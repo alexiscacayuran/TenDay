@@ -1,0 +1,39 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    font-family: 'Inter Variable', sans-serif;
+}
+
+#root {
+    height: 100vh;
+}
+
+/*required map size*/
+.leaflet-container {
+    height: 100vh;
+}
+
+.leaflet-control {
+    z-index: 0 !important
+}
+
+.leaflet-pane {
+    z-index: 0 !important
+}
+
+.leaflet-top,
+.leaflet-bottom {
+    z-index: 0 !important
+}
+
+.glass-card{
+    background-color: rgba(255, 255, 255, 0.4) !important;
+    background-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0)) !important;
+    backdrop-filter: blur(7px);
+}
+
+
