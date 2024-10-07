@@ -21,7 +21,7 @@ const features = municities.features.map((feature) => {
 });
 
 const provinceList = [...new Set(features.map((item) => item.province))];
-console.log(provinceList);
+//console.log(provinceList);
 
 export default function SearchCard(props) {
   const [province, setProvince] = useState("");
@@ -43,6 +43,7 @@ export default function SearchCard(props) {
                 value={province}
                 onChange={(event, newValue) => {
                   setProvince(newValue);
+                  props.searchLoc(newValue);
                 }}
                 renderInput={(params) => (
                   <TextField {...params} label="Province" />

@@ -24,7 +24,7 @@ const Theme = createTheme({
     },
   },
   typography: {
-    fontFamily: ["Inter", "Roboto", "sans-serif"],
+    fontFamily: ["Inter Variable"],
   },
 });
 
