@@ -1,8 +1,11 @@
+:root{
+    --blue: #187498;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    
 }
 
 
@@ -32,6 +35,16 @@
     background-color: rgba(255, 255, 255, 0.4) !important;
     background-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0)) !important;
     backdrop-filter: blur(7px);
+}
+
+.tooltip-municity-name{
+    background-color: transparent;
+    border: 0;
+    box-shadow: none;
+    text-transform: uppercase;
+    font-weight: bolder;
+    color: var(--blue);
+    font-family: "Inter Variable";
 }
 
 

@@ -21,7 +21,7 @@ const features = municities.features.map((feature) => {
 });
 
 const provinceList = [...new Set(features.map((item) => item.province))];
-//console.log(provinceList);
+provinceList.sort();
 
 export default function SearchCard(props) {
   const [province, setProvince] = useState("");
@@ -43,17 +43,23 @@ export default function SearchCard(props) {
                 value={province}
                 onChange={(event, newValue) => {
                   setProvince(newValue);
-                  props.searchLoc(newValue);
+                  props.searchLoc({ province: newValue });
                 }}
                 renderInput={(params) => (
                   <TextField {...params} label="Province" />
                 )}
               />
               <Autocomplete
+                key={province}
                 freeSolo
                 options={features
                   .filter((feature) => feature.province === province)
                   .map((feature) => feature.municity)}
+                onChange={(event, newValue) => {
+                  props.searchLoc((prevValue) => {
+                    return { ...prevValue, municity: newValue };
+                  });
+                }}
                 renderInput={(params) => (
                   <TextField {...params} label="Municipality" />
                 )}
