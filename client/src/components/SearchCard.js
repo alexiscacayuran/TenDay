@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Stack,
   TextField,
@@ -23,8 +23,17 @@ const features = municities.features.map((feature) => {
 const provinceList = [...new Set(features.map((item) => item.province))];
 provinceList.sort();
 
-export default function SearchCard(props) {
+function SearchCard(props) {
   const [province, setProvince] = useState("");
+  const [municity, setMunicity] = useState("");
+
+  // Update the municity field when a municity is selected in the map
+  useEffect(() => {
+    if (props.location) {
+      setProvince(props.location.province); // Set the selected municity from the map
+      setMunicity(props.location.municity); // Set the selected municity from the map
+    }
+  }, [props.location]);
 
   return (
     <ThemeProvider theme={Theme}>
@@ -40,10 +49,14 @@ export default function SearchCard(props) {
               <Autocomplete
                 freeSolo
                 options={provinceList}
-                value={province}
-                onChange={(event, newValue) => {
+                value={province} // Bind the Autocomplete value to the selected province
+                onChange={(event, newValue, reason) => {
+                  if (reason === "clear") {
+                    props.setDidClear(true);
+                    props.setLocation({ province: "", municity: "" });
+                  } else props.setDidClear(false);
                   setProvince(newValue);
-                  props.searchLoc({ province: newValue });
+                  props.setLocation({ province: newValue, municity: "" });
                 }}
                 renderInput={(params) => (
                   <TextField {...params} label="Province" />
@@ -54,9 +67,11 @@ export default function SearchCard(props) {
                 freeSolo
                 options={features
                   .filter((feature) => feature.province === province)
-                  .map((feature) => feature.municity)}
+                  .map((feature) => feature.municity)
+                  .sort()}
+                value={municity} // Bind the Autocomplete value to the selected municity
                 onChange={(event, newValue) => {
-                  props.searchLoc((prevValue) => {
+                  props.setLocation((prevValue) => {
                     return { ...prevValue, municity: newValue };
                   });
                 }}
@@ -72,3 +87,5 @@ export default function SearchCard(props) {
     </ThemeProvider>
   );
 }
+
+export default SearchCard;

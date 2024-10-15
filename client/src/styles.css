@@ -41,10 +41,14 @@
     background-color: transparent;
     border: 0;
     box-shadow: none;
-    text-transform: uppercase;
-    font-weight: bolder;
     color: var(--blue);
+    text-shadow: 1px 1px 2px white;
+    text-transform: uppercase;
+    font-weight: 900;
     font-family: "Inter Variable";
+    letter-spacing: 1.5px;
+    
+    
 }
 
 
