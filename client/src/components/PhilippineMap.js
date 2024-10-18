@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -10,9 +10,9 @@ import {
 import { Box } from "@mui/material";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import * as turf from "@turf/turf";
 import municities from "../data/municities.json";
 import SearchCard from "./SearchCard";
-import * as turf from "@turf/turf";
 
 function GetZoom({ setZoomLevel }) {
   const map = useMapEvents({
@@ -73,20 +73,16 @@ export default function PhilippineMap() {
     transition: "0.3s", // Added transition for smooth animation
   };
 
-  // [bounds[1], bounds[0]],
-  // [bounds[3], bounds[2]],
-
-  var bounds = L.latLngBounds([
+  const map = useRef(null);
+  const bounds = L.latLngBounds([
     [4.64168888115381, 116.930117636657],
     [20.9366800806089, 126.605638820405],
-  ]).pad(0.1);
-
-  console.log(bounds);
+  ]).pad(0.2);
   const [location, setLocation] = useState({ municity: "", province: "" });
   const [didClear, setDidClear] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(5);
 
-  function getLargestPolygon(feature) {
+  function getFeatureCenter(feature) {
     let maxAreaPolygon = null;
     let maxArea = 0;
 
@@ -131,53 +127,65 @@ export default function PhilippineMap() {
       });
     }
 
-    return maxAreaPolygon;
+    // Compute the center of mass of the largest polygon
+    const center = turf.centerOfMass(maxAreaPolygon);
+    return [center.geometry.coordinates[1], center.geometry.coordinates[0]];
   }
 
-  function handleAddMunicityName(layer) {
-    if (location.province && zoomLevel > 9) {
-      const municityName = layer.feature.properties.municity;
-
-      const maxAreaPolygon = getLargestPolygon(layer.feature);
-
-      if (maxAreaPolygon) {
-        // Compute the center of mass of the largest polygon
-        const center = turf.centerOfMass(maxAreaPolygon);
-        const latLng = [
-          center.geometry.coordinates[1],
-          center.geometry.coordinates[0],
-        ];
-
-        // Bind tooltip at the computed center of mass
-
-        layer.bindTooltip(municityName, {
-          className: "tooltip-municity-name",
-          permanent: true,
-          direction: "center",
-          interactive: true,
-        });
-        layer.openTooltip(latLng);
-      }
-
-      // Bind tooltips only after the layer has been added
-    }
-  }
-
-  //shows name for each municities
   function onEachMunicity(municity, layer) {
-    layer.on("add", () => {
-      handleAddMunicityName(layer);
-    });
-
-    // Update municity when clicked
-    layer.on("click", () => {
-      const municitySelected = municity.properties.municity;
-      const provinceSelected = municity.properties.province;
-      setLocation({ province: provinceSelected, municity: municitySelected }); // Update the location state
-    });
-
     // Hover animation effect for all features
     layer.on({
+      add: () => {
+        // Shows name for each municities
+        if (zoomLevel > 10 && location.province) {
+          const municityName = layer.feature.properties.municity;
+          const featureCenter = getFeatureCenter(layer.feature);
+
+          // Bind tooltip at the computed center of mass
+          if (featureCenter) {
+            layer.bindTooltip(municityName, {
+              className: "tooltip-municity-name",
+              permanent: true,
+              direction: "center",
+              interactive: true,
+            });
+            layer.openTooltip(featureCenter);
+          }
+        }
+      },
+      click: () => {
+        const municitySelected = municity.properties.municity;
+        const provinceSelected = municity.properties.province;
+
+        // Check if the municity has changed
+        if (municitySelected === location.municity) {
+          // If the municity is the same, do nothing
+          return;
+        }
+
+        // Set the current layer as selected
+        layer.setStyle({ fillOpacity: 0.5 });
+
+        setLocation({
+          province: provinceSelected,
+          municity: municitySelected,
+        }); // Set location to selected municity and province
+
+        if (map) {
+          // Get bounds for the selected feature
+          const bounds = turf.bbox(layer.feature);
+          const latLngBounds = [
+            [bounds[1], bounds[0]], // SW corner
+            [bounds[3], bounds[2]], // NE corner
+          ];
+          console.log(map);
+          // Fit the map to the bounds of the clicked feature
+          map.current.fitBounds(latLngBounds, {
+            padding: [50, 50],
+            maxZoom: zoomLevel,
+          });
+        }
+      },
       mouseover: () => {
         layer.setStyle({ weight: 3 }); // Highlight border on hover
       },
@@ -188,7 +196,7 @@ export default function PhilippineMap() {
 
     // Apply additional style to the selected municity
     if (municity.properties.municity === location.municity) {
-      layer.setStyle({ fillOpacity: 0.8 }); // Highlight selected municity
+      layer.setStyle({ fillOpacity: 0.5 }); // Highlight selected municity
     } else {
       layer.setStyle(baseMapStyle); // Default style for other municities
     }
@@ -210,16 +218,20 @@ export default function PhilippineMap() {
     () => (
       <div>
         <MapContainer
+          ref={map}
           center={[13, 122]}
           zoom={6}
           minZoom={6}
+          maxZoom={12}
           maxBounds={bounds}
           zoomControl={false}
+          whenReady={(event) => {
+            map.current = event.target;
+          }}
         >
           <TileLayer
             attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
             url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={15}
           />
 
           {/* Set key to force render geojson every user input for province */}

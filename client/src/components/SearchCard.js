@@ -47,7 +47,6 @@ function SearchCard(props) {
 
             <Stack spacing={2}>
               <Autocomplete
-                freeSolo
                 options={provinceList}
                 value={province} // Bind the Autocomplete value to the selected province
                 onChange={(event, newValue, reason) => {
@@ -64,7 +63,6 @@ function SearchCard(props) {
               />
               <Autocomplete
                 key={province}
-                freeSolo
                 options={features
                   .filter((feature) => feature.province === province)
                   .map((feature) => feature.municity)
