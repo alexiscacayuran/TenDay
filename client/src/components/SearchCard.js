@@ -54,6 +54,7 @@ function SearchCard(props) {
                     props.setDidClear(true);
                     props.setLocation({ province: "", municity: "" });
                   } else props.setDidClear(false);
+
                   setProvince(newValue);
                   props.setLocation({ province: newValue, municity: "" });
                 }}

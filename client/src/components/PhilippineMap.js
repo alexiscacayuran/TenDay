@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -7,10 +7,11 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
+import axios from "axios";
 import { Box } from "@mui/material";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import * as turf from "@turf/turf";
+import { bbox } from "@turf/bbox";
 import municities from "../data/municities.json";
 import SearchCard from "./SearchCard";
 
@@ -22,7 +23,7 @@ function GetZoom({ setZoomLevel }) {
   });
 }
 
-function FlyToFeature(props) {
+function FlyToFeature({province, didClear}) {
   const map = useMap();
 
   useEffect(() => {
@@ -30,7 +31,7 @@ function FlyToFeature(props) {
       116.930117636657, 4.64168888115381, 126.605638820405, 20.9366800806089,
     ];
 
-    if (props.didClear) {
+    if (didClear) {
       map.flyToBounds(
         [
           [bounds[1], bounds[0]],
@@ -40,12 +41,12 @@ function FlyToFeature(props) {
       );
     }
 
-    if (props.province) {
+    if (province) {
       const filterByProvince = municities.features.filter((feature) => {
-        return feature.properties.province === props.province;
+        return feature.properties.province === province;
       });
 
-      bounds = turf.bbox({
+      bounds = bbox({
         type: "FeatureCollection",
         features: filterByProvince,
       });
@@ -58,134 +59,104 @@ function FlyToFeature(props) {
         { duration: 1 }
       );
     }
-  }, [props.province, props.didClear, map]); // Effect runs only when province changes
+  }, [province, didClear, map]); // Effect runs only when province changes
 
   return null;
 }
 
 export default function PhilippineMap() {
-  //map style
-  const baseMapStyle = {
-    fillColor: "#187498",
-    weight: 1.5,
-    color: "#187498",
-    fillOpacity: 0.1,
-    transition: "0.3s", // Added transition for smooth animation
-  };
+  const baseMapStyle = useMemo(
+    () => ({
+      fillColor: "#187498",
+      weight: 1.5,
+      color: "#187498",
+      fillOpacity: 0.1,
+      transition: "0.3s",
+    }),
+    []
+  );
 
   const map = useRef(null);
-  const bounds = L.latLngBounds([
-    [4.64168888115381, 116.930117636657],
-    [20.9366800806089, 126.605638820405],
-  ]).pad(0.2);
+  const bounds = useMemo(
+    () =>
+      L.latLngBounds([
+        [4.64, 116.93],
+        [20.94, 126.61],
+      ]).pad(0.2),
+    []
+  );
   const [location, setLocation] = useState({ municity: "", province: "" });
   const [didClear, setDidClear] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(5);
 
-  function getFeatureCenter(feature) {
-    let maxAreaPolygon = null;
-    let maxArea = 0;
+  const [currentForecast, setCurrentForecast] = useState({});
 
-    // Handle Polygon or MultiPolygon
-    const coordinates = feature.geometry.coordinates;
-    const isMultiPolygon = feature.geometry.type === "MultiPolygon";
+  // Pan to feature on location change
+  useEffect(() => {
+    if (location.municity && map.current) {
+      const selectedFeature = municities.features.find(
+        (feature) =>
+          feature.properties.municity === location.municity &&
+          feature.properties.province === location.province
+      );
 
-    if (isMultiPolygon) {
-      // Iterate over MultiPolygon
-      coordinates.forEach((polyCoords) => {
-        polyCoords.forEach((ringCoords) => {
-          // Ensure valid polygon
-          if (
-            ringCoords.length >= 4 &&
-            turf.booleanValid(turf.polygon([ringCoords]))
-          ) {
-            const polygon = turf.polygon([ringCoords]);
-            const area = turf.area(polygon);
+      if (selectedFeature) {
+        const bounds = bbox(selectedFeature);
+        const latLngBounds = [
+          [bounds[1], bounds[0]], // SW corner
+          [bounds[3], bounds[2]], // NE corner
+        ];
 
-            if (area > maxArea) {
-              maxArea = area;
-              maxAreaPolygon = polygon;
-            }
-          }
+        // Fit the map to the bounds of the selected feature
+        map.current.fitBounds(latLngBounds, {
+          padding: [50, 50],
+          maxZoom: zoomLevel < 9 ? 10 : zoomLevel,
         });
-      });
-    } else {
-      // Handle simple Polygon
-      coordinates.forEach((ringCoords) => {
-        if (
-          ringCoords.length >= 4 &&
-          turf.booleanValid(turf.polygon([ringCoords]))
-        ) {
-          const polygon = turf.polygon([ringCoords]);
-          const area = turf.area(polygon);
-
-          if (area > maxArea) {
-            maxArea = area;
-            maxAreaPolygon = polygon;
-          }
-        }
-      });
+      }
     }
 
-    // Compute the center of mass of the largest polygon
-    const center = turf.centerOfMass(maxAreaPolygon);
-    return [center.geometry.coordinates[1], center.geometry.coordinates[0]];
-  }
+    axios.get('/current', {
+      params:{
+        municity: location.municity,
+        province: location.province
+      }
+    }).then((res) =>{
+      setCurrentForecast(res.data);
+    }).catch((error)=>{
+      console.log(error)
+    })
 
-  function onEachMunicity(municity, layer) {
-    // Hover animation effect for all features
+  }, [location.municity, location.province]);
+
+  const onEachMunicity = useCallback((municity, layer) => {
     layer.on({
       add: () => {
         // Shows name for each municities
         if (zoomLevel > 10 && location.province) {
           const municityName = layer.feature.properties.municity;
-          const featureCenter = getFeatureCenter(layer.feature);
-
-          // Bind tooltip at the computed center of mass
-          if (featureCenter) {
-            layer.bindTooltip(municityName, {
-              className: "tooltip-municity-name",
-              permanent: true,
-              direction: "center",
-              interactive: true,
-            });
-            layer.openTooltip(featureCenter);
-          }
+          const featureCenter = layer.feature.center;
+        
+          layer.bindTooltip(municityName, {
+            className: "tooltip-municity-name",
+            permanent: true,
+            direction: "center",
+            interactive: true,
+          }).openTooltip(featureCenter);
+          // Bind tooltip at the center of mass 
+          
+          
         }
       },
       click: () => {
-        const municitySelected = municity.properties.municity;
-        const provinceSelected = municity.properties.province;
+        const { municity: selectedMunicity, province: selectedProvince } = municity.properties;
 
-        // Check if the municity has changed
-        if (municitySelected === location.municity) {
-          // If the municity is the same, do nothing
-          return;
-        }
+        //do nothing if same municity is clicked
+        if (selectedMunicity === location.municity) return;
 
-        // Set the current layer as selected
         layer.setStyle({ fillOpacity: 0.5 });
-
-        setLocation({
-          province: provinceSelected,
-          municity: municitySelected,
-        }); // Set location to selected municity and province
-
-        if (map) {
-          // Get bounds for the selected feature
-          const bounds = turf.bbox(layer.feature);
-          const latLngBounds = [
-            [bounds[1], bounds[0]], // SW corner
-            [bounds[3], bounds[2]], // NE corner
-          ];
-          console.log(map);
-          // Fit the map to the bounds of the clicked feature
-          map.current.fitBounds(latLngBounds, {
-            padding: [50, 50],
-            maxZoom: zoomLevel,
-          });
-        }
+        setLocation({ province: selectedProvince, municity: selectedMunicity });
       },
+      // Hover animation effect for all features
       mouseover: () => {
         layer.setStyle({ weight: 3 }); // Highlight border on hover
       },
@@ -195,24 +166,23 @@ export default function PhilippineMap() {
     });
 
     // Apply additional style to the selected municity
-    if (municity.properties.municity === location.municity) {
-      layer.setStyle({ fillOpacity: 0.5 }); // Highlight selected municity
-    } else {
-      layer.setStyle(baseMapStyle); // Default style for other municities
-    }
-  }
+      layer.setStyle(
+        municity.properties.municity === location.municity
+          ? { fillOpacity: 0.5 }
+          : baseMapStyle
+      );
+    }, [location.municity, location.province, baseMapStyle, zoomLevel]
+    )
+  
 
   //filter the list of municities depending on the selected province
-  function filterByProvince(municity) {
-    if (location.province) {
-      if (municity.properties.province === location.province) {
-        return true;
-      }
-    } else {
-      // If province is not selected, show all
-      return true;
-    }
-  }
+  const filterByProvince = useCallback(
+    (municity) =>
+      //if province is not selected, show all or filter if province is selected
+      !location.province ||
+      municity.properties.province === location.province,
+    [location.province]
+  );
 
   const displayMap = useMemo(
     () => (
@@ -257,7 +227,7 @@ export default function PhilippineMap() {
         </Box>
       </div>
     ),
-    [location, zoomLevel, didClear]
+    [location, zoomLevel, didClear, bounds, baseMapStyle, filterByProvince, onEachMunicity]
   );
 
   return <div>{displayMap}</div>;
