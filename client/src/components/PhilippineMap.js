@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import {
   MapContainer,
   TileLayer,
@@ -6,6 +12,7 @@ import {
   ZoomControl,
   useMap,
   useMapEvents,
+  Tooltip,
 } from "react-leaflet";
 import axios from "axios";
 import { Box } from "@mui/material";
@@ -14,6 +21,7 @@ import L from "leaflet";
 import { bbox } from "@turf/bbox";
 import municities from "../data/municities.json";
 import SearchCard from "./SearchCard";
+import ForecastTooltip from "./ForecastTooltip";
 
 function GetZoom({ setZoomLevel }) {
   const map = useMapEvents({
@@ -23,7 +31,7 @@ function GetZoom({ setZoomLevel }) {
   });
 }
 
-function FlyToFeature({province, didClear}) {
+function FlyToFeature({ province, didClear }) {
   const map = useMap();
 
   useEffect(() => {
@@ -68,7 +76,7 @@ export default function PhilippineMap() {
   const baseMapStyle = useMemo(
     () => ({
       fillColor: "#187498",
-      weight: 1.5,
+      weight: 0,
       color: "#187498",
       fillOpacity: 0.1,
       transition: "0.3s",
@@ -90,8 +98,10 @@ export default function PhilippineMap() {
   const [zoomLevel, setZoomLevel] = useState(5);
 
   const [currentForecast, setCurrentForecast] = useState({});
+  const [tooltipPosition, setTooltipPosition] = useState([]);
+  console.log(tooltipPosition);
 
-  // Pan to feature on location change
+  // Pan to feature on location change, get the center of the feature, and fetch forecast data
   useEffect(() => {
     if (location.municity && map.current) {
       const selectedFeature = municities.features.find(
@@ -101,6 +111,9 @@ export default function PhilippineMap() {
       );
 
       if (selectedFeature) {
+        // Get the center of the feature
+        setTooltipPosition(selectedFeature.center);
+
         const bounds = bbox(selectedFeature);
         const latLngBounds = [
           [bounds[1], bounds[0]], // SW corner
@@ -115,120 +128,129 @@ export default function PhilippineMap() {
       }
     }
 
-    axios.get('/current', {
-      params:{
-        municity: location.municity,
-        province: location.province
-      }
-    }).then((res) =>{
-      setCurrentForecast(res.data);
-    }).catch((error)=>{
-      console.log(error)
-    })
+    axios
+      .get("/current", {
+        params: {
+          municity: location.municity,
+          province: location.province,
+        },
+      })
+      .then((res) => {
+        setCurrentForecast(res.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [location]);
 
-  }, [location.municity, location.province]);
+  const onEachMunicity = useCallback(
+    (municity, layer) => {
+      layer.on({
+        add: () => {
+          // Shows name for each municities
+          if (zoomLevel > 9 && location.province) {
+            const municityName = layer.feature.properties.municity;
+            const featureCenter = layer.feature.center;
 
-  const onEachMunicity = useCallback((municity, layer) => {
-    layer.on({
-      add: () => {
-        // Shows name for each municities
-        if (zoomLevel > 10 && location.province) {
-          const municityName = layer.feature.properties.municity;
-          const featureCenter = layer.feature.center;
-        
-          layer.bindTooltip(municityName, {
-            className: "tooltip-municity-name",
-            permanent: true,
-            direction: "center",
-            interactive: true,
-          }).openTooltip(featureCenter);
-          // Bind tooltip at the center of mass 
-          
-          
-        }
-      },
-      click: () => {
-        const { municity: selectedMunicity, province: selectedProvince } = municity.properties;
+            layer
+              .bindTooltip(municityName, {
+                className: "tooltip-municity-name",
+                permanent: true,
+                direction: "center",
+                interactive: true,
+              })
+              .openTooltip(featureCenter);
+          }
+        },
+        click: () => {
+          const { municity: selectedMunicity, province: selectedProvince } =
+            municity.properties;
 
-        //do nothing if same municity is clicked
-        if (selectedMunicity === location.municity) return;
+          //do nothing if same municity is clicked
+          if (selectedMunicity === location.municity) return;
 
-        layer.setStyle({ fillOpacity: 0.5 });
-        setLocation({ province: selectedProvince, municity: selectedMunicity });
-      },
-      // Hover animation effect for all features
-      mouseover: () => {
-        layer.setStyle({ weight: 3 }); // Highlight border on hover
-      },
-      mouseout: () => {
-        layer.setStyle({ weight: 1.5 }); // Reset border when not hovering
-      },
-    });
+          layer.setStyle({ fillOpacity: 0.5 });
 
-    // Apply additional style to the selected municity
+          setLocation({
+            province: selectedProvince,
+            municity: selectedMunicity,
+          });
+        },
+        // Hover animation effect for all features
+        mouseover: () => layer.setStyle({ weight: 1.5 }), // Highlight border on hover
+        mouseout: () => layer.setStyle({ weight: 0 }), // Reset border when not hovering
+      });
+
+      // Apply additional style to the selected municity
       layer.setStyle(
         municity.properties.municity === location.municity
           ? { fillOpacity: 0.5 }
           : baseMapStyle
       );
-    }, [location.municity, location.province, baseMapStyle, zoomLevel]
-    )
-  
+    },
+    [location.municity, location.province, baseMapStyle, zoomLevel]
+  );
 
   //filter the list of municities depending on the selected province
   const filterByProvince = useCallback(
     (municity) =>
       //if province is not selected, show all or filter if province is selected
-      !location.province ||
-      municity.properties.province === location.province,
+      !location.province || municity.properties.province === location.province,
     [location.province]
   );
 
-  const displayMap = useMemo(
-    () => (
-      <div>
-        <MapContainer
-          ref={map}
-          center={[13, 122]}
-          zoom={6}
-          minZoom={6}
-          maxZoom={12}
-          maxBounds={bounds}
-          zoomControl={false}
-          whenReady={(event) => {
-            map.current = event.target;
-          }}
+  return (
+    <div>
+      <MapContainer
+        ref={map}
+        center={[13, 122]}
+        zoom={6}
+        minZoom={6}
+        maxZoom={12}
+        maxBounds={bounds}
+        zoomControl={false}
+        whenReady={(event) => {
+          map.current = event.target;
+        }}
+      >
+        <TileLayer
+          attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        />
+
+        {/* Set key to force render geojson every user input for province */}
+        <GeoJSON
+          key={location.province + location.municity + zoomLevel}
+          data={municities.features}
+          style={baseMapStyle}
+          onEachFeature={onEachMunicity}
+          filter={filterByProvince}
         >
-          <TileLayer
-            attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-          />
+          {/* Tooltip for the selected feature */}
+          {location.municity && currentForecast.forecast && (
+            <Tooltip
+              position={tooltipPosition}
+              direction="top"
+              permanent
+              className="custom-tooltip"
+            >
+              <ForecastTooltip forecast={currentForecast.forecast} />
+            </Tooltip>
+          )}
+        </GeoJSON>
 
-          {/* Set key to force render geojson every user input for province */}
-          <GeoJSON
-            key={location.province + location.municity + zoomLevel}
-            data={municities.features}
-            style={baseMapStyle}
-            onEachFeature={onEachMunicity}
-            filter={filterByProvince}
-          />
+        <ZoomControl position="topright" />
+        <FlyToFeature province={location.province} didClear={didClear} />
+        <GetZoom setZoomLevel={setZoomLevel} />
+      </MapContainer>
 
-          <ZoomControl position="topright" />
-          <FlyToFeature province={location.province} didClear={didClear} />
-          <GetZoom setZoomLevel={setZoomLevel} />
-        </MapContainer>
-
-        <Box sx={{ position: "fixed", top: "10px" }}>
-          <SearchCard
-            setLocation={setLocation}
-            setDidClear={setDidClear}
-            location={location}
-          />
-        </Box>
-      </div>
-    ),
-    [location, zoomLevel, didClear, bounds, baseMapStyle, filterByProvince, onEachMunicity]
+      <Box sx={{ position: "fixed", top: "10px" }}>
+        <SearchCard
+          setLocation={setLocation}
+          setDidClear={setDidClear}
+          location={location}
+        />
+      </Box>
+    </div>
   );
-
-  return <div>{displayMap}</div>;
 }

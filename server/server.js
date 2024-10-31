@@ -1,23 +1,32 @@
 import express from "express";
-import pg from "pg";
 import axios from "axios";
-import env from "dotenv";
 import cors from "cors";
+import multer from "multer";
+import { importCsvToDatabase } from "./route/csvImport.js";
+import jwtAuth from "./route/jwtAuth.js";
+import dashboard from "./route/dashboard.js";
+import pool from "./db.js";
 
 const app = express();
 const port = 5000;
-env.config();
 
-const { Pool } = pg;
-const pool = new Pool({
-  user: process.env.PG_USER,
-  host: process.env.PG_HOST,
-  database: process.env.PG_DATABASE,
-  password: process.env.PG_PASSWORD,
-  port: process.env.PG_PORT,
+app.use(express.json());
+app.use(cors());
+
+// Multer setup for file uploads
+const upload = multer({
+  dest: "route/",
+  limits: { fileSize: 1 * 1024 * 1024 }, // 1 MB limit per file
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "text/csv") {
+      cb(null, true);
+    } else {
+      cb(new multer.MulterError("Unexpected file type"), false);
+    }
+  },
 });
 
-app.use(cors());
+// ROUTES:
 
 app.get("/current", async (req, res) => {
   const { municity, province } = req.query;
@@ -132,8 +141,6 @@ app.get("/current", async (req, res) => {
         },
       };
 
-      console.log(data.forecast.date);
-
       return res.json(data);
     }
 
@@ -233,6 +240,31 @@ app.get("/full", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+// Route for CSV upload and database import
+app.post("/route/upload-csv", upload.array("files"), async (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).send("No files uploaded.");
+  }
+
+  try {
+    const messages = [];
+    for (const file of req.files) {
+      const message = await importCsvToDatabase(file.path);
+      messages.push(message);
+    }
+    res.status(200).send(messages);
+  } catch (error) {
+    console.error("Error during CSV import:", error);
+    res.status(500).send("Failed to import CSV.");
+  }
+});
+
+// Route for registration
+app.use("/auth", jwtAuth);
+
+// Route for dashboard
+app.use("/dashboard", dashboard);
 
 app.listen(port, () => {
   console.log(`Server listening on ${port}`);
