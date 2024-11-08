@@ -1,13 +1,9 @@
 import React from "react";
 import "leaflet/dist/leaflet.css";
-import PhilippineMap from "./components/PhilippineMap";
+import Map from "./components/Map";
 
 function App() {
-  return (
-    <div>
-      <PhilippineMap></PhilippineMap>
-    </div>
-  );
+  return <Map />;
 }
 
 export default App;
