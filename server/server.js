@@ -243,7 +243,7 @@ app.get("/full", async (req, res) => {
           min: forecast.min,
           max: forecast.max,
         },
-        huimidity: forecast.humidity,
+        humidity: forecast.humidity,
         wind: {
           speed: forecast.speed,
           direction: forecast.direction,

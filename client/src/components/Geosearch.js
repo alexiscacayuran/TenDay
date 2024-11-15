@@ -5,27 +5,35 @@ import { geocodeService } from "esri-leaflet-geocoder";
 import axios from "axios";
 
 //styles
-import Box from "@mui/joy/Box";
-import Input from "@mui/joy/Input";
-import Button from "@mui/joy/Button";
+import {
+  Box,
+  Input,
+  Tooltip,
+  Typography,
+  List,
+  ListItem,
+  ListItemButton,
+  ListDivider,
+  IconButton,
+  Stack,
+} from "@mui/joy";
 import SearchIcon from "@mui/icons-material/Search";
-import Typography from "@mui/joy/Typography";
-import List from "@mui/joy/List";
-import ListItem from "@mui/joy/ListItem";
-import ListItemButton from "@mui/joy/ListItemButton";
-import ListDivider from "@mui/joy/ListDivider";
-import { IconButton } from "@mui/joy";
 import MapIcon from "@mui/icons-material/Map";
-import Stack from "@mui/joy/Stack";
 
 // custom components
 import ForecastTooltip from "./ForecastTooltip";
 
-const GeoSearch = ({ accessToken, setLocation, map }) => {
+const GeoSearch = ({
+  accessToken,
+  setLocation,
+  map,
+  setOpenModal,
+  setOpenContainer,
+}) => {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [address, setAddress] = useState("");
 
+  const [address, setAddress] = useState("");
   const [position, setPosition] = useState(null);
   const [forecast, setForecast] = useState({});
   const [isForecastReady, setIsForecastReady] = useState(false); // Track forecast readiness
@@ -59,12 +67,13 @@ const GeoSearch = ({ accessToken, setLocation, map }) => {
   };
 
   // Handle selection of a suggestion
-  const handleSelectSuggestion = (text) => {
+  const handleFlyToLocation = (text) => {
     setAddress(text);
     // Perform geocode search using the selected suggestion text
     const _geocodeService = geocodeService({
       apikey: accessToken,
     });
+
     _geocodeService
       .geocode()
       .text(text)
@@ -101,6 +110,7 @@ const GeoSearch = ({ accessToken, setLocation, map }) => {
           // // Add marker for the selected result
           // const marker = L.marker(result.latlng).addTo(layerGroup.current);
           map.flyTo(result.latlng, 12);
+          setOpenModal(false);
 
           // // Bind popup with location information
           // marker
@@ -113,24 +123,47 @@ const GeoSearch = ({ accessToken, setLocation, map }) => {
     setSuggestions([]);
   };
 
+  const handleSelectSuggestion = (text) => {
+    setAddress(text);
+
+    // Perform geocode search using the selected suggestion text
+    const _geocodeService = geocodeService({
+      apikey: accessToken,
+    });
+
+    _geocodeService
+      .geocode()
+      .text(text)
+      .run((error, res) => {
+        if (!error) {
+          const result = res.results[0];
+
+          setLocation({
+            municity: result.properties.City,
+            province: result.properties.Subregion,
+          });
+
+          setOpenModal(false);
+          setOpenContainer(true);
+        }
+      });
+  };
+
   return (
     <div>
       <Input
         startDecorator={<SearchIcon />}
-        placeholder={
-          suggestions.length > 0
-            ? address.split(", ")[0] + ", " + address.split(", ")[1]
-            : "Search a location"
-        }
+        placeholder="Search location"
         value={input}
         onChange={handleInputChange}
+        size="lg"
         sx={{
           mx: "10px",
-          minWidth: 300,
+          minWidth: 150,
         }}
       />
 
-      {suggestions.length > 0 && (
+      {suggestions.length > 0 ? (
         <Box
           sx={{
             mx: "10px",
@@ -138,8 +171,6 @@ const GeoSearch = ({ accessToken, setLocation, map }) => {
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "center",
-            backgroundColor: "white",
-            borderRadius: "sm",
           }}
         >
           <List
@@ -153,14 +184,27 @@ const GeoSearch = ({ accessToken, setLocation, map }) => {
               <div key={index}>
                 <ListItem
                   endAction={
-                    <IconButton
-                      aria-label="See Full Forecast"
-                      size="sm"
-                      color="primary"
-                      onClick={() => handleSelectSuggestion(suggestion.text)}
+                    <Tooltip
+                      placement="bottom"
+                      title="See on map"
+                      variant="solid"
                     >
-                      <MapIcon />
-                    </IconButton>
+                      <IconButton
+                        aria-label="See Full Forecast"
+                        size="sm"
+                        color="primary"
+                        onClick={() => {
+                          setInput(
+                            suggestion.text.split(", ")[0] +
+                              ", " +
+                              suggestion.text.split(", ")[1]
+                          );
+                          handleFlyToLocation(suggestion.text);
+                        }}
+                      >
+                        <MapIcon />
+                      </IconButton>
+                    </Tooltip>
                   }
                 >
                   <ListItemButton
@@ -171,7 +215,7 @@ const GeoSearch = ({ accessToken, setLocation, map }) => {
                         {suggestion.text.split(", ")[0]}
                       </Typography>
                       <Typography level="title-sm">
-                        {"Place in " + suggestion.text.split(", ")[1]}
+                        {suggestion.text.split(", ")[1]}
                         {suggestion.text.split(", ").length > 3
                           ? ", " + suggestion.text.split(", ")[2]
                           : ""}
@@ -190,6 +234,8 @@ const GeoSearch = ({ accessToken, setLocation, map }) => {
             ))}
           </List>
         </Box>
+      ) : (
+        <Box></Box>
       )}
 
       {/* {isForecastReady ? (

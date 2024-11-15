@@ -1,12 +1,15 @@
 import React, { useState, useRef, useMemo } from "react";
-import { MapContainer, ZoomControl, LayerGroup } from "react-leaflet";
+import { MapContainer, LayerGroup } from "react-leaflet";
 import L from "leaflet";
 
+import MapControl from "./MapControl";
 import VectorBasemap from "./VectorBasemap";
 import ReverseGeocode from "./ReverseGeocode";
-import Geosearch from "./Geosearch";
 import DateNavigation from "./DateNavigation";
-import { Box } from "@mui/material";
+import ButtonAppBar from "./ButtonAppBar";
+
+import Box from "@mui/joy/Box";
+import ForecastContainer from "./ForecastContainer";
 
 const Map = () => {
   const accessToken =
@@ -21,24 +24,32 @@ const Map = () => {
     []
   );
   const [location, setLocation] = useState({ municity: "", province: "" });
+  // console.log(location);
   const [map, setMap] = useState(null); // External state for the map instance
   const layerGroup = useRef(null); // Shared LayerGroup reference
-  const [date, setDate] = useState(new Date().now());
+  //const [date, setDate] = useState();
+  const [open, setOpen] = useState(false);
 
   const displayMap = useMemo(
     () => (
-      <div>
+      <Box sx={{ maxHeight: "100vh" }}>
+        <ButtonAppBar
+          accessToken={accessToken}
+          map={map}
+          setLocation={setLocation}
+          setOpenContainer={setOpen}
+        />
         <MapContainer
           center={[13, 122]}
           zoom={6}
           minZoom={6}
-          maxZoom={15}
+          maxZoom={20}
           maxBounds={bounds}
           zoomControl={false}
           ref={setMap} // Set map instance to external state
         >
           <LayerGroup ref={layerGroup} />
-          <ZoomControl position="topright" />
+          <MapControl />
           <VectorBasemap basemap={basemapEnum} accessToken={accessToken} />
           {map && (
             <ReverseGeocode
@@ -48,28 +59,21 @@ const Map = () => {
             />
           )}
         </MapContainer>
-        <Box sx={{ position: "fixed", top: "10px" }}>
-          <Geosearch
-            accessToken={accessToken}
-            setLocation={setLocation}
-            map={map}
+
+        {!open && (
+          <DateNavigation
+            initialDate={new Date()}
+            range={10}
+            onPageChange={(date) => {
+              console.log(date);
+            }}
           />
-        </Box>
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 0,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "90%", // Optional width adjustment
-            maxWidth: 400, // Optional max width
-          }}
-        >
-          <DateNavigation></DateNavigation>
-        </Box>
-      </div>
+        )}
+
+        <ForecastContainer open={open} setOpen={setOpen} location={location} />
+      </Box>
     ),
-    [map, bounds, accessToken] // Dependencies for memoization
+    [map, bounds, accessToken, open, location] // Dependencies for memoization
   );
 
   return <div>{displayMap}</div>;
