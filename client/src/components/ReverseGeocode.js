@@ -2,10 +2,11 @@ import axios from "axios";
 import { useState } from "react";
 // import L from "leaflet";
 import { reverseGeocode } from "esri-leaflet-geocoder";
-import ForecastTooltip from "./ForecastTooltip";
+import ForecastTooltip from "./ForecastPopup";
 import { useMapEvents } from "react-leaflet";
+import ForecastPopup from "./ForecastPopup";
 
-const ReverseGeocode = ({ accessToken, setLocation, layerGroup }) => {
+const ReverseGeocode = ({ accessToken, setLocation, layerGroup, setOpenContainer }) => {
   const [forecast, setForecast] = useState({});
   const [position, setPosition] = useState(null);
   const [isForecastReady, setIsForecastReady] = useState(false); // Track forecast readiness
@@ -59,10 +60,11 @@ const ReverseGeocode = ({ accessToken, setLocation, layerGroup }) => {
 
   // Render the ForecastTooltip only when isForecastReady is true
   return isForecastReady ? (
-    <ForecastTooltip
+    <ForecastPopup
       forecast={forecast}
       position={position}
       layerGroup={layerGroup}
+      setOpenContainer={setOpenContainer}
     />
   ) : null;
 };

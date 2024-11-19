@@ -21,7 +21,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import MapIcon from "@mui/icons-material/Map";
 
 // custom components
-import ForecastTooltip from "./ForecastTooltip";
+import ForecastTooltip from "./ForecastPopup";
 
 const GeoSearch = ({
   accessToken,

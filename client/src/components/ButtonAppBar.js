@@ -76,7 +76,7 @@ const ButtonAppBar = ({ accessToken, setLocation, map, setOpenContainer }) => {
                 >
                   <ModalClose
                     variant="plain"
-                    sx={{ m: 1, top: "-2.375rem", right: "-3.375rem" }}
+                    sx={{ m: 1, top: "-2.375rem", right: "-2.375rem" }}
                   />
                   <Geosearch
                     accessToken={accessToken}

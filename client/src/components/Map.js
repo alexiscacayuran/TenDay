@@ -28,7 +28,8 @@ const Map = () => {
   const [map, setMap] = useState(null); // External state for the map instance
   const layerGroup = useRef(null); // Shared LayerGroup reference
   //const [date, setDate] = useState();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false); // Slide up bottom container state
+
 
   const displayMap = useMemo(
     () => (
@@ -56,6 +57,7 @@ const Map = () => {
               accessToken={accessToken}
               setLocation={setLocation}
               layerGroup={layerGroup}
+              setOpenContainer={setOpen}
             />
           )}
         </MapContainer>

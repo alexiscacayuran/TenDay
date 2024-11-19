@@ -96,3 +96,14 @@
     min-height: 53px !important;
 }
 
+.leaflet-popup-content-wrapper, .leaflet-popup-tip{
+    background-color: transparent !important;
+    box-shadow: none !important;
+    
+}
+
+.leaflet-popup-content, .leaflet-popup-content p{
+    margin: 0 !important;
+}
+
+

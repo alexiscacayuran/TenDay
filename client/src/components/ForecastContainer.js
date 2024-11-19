@@ -62,7 +62,7 @@ const ForecastContainer = ({ open, setOpen, location }) => {
             borderRadius: "sm",
             boxShadow: "lg",
             width: "70vw",
-            height: "30vh", // Adjust height as needed
+            height: "35vh", // Adjust height as needed
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -75,22 +75,23 @@ const ForecastContainer = ({ open, setOpen, location }) => {
             onClick={() => setOpen(false)}
             sx={{
               position: "absolute",
-              top: 8,
-              right: 8,
+              top: "-2.375rem",
+              right: "-3.375rem",
+              zIndex: 1050,
             }}
           >
             <CloseIcon />
           </IconButton>
 
           {/* Content inside the Sheet */}
-          <Box sx={{ position: "absolute" }}>
+          <Box sx={{ position: "relative" }}>
             {forecast && (
               <Table size="sm">
                 <thead>
                   <tr>
                     <th></th>
                     {forecast.forecasts.map((data, index) => (
-                      <th key={index}>{data.date}</th>
+                      <th key={index}>{format(data.date, "EEE, MMM d")}</th>
                     ))}
                   </tr>
                 </thead>
