@@ -1,10 +1,11 @@
 import React, { useRef, useEffect } from "react";
-import { Marker, Popup } from "react-leaflet";
-import { Icon } from "leaflet";
+import { Popup, Marker } from "react-leaflet";
+import { Icon, DivIcon } from "leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "../styles.css";
 import markerIconPng from "leaflet/dist/images/marker-icon.png";
-import AspectRatio from "@mui/joy/AspectRatio";
+
 import Button from "@mui/joy/Button";
 import Card from "@mui/joy/Card";
 import CardContent from "@mui/joy/CardContent";
@@ -13,12 +14,14 @@ import Typography from "@mui/joy/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ThermostatIcon from "@mui/icons-material/Thermostat";
+import Divider from "@mui/joy/Divider";
 
 const ForecastPopup = ({
   forecast,
-  position,
+  location,
   layerGroup,
   setOpenContainer,
+  openContainer,
 }) => {
   const markerRef = useRef(null); // Reference for React Leaflet Marker
 
@@ -29,7 +32,7 @@ const ForecastPopup = ({
       layerGroup.current.clearLayers(); // Clear any existing layers in the group
       layerGroup.current.addLayer(leafletMarker); // Add the current marker to the group
     }
-  }, [layerGroup, position]);
+  }, [layerGroup]);
 
   // Event handler to remove marker when popup closes
   const handlePopupClose = () => {
@@ -38,13 +41,13 @@ const ForecastPopup = ({
     }
   };
 
-  if (!position) return null; // Handle cases where position is not defined
+  if (!location) return null; // Handle cases where position is not defined
 
-  if (forecast === null)
+  if (!openContainer && !forecast) {
     return (
       <Marker
         ref={markerRef}
-        position={position}
+        position={location.latLng}
         icon={
           new Icon({
             iconUrl: markerIconPng,
@@ -61,6 +64,21 @@ const ForecastPopup = ({
         </Popup>
       </Marker>
     );
+  }
+
+  if (openContainer) {
+    return (
+      <Marker
+        ref={markerRef}
+        position={location.latLng}
+        icon={
+          new DivIcon({
+            className: "pulsating-marker",
+          })
+        }
+      />
+    );
+  }
 
   const { municity, province } = forecast;
   const {
@@ -76,7 +94,7 @@ const ForecastPopup = ({
   return (
     <Marker
       ref={markerRef}
-      position={position}
+      position={location.latLng}
       icon={
         new Icon({
           iconUrl: markerIconPng,
@@ -85,6 +103,7 @@ const ForecastPopup = ({
         })
       }
       eventHandlers={{ add: (e) => e.target.openPopup() }}
+      draggable={true}
     >
       <Popup
         offset={[0, -30]}
@@ -96,6 +115,7 @@ const ForecastPopup = ({
           <div>
             <Typography level="title-lg">{municity}</Typography>
             <Typography level="body-sm">{province}</Typography>
+            <Divider inset="none" sx={{ mt: 1 }} />
             <IconButton
               variant="plain"
               color="neutral"
@@ -123,7 +143,10 @@ const ForecastPopup = ({
               aria-label="See Forecast"
               sx={{ ml: "auto", alignSelf: "center", fontWeight: 600 }}
               endDecorator={<ExpandMoreIcon />}
-              onClick={() => setOpenContainer(true)}
+              onClick={(e) => {
+                e.stopPropagation(); //prevent map interaction when this button is clicked
+                setOpenContainer(true);
+              }}
             >
               See Forecast
             </Button>

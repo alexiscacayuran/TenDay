@@ -2,13 +2,18 @@ import axios from "axios";
 import { useState } from "react";
 // import L from "leaflet";
 import { reverseGeocode } from "esri-leaflet-geocoder";
-import ForecastTooltip from "./ForecastPopup";
 import { useMapEvents } from "react-leaflet";
 import ForecastPopup from "./ForecastPopup";
 
-const ReverseGeocode = ({ accessToken, setLocation, layerGroup, setOpenContainer }) => {
+const ReverseGeocode = ({
+  accessToken,
+  location,
+  setLocation,
+  layerGroup,
+  setOpenContainer,
+  openContainer,
+}) => {
   const [forecast, setForecast] = useState({});
-  const [position, setPosition] = useState(null);
   const [isForecastReady, setIsForecastReady] = useState(false); // Track forecast readiness
 
   useMapEvents({
@@ -26,13 +31,14 @@ const ReverseGeocode = ({ accessToken, setLocation, layerGroup, setOpenContainer
             return;
           }
 
+          console.log(result);
+
           // // Clear previous markers and add a new marker at clicked location
           // layerGroup.current.clearLayers();
-
-          setPosition(result.latlng);
           setIsForecastReady(false); // Reset forecast readiness on new click
 
           setLocation({
+            latLng: result.latlng,
             municity: result.address.City,
             province: result.address.Subregion,
           });
@@ -47,6 +53,7 @@ const ReverseGeocode = ({ accessToken, setLocation, layerGroup, setOpenContainer
             })
             .then((res) => {
               setForecast(res.data);
+
               setIsForecastReady(true); // Set forecast readiness after data is updated
             })
             .catch((error) => {
@@ -62,9 +69,10 @@ const ReverseGeocode = ({ accessToken, setLocation, layerGroup, setOpenContainer
   return isForecastReady ? (
     <ForecastPopup
       forecast={forecast}
-      position={position}
+      location={location}
       layerGroup={layerGroup}
       setOpenContainer={setOpenContainer}
+      openContainer={openContainer}
     />
   ) : null;
 };

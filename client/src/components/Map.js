@@ -23,13 +23,16 @@ const Map = () => {
       ]).pad(0.2),
     []
   );
-  const [location, setLocation] = useState({ municity: "", province: "" });
-  // console.log(location);
+  const [location, setLocation] = useState({
+    latLng: {},
+    municity: "",
+    province: "",
+  });
+
   const [map, setMap] = useState(null); // External state for the map instance
   const layerGroup = useRef(null); // Shared LayerGroup reference
   //const [date, setDate] = useState();
   const [open, setOpen] = useState(false); // Slide up bottom container state
-
 
   const displayMap = useMemo(
     () => (
@@ -37,8 +40,11 @@ const Map = () => {
         <ButtonAppBar
           accessToken={accessToken}
           map={map}
+          layerGroup={layerGroup}
+          location={location}
           setLocation={setLocation}
           setOpenContainer={setOpen}
+          openContainer={open}
         />
         <MapContainer
           center={[13, 122]}
@@ -50,18 +56,19 @@ const Map = () => {
           ref={setMap} // Set map instance to external state
         >
           <LayerGroup ref={layerGroup} />
-          <MapControl />
           <VectorBasemap basemap={basemapEnum} accessToken={accessToken} />
           {map && (
             <ReverseGeocode
               accessToken={accessToken}
-              setLocation={setLocation}
               layerGroup={layerGroup}
+              location={location}
+              setLocation={setLocation}
               setOpenContainer={setOpen}
+              openContainer={open}
             />
           )}
         </MapContainer>
-
+        {map && <MapControl map={map} />}
         {!open && (
           <DateNavigation
             initialDate={new Date()}
@@ -71,8 +78,12 @@ const Map = () => {
             }}
           />
         )}
-
-        <ForecastContainer open={open} setOpen={setOpen} location={location} />
+        <ForecastContainer
+          open={open}
+          setOpen={setOpen}
+          location={location}
+          layerGroup={layerGroup}
+        />
       </Box>
     ),
     [map, bounds, accessToken, open, location] // Dependencies for memoization

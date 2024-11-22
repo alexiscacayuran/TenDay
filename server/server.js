@@ -213,9 +213,12 @@ app.get("/full", async (req, res) => {
       INNER JOIN temperature as t ON d.id = t.date_id 
       INNER JOIN humidity as h ON d.id = h.date_id 
       INNER JOIN wind as w ON d.id = w.date_id 
-      WHERE 
-          UPPER(m.municity) = UPPER($1) 
-          AND UPPER(m.province) = UPPER($2)
+      WHERE
+        ($1::TEXT IS NOT NULL AND $1::TEXT <> '' OR $2::TEXT IS NOT NULL AND $2::TEXT <> '')
+        AND
+        REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($1, ' CITY', '', 'gi') || '%' 
+        AND 
+        m.province ILIKE '%' || $2 || '%' 
       ORDER BY 
         d.start_date DESC, date ASC
       LIMIT 10`;

@@ -16,7 +16,15 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 
-const ButtonAppBar = ({ accessToken, setLocation, map, setOpenContainer }) => {
+const ButtonAppBar = ({
+  accessToken,
+  map,
+  layerGroup,
+  location,
+  setLocation,
+  setOpenContainer,
+  openContainer,
+}) => {
   const [open, setOpen] = useState(false);
   return (
     <Box>
@@ -40,7 +48,7 @@ const ButtonAppBar = ({ accessToken, setLocation, map, setOpenContainer }) => {
             component="div"
             sx={{ mr: 4, flexGrow: 0, fontWeight: "lg" }}
           >
-            10-Day Climate Forecast
+            PAGASA 10-Day Climate Forecast
           </Typography>
           <Box sx={{ flexGrow: 1 }}>
             <React.Fragment>
@@ -48,7 +56,9 @@ const ButtonAppBar = ({ accessToken, setLocation, map, setOpenContainer }) => {
                 startDecorator={<SearchIcon />}
                 variant="soft"
                 color="primary"
-                onClick={() => setOpen(true)}
+                onClick={() => {
+                  setOpen(true);
+                }}
               >
                 Search...
               </Button>
@@ -80,10 +90,13 @@ const ButtonAppBar = ({ accessToken, setLocation, map, setOpenContainer }) => {
                   />
                   <Geosearch
                     accessToken={accessToken}
-                    setLocation={setLocation}
                     map={map}
+                    layerGroup={layerGroup}
+                    location={location}
+                    setLocation={setLocation}
                     setOpenModal={setOpen}
                     setOpenContainer={setOpenContainer}
+                    openContainer={openContainer}
                   />
                 </Sheet>
               </Modal>

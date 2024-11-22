@@ -1,85 +1,59 @@
-import React, { useEffect } from "react";
-import { useMap } from "react-leaflet";
-import L from "leaflet";
-
+import React, { useState, useEffect } from "react";
 import ButtonGroup from "@mui/joy/ButtonGroup";
 import Button from "@mui/joy/Button";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import Tooltip from "@mui/joy/Tooltip";
-import { Stack } from "@mui/material";
+import { Box, Stack } from "@mui/joy";
 
-// Custom Zoom Control Component
-const CustomZoomControl = () => {
-  const map = useMap(); // Get map instance from React Leaflet
+const CustomZoomControl = ({ map }) => {
+  const [zoomLevel, setZoomLevel] = useState(null);
+  // console.log(zoomLevel);
 
-  // Zoom in and Zoom out functions
-  const handleZoomIn = () => {
-    map.zoomIn();
-  };
-
-  const handleZoomOut = () => {
-    map.zoomOut();
-  };
-
-  // Add the custom control box to the map
   useEffect(() => {
-    const customControl = L.control({ position: "topright" }); // Position can be "topleft", "topright", etc.
-
-    customControl.onAdd = () => {
-      const div = L.DomUtil.create("div");
-      div.className = "leaflet-bar"; // Optional: add Leaflet's default bar styling
-
-      return div;
-    };
-
-    customControl.addTo(map);
-
-    const controlContainer = document.querySelector(
-      ".leaflet-top.leaflet-right .leaflet-bar"
-    );
-
-    if (controlContainer) {
-      controlContainer.appendChild(
-        document.querySelector("#custom-zoom-control")
-      );
-    }
-
-    return () => {
-      customControl.remove(); // Cleanup on unmount
-    };
+    map.on("zoomend", () => setZoomLevel(map.getZoom()));
   }, [map]);
 
   return (
-    <Stack
-      id="custom-zoom-control"
-      direction="column"
-      spacing={1}
-      sx={{
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <ButtonGroup
-        orientation="vertical"
-        color="neutral"
-        variant="soft"
-        sx={{ width: 35 }}
+    <Box sx={{ position: "absolute", top: 60, right: 10 }}>
+      <Stack
+        id="custom-zoom-control"
+        direction="column"
+        spacing={1}
+        sx={{
+          justifyContent: "center",
+          alignItems: "center",
+        }}
       >
-        <Button onClick={handleZoomIn}>
-          <AddIcon />
-        </Button>
-        <Button onClick={handleZoomOut}>
-          <RemoveIcon />
-        </Button>
-      </ButtonGroup>
-      <Tooltip placement="left" title="See current location" variant="solid">
-        <Button color="neutral" variant="soft" sx={{ width: 35 }}>
-          <MyLocationIcon />
-        </Button>
-      </Tooltip>
-    </Stack>
+        <ButtonGroup
+          orientation="vertical"
+          color="neutral"
+          variant="soft"
+          sx={{ width: 35 }}
+        >
+          <Button
+            onClick={(e) => {
+              map.zoomIn();
+            }}
+          >
+            <AddIcon />
+          </Button>
+          <Button
+            onClick={(e) => {
+              map.zoomOut();
+            }}
+          >
+            <RemoveIcon />
+          </Button>
+        </ButtonGroup>
+        <Tooltip placement="left" title="See current location" variant="solid">
+          <Button color="neutral" variant="soft" sx={{ width: 35 }}>
+            <MyLocationIcon />
+          </Button>
+        </Tooltip>
+      </Stack>
+    </Box>
   );
 };
 

@@ -3,12 +3,53 @@ import axios from "axios";
 import { format } from "date-fns";
 
 import { Slide } from "@mui/material";
-import { Box, Button, Sheet, Typography, IconButton, Table } from "@mui/joy";
+import {
+  Box,
+  Stack,
+  Sheet,
+  Typography,
+  IconButton,
+  Table,
+  Divider,
+  Button,
+} from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
+import DownloadIcon from "@mui/icons-material/Download";
+import {
+  SunnyIcon,
+  NoRainParCloudyIcon,
+  NoRainMosCloudyIcon,
+  NoRainCloudyIcon,
+  LightRainsParCloudyIcon,
+  LightRainsMosCloudyIcon,
+  LightRainsCloudyIcon,
+  ModRainsParCloudyIcon,
+  ModRainsMosCloudyIcon,
+  ModRainsCloudyIcon,
+  HeavyRainsParCloudyIcon,
+  HeavyRainsMosCloudyIcon,
+  HeavyRainsCloudyIcon,
+  NIcon,
+  NNEIcon,
+  NEIcon,
+  ENEIcon,
+  EIcon,
+  ESEIcon,
+  SEIcon,
+  SSEIcon,
+  SIcon,
+  SSWIcon,
+  SWIcon,
+  WSWIcon,
+  WIcon,
+  WNWIcon,
+  NWIcon,
+  NNWIcon,
+} from "./CustomIcons";
 
-const ForecastContainer = ({ open, setOpen, location }) => {
+const ForecastContainer = ({ open, setOpen, location, layerGroup }) => {
   const [forecast, setForecast] = useState(null);
-  console.log(forecast);
+  // console.log(forecast);
 
   useEffect(() => {
     // When open is true, disable body scroll
@@ -39,7 +80,7 @@ const ForecastContainer = ({ open, setOpen, location }) => {
         console.error(error);
         setForecast(null);
       });
-  }, [location]);
+  }, [open, location]);
 
   return (
     <Slide direction="up" in={open} mountOnEnter unmountOnExit>
@@ -57,85 +98,290 @@ const ForecastContainer = ({ open, setOpen, location }) => {
           className="glass"
           sx={{
             position: "relative",
-            p: 2,
             bgcolor: "background.body",
             borderRadius: "sm",
             boxShadow: "lg",
-            width: "70vw",
-            height: "35vh", // Adjust height as needed
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          {/* Close Button */}
-          <IconButton
-            aria-label="close"
-            onClick={() => setOpen(false)}
+          <Stack
+            direction="row"
+            spacing={1}
             sx={{
-              position: "absolute",
-              top: "-2.375rem",
-              right: "-3.375rem",
-              zIndex: 1050,
+              justifyContent: "center",
+              alignItems: "flex-start",
             }}
           >
-            <CloseIcon />
-          </IconButton>
-
-          {/* Content inside the Sheet */}
-          <Box sx={{ position: "relative" }}>
             {forecast && (
-              <Table size="sm">
-                <thead>
-                  <tr>
-                    <th></th>
-                    {forecast.forecasts.map((data, index) => (
-                      <th key={index}>{format(data.date, "EEE, MMM d")}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Rainfall</td>
-                    {forecast.forecasts.map((data, index) => (
-                      <td key={index}>{data.rainfall}</td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td>Cloud Cover</td>
-                    {forecast.forecasts.map((data, index) => (
-                      <td key={index}>{data.cloud_cover}</td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td>Temperature</td>
-                    {forecast.forecasts.map((data, index) => (
-                      <td key={index}>{data.temperature.mean}</td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td>Humidity</td>
-                    {forecast.forecasts.map((data, index) => (
-                      <td key={index}>{data.humidity}</td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td>Wind speed</td>
-                    {forecast.forecasts.map((data, index) => (
-                      <td key={index}>{data.wind.speed}</td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td>Wind direction</td>
-                    {forecast.forecasts.map((data, index) => (
-                      <td key={index}>{data.wind.direction}</td>
-                    ))}
-                  </tr>
-                </tbody>
-              </Table>
+              <>
+                <Table
+                  size="sm"
+                  borderAxis="yBetween"
+                  sx={{
+                    width: "800px",
+                    "& thead th:nth-of-type(1)": {
+                      width: "15%",
+                    },
+                    "& thead td:nth-of-type(2)": {
+                      width: "5%",
+                    },
+                    "& tr > *:first-of-type": { textAlign: "right" },
+                    "& tr > *:not(:first-of-type)": {
+                      textAlign: "center",
+                      width: "8.2%",
+                    },
+                    "& tr > *:nth-of-type(2)": { borderLeftStyle: "none" },
+                    "& td": { height: "24px" },
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th></th>
+                      {forecast.forecasts.map((data, index) => (
+                        <th key={index}>
+                          <Typography level="title-xs">
+                            {format(data.date, "EEE d")}
+                          </Typography>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th>
+                        <Typography level="title-sm">Weather</Typography>
+                      </th>
+                      <th></th>
+                      {forecast.forecasts.map((data, index) => (
+                        <td key={index}>
+                          {(() => {
+                            switch (data.rainfall) {
+                              case "NO RAIN":
+                                switch (data.cloud_cover) {
+                                  case "SUNNY":
+                                    return <SunnyIcon />;
+                                  case "PARTLY CLOUDY":
+                                    return <NoRainParCloudyIcon />;
+                                  case "MOSTLY CLOUDY":
+                                    return <NoRainMosCloudyIcon />;
+                                  case "CLOUDY":
+                                    return <NoRainCloudyIcon />;
+                                  default:
+                                    return null;
+                                }
+                              case "LIGHT RAINS":
+                                switch (data.cloud_cover) {
+                                  case "SUNNY":
+                                    return <LightRainsParCloudyIcon />;
+                                  case "PARTLY CLOUDY":
+                                    return <LightRainsParCloudyIcon />;
+                                  case "MOSTLY CLOUDY":
+                                    return <LightRainsMosCloudyIcon />;
+                                  case "CLOUDY":
+                                    return <LightRainsCloudyIcon />;
+                                  default:
+                                    return null;
+                                }
+                              case "MODERATE RAINS":
+                                switch (data.cloud_cover) {
+                                  case "SUNNY":
+                                    return <ModRainsParCloudyIcon />;
+                                  case "PARTLY CLOUDY":
+                                    return <ModRainsParCloudyIcon />;
+                                  case "MOSTLY CLOUDY":
+                                    return <ModRainsMosCloudyIcon />;
+                                  case "CLOUDY":
+                                    return <ModRainsCloudyIcon />;
+                                  default:
+                                    return null;
+                                }
+                              case "HEAVY RAINS":
+                                switch (data.cloud_cover) {
+                                  case "SUNNY":
+                                    return <HeavyRainsParCloudyIcon />;
+                                  case "PARTLY CLOUDY":
+                                    return <HeavyRainsParCloudyIcon />;
+                                  case "MOSTLY CLOUDY":
+                                    return <HeavyRainsMosCloudyIcon />;
+                                  case "CLOUDY":
+                                    return <HeavyRainsCloudyIcon />;
+                                  default:
+                                    return null;
+                                }
+                              default:
+                                return null;
+                            }
+                          })()}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <th>
+                        <Typography level="title-sm">Temperature</Typography>
+                      </th>
+                      <th>
+                        <Button
+                          color="neutral"
+                          onClick={function () {}}
+                          size="sm"
+                          variant="plain"
+                        >
+                          &deg;C
+                        </Button>
+                      </th>
+                      {forecast.forecasts.map((data, index) => (
+                        <td key={index}>{data.temperature.mean}</td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <th>
+                        <Typography level="title-sm">Humidity</Typography>
+                      </th>
+
+                      <th>
+                        {" "}
+                        <Button
+                          color="neutral"
+                          onClick={function () {}}
+                          size="sm"
+                          variant="plain"
+                        >
+                          %
+                        </Button>
+                      </th>
+                      {forecast.forecasts.map((data, index) => (
+                        <td key={index}>{data.humidity}</td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <th>
+                        <Typography level="title-sm">Wind speed</Typography>
+                      </th>
+                      <th>
+                        {" "}
+                        <Button
+                          color="neutral"
+                          onClick={function () {}}
+                          size="sm"
+                          variant="plain"
+                        >
+                          m/s
+                        </Button>
+                      </th>
+                      {forecast.forecasts.map((data, index) => (
+                        <td key={index}>{data.wind.speed}</td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <th>
+                        <Typography level="title-sm">Wind direction</Typography>
+                      </th>
+                      <th>
+                        {" "}
+                        <Button
+                          color="neutral"
+                          onClick={function () {}}
+                          size="sm"
+                          variant="plain"
+                        >
+                          desc
+                        </Button>
+                      </th>
+                      {forecast.forecasts.map((data, index) => (
+                        <td key={index}>
+                          {(() => {
+                            switch (data.wind.direction) {
+                              case "N":
+                                return <NIcon />;
+                              case "NNE":
+                                return <NNEIcon />;
+                              case "NE":
+                                return <NEIcon />; // Northeast
+                              case "ENE":
+                                return <ENEIcon />; // East-Northeast
+                              case "E":
+                                return <EIcon />; // East
+                              case "ESE":
+                                return <ESEIcon />; // East-Southeast
+                              case "SE":
+                                return <SEIcon />; // Southeast
+                              case "SSE":
+                                return <SSEIcon />; // South-Southeast
+                              case "S":
+                                return <SIcon />; // South
+                              case "SSW":
+                                return <SSWIcon />; // South-Southwest
+                              case "SW":
+                                return <SWIcon />; // Southwest
+                              case "WSW":
+                                return <WSWIcon />; // West-Southwest
+                              case "W":
+                                return <WIcon />; // West
+                              case "WNW":
+                                return <WNWIcon />; // West-Northwest
+                              case "NW":
+                                return <NWIcon />; // Northwest
+                              case "NNW":
+                                return <NNWIcon />; // North-Northwest
+                              default:
+                                return null;
+                            }
+                          })()}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </Table>
+                <Box sx={{ p: 1, width: "20%" }}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{
+                      justifyContent: "flex-end",
+                      alignItems: "flex-start",
+                      mb: 1,
+                    }}
+                  >
+                    <IconButton
+                      size="sm"
+                      color="neutral"
+                      variant="outlined"
+                      aria-label="download"
+                    >
+                      <DownloadIcon color="neutral" />
+                    </IconButton>
+                    <IconButton
+                      size="sm"
+                      color="neutral"
+                      variant="outlined"
+                      aria-label="close"
+                      onClick={() => {
+                        layerGroup.current.clearLayers();
+                        setOpen(false);
+                      }}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  </Stack>
+                  {location && (
+                    <Typography level="body-xs" sx={{ mb: 1 }}>
+                      {"Lat: " +
+                        location.latLng.lat.toFixed(2) +
+                        " " +
+                        "Long: " +
+                        location.latLng.lng.toFixed(2)}
+                    </Typography>
+                  )}
+                  <Typography level="h3">{forecast.municity}</Typography>
+                  <Typography level="title-sm">{forecast.province}</Typography>
+                </Box>
+              </>
             )}
-          </Box>
+          </Stack>
         </Sheet>
       </Box>
     </Slide>
