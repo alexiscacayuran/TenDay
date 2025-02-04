@@ -13,17 +13,13 @@ function generateDateRange(startDate, range) {
   return Array.from({ length: range }, (_, i) => addDays(startDate, i));
 }
 
-const DateNavigation = ({
-  initialDate = new Date(),
-  range = 10,
-  onPageChange,
-}) => {
+const DateNavigation = ({ initialDate, range, setDate }) => {
   const [currentDate, setCurrentDate] = useState(initialDate);
   const [dateRange] = useState(generateDateRange(initialDate, range));
 
   const handleDateSelect = (date) => {
     setCurrentDate(date);
-    onPageChange(date);
+    setDate(date.toLocaleString("en-PH").split(", ")[0]);
   };
 
   const handlePreviousDate = () => {
@@ -35,7 +31,7 @@ const DateNavigation = ({
       )
     ) {
       setCurrentDate(previousDate);
-      onPageChange(previousDate);
+      setDate(previousDate);
     }
   };
 
@@ -47,7 +43,7 @@ const DateNavigation = ({
       )
     ) {
       setCurrentDate(nextDate);
-      onPageChange(nextDate);
+      setDate(nextDate);
     }
   };
 
@@ -84,7 +80,7 @@ const DateNavigation = ({
             <Button
               key={index}
               className={
-                format(date, "yyyy-MM-dd") !=
+                format(date, "yyyy-MM-dd") !==
                   format(currentDate, "yyyy-MM-dd") && "glass"
               }
               color="primary"
@@ -103,7 +99,7 @@ const DateNavigation = ({
                   alignItems: "center",
                 }}
               >
-                {format(date, "EEE, MMM d")}{" "}
+                {format(date, "EEE d")}
               </Stack>
             </Button>
           ))}

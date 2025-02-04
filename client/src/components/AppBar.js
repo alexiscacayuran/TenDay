@@ -3,15 +3,7 @@ import React, { useState } from "react";
 import Geosearch from "./Geosearch";
 
 import { AppBar, Toolbar } from "@mui/material";
-import {
-  Box,
-  Typography,
-  Button,
-  IconButton,
-  Sheet,
-  Modal,
-  ModalClose,
-} from "@mui/joy";
+import { Box, Typography, Button, IconButton, Sheet, Modal } from "@mui/joy";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -84,16 +76,12 @@ const ButtonAppBar = ({
                     boxShadow: "lg",
                   }}
                 >
-                  <ModalClose
-                    variant="plain"
-                    sx={{ m: 1, top: "-2.375rem", right: "-2.375rem" }}
-                  />
                   <Geosearch
                     accessToken={accessToken}
+                    setLocation={setLocation}
                     map={map}
                     layerGroup={layerGroup}
                     location={location}
-                    setLocation={setLocation}
                     setOpenModal={setOpen}
                     setOpenContainer={setOpenContainer}
                     openContainer={openContainer}

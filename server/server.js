@@ -126,8 +126,6 @@ app.get("/current", async (req, res) => {
 });
 
 app.get("/current-all", async (req, res) => {
-  const { municity, province } = req.query;
-
   // Get current date (assuming now is needed)
   const now = new Date().toISOString().split("T")[0];
 
@@ -184,6 +182,100 @@ app.get("/current-all", async (req, res) => {
         },
       },
     }));
+
+    return res.json(data);
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/date", async (req, res) => {
+  const { municity, province, date } = req.query;
+
+  // Get current date (assuming now is needed)
+  const values = [municity, province, date];
+  try {
+    const query = `
+        SELECT 
+        m.id AS location_id, 
+        m.municity, 
+        m.province, 
+        d.id AS date_id, 
+        d.date,
+        d.start_date,
+        r.description as rainfall, 
+        c.description as cloud_cover, 
+        t.mean, t.min, t.max, 
+        h.mean as humidity, 
+        w.speed, w.direction 
+      FROM 
+        municities AS m 
+      INNER JOIN date AS d ON m.id = d.municity_id 
+      INNER JOIN rainfall AS r ON d.id = r.date_id 
+      INNER JOIN cloud_cover AS c ON d.id = c.date_id 
+      INNER JOIN temperature AS t ON d.id = t.date_id 
+      INNER JOIN humidity AS h ON d.id = h.date_id 
+      INNER JOIN wind AS w ON d.id = w.date_id 
+      WHERE
+        ($1::TEXT IS NOT NULL AND $1::TEXT <> '' OR $2::TEXT IS NOT NULL AND $2::TEXT <> '')
+        AND
+        REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($1, ' CITY', '', 'gi') || '%' 
+        AND 
+        m.province ILIKE '%' || $2 || '%' 
+        AND d.date = $3 
+      ORDER BY 
+        d.start_date DESC 
+      LIMIT 1
+`;
+    // Execute the query
+    const result = await pool.query(query, values);
+
+    // If no results found, return an empty response
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No data found" });
+    }
+
+    // Format data if municity and province were provided (single forecast)
+    const {
+      location_id,
+      municity: _municity,
+      province: _province,
+      date_id,
+      date,
+      start_date,
+      rainfall,
+      cloud_cover,
+      mean,
+      min,
+      max,
+      humidity,
+      speed,
+      direction,
+    } = result.rows[0];
+
+    const data = {
+      id: location_id,
+      municity: _municity,
+      province: _province,
+      forecast: {
+        forecast_id: date_id,
+        date: date.toLocaleString("en-PH").split(", ")[0],
+        start_date: start_date.toLocaleString("en-PH").split(", ")[0],
+        rainfall: rainfall,
+        cloud_cover: cloud_cover,
+        temperature: {
+          mean: mean,
+          min: min,
+          max: max,
+        },
+        humidity: humidity,
+        wind: {
+          speed: speed,
+          direction: direction,
+        },
+      },
+    };
 
     return res.json(data);
   } catch (error) {
@@ -255,6 +347,21 @@ app.get("/full", async (req, res) => {
     };
 
     res.json(data);
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/valid", async (req, res) => {
+  try {
+    const query = `SELECT MAX(start_date) as latest_date FROM date`;
+    const result = await pool.query(query);
+    const { latest_date } = result.rows[0];
+
+    res.json({
+      latest_date: latest_date.toLocaleString("en-PH").split(", ")[0],
+    });
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal Server Error" });

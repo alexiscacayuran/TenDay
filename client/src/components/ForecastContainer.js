@@ -66,6 +66,8 @@ const ForecastContainer = ({ open, setOpen, location, layerGroup }) => {
   }, [open]);
 
   useEffect(() => {
+    if (!location) return;
+
     axios
       .get("/full", {
         params: {
@@ -122,19 +124,25 @@ const ForecastContainer = ({ open, setOpen, location, layerGroup }) => {
                   borderAxis="yBetween"
                   sx={{
                     width: "800px",
+                    "& td": { height: "24px" },
                     "& thead th:nth-of-type(1)": {
                       width: "15%",
                     },
                     "& thead td:nth-of-type(2)": {
                       width: "5%",
                     },
-                    "& tr > *:first-of-type": { textAlign: "right" },
-                    "& tr > *:not(:first-of-type)": {
+                    "& tr > *:first-child": { textAlign: "right" },
+                    "& tr > *:not(:first-child)": {
                       textAlign: "center",
                       width: "8.2%",
                     },
-                    "& tr > *:nth-of-type(2)": { borderLeftStyle: "none" },
-                    "& td": { height: "24px" },
+                    "& tr > *:nth-child(2)": { borderLeftStyle: "none" },
+
+                    "& tr > *:last-child": {
+                      borderRightStyle: "solid",
+                      borderWidth: "1px",
+                      borderColor: "--TableCell-borderColor",
+                    },
                   }}
                 >
                   <thead>
@@ -230,11 +238,11 @@ const ForecastContainer = ({ open, setOpen, location, layerGroup }) => {
                           size="sm"
                           variant="plain"
                         >
-                          &deg;C
+                          C
                         </Button>
                       </th>
                       {forecast.forecasts.map((data, index) => (
-                        <td key={index}>{data.temperature.mean}</td>
+                        <td key={index}>{data.temperature.mean}&deg;</td>
                       ))}
                     </tr>
                     <tr>

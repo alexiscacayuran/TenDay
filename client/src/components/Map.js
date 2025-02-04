@@ -1,19 +1,22 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup } from "react-leaflet";
 import L from "leaflet";
+import axios from "axios";
 
 import MapControl from "./MapControl";
 import VectorBasemap from "./VectorBasemap";
 import ReverseGeocode from "./ReverseGeocode";
 import DateNavigation from "./DateNavigation";
-import ButtonAppBar from "./ButtonAppBar";
+import AppBar from "./AppBar";
+import ForecastContainer from "./ForecastContainer";
+import ForecastPopup from "./ForecastPopup";
+import OverlayMenu from "./OverlayMenu";
 
 import Box from "@mui/joy/Box";
-import ForecastContainer from "./ForecastContainer";
 
 const Map = () => {
   const accessToken =
-    "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaUIH6Oi8DVQxlQNlgJ2NGag5CZoTCLmwUifs4KdV-ulF6A5N7NefR0m6pAGXfeizirbpfE96mEFu5jlt2UakL2z55jRFySaoldDbYJ9MPCgYc-sYslYMoWfCGGg90spQczysdX-XGyy9GFe9ESnHI0m8Kxc35mFQ_C1OSfwfWR8_0Pie-hNQuzWTmv3VAUmxe4.AT1_XXGKpVpT"; // Replace with your actual token
+    "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaWYypLJFqQTUuTnKsCor2bPmkCpMzOrhKexPvlodoF0x3XdMHV7blW62ufUMcT3gKihPOu4TcaTATBLWA_JI6CteZmk1RSE0SlFnhNfG2gSI8kl8egAcQiWmfV622MVLRCJyo5569gRgq-ct-dCD8eDVTOSW3pILfzsmmxvuTf_q96lARx7V_tstPR8WGt8vbg.AT1_tONBP2yK"; // Replace with your actual token
   const basemapEnum = "arcgis/light-gray";
   const bounds = useMemo(
     () =>
@@ -31,13 +34,35 @@ const Map = () => {
 
   const [map, setMap] = useState(null); // External state for the map instance
   const layerGroup = useRef(null); // Shared LayerGroup reference
-  //const [date, setDate] = useState();
   const [open, setOpen] = useState(false); // Slide up bottom container state
+
+  const [dateReady, setDateReady] = useState(false); // Track readiness of `latest_date`
+  const startDate = useRef(null); // Store the `latest_date`
+  const [date, setDate] = useState(null);
+
+  const [overlay, setOverlay] = useState("temperature_average");
+  console.log("Map rendered");
+
+  useEffect(() => {
+    // Function to fetch data from the API
+    const fetchDate = async () => {
+      try {
+        const response = await axios.get("/valid");
+        startDate.current = response.data; // Store the fetched data
+        setDate(startDate.current.latest_date);
+        setDateReady(true); // Set readiness to true once data is fetched
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchDate(); // Trigger the data fetch when the component mounts
+  }, []); // Empty dependency array to run only on component mount
 
   const displayMap = useMemo(
     () => (
       <Box sx={{ maxHeight: "100vh" }}>
-        <ButtonAppBar
+        <AppBar
           accessToken={accessToken}
           map={map}
           layerGroup={layerGroup}
@@ -65,19 +90,21 @@ const Map = () => {
               setLocation={setLocation}
               setOpenContainer={setOpen}
               openContainer={open}
+              date={date}
+              overlay={overlay}
             />
           )}
         </MapContainer>
+        <OverlayMenu setOverlay={setOverlay} overlay={overlay} />
         {map && <MapControl map={map} />}
-        {!open && (
-          <DateNavigation
-            initialDate={new Date()}
-            range={10}
-            onPageChange={(date) => {
-              console.log(date);
-            }}
-          />
-        )}
+        {dateReady &&
+          !open && ( // Render DateNavigation only if `dateReady` is true
+            <DateNavigation
+              initialDate={new Date(startDate.current.latest_date)} // Pass the fetched `latest_date`
+              range={10}
+              setDate={setDate}
+            />
+          )}
         <ForecastContainer
           open={open}
           setOpen={setOpen}
@@ -86,7 +113,7 @@ const Map = () => {
         />
       </Box>
     ),
-    [map, bounds, accessToken, open, location] // Dependencies for memoization
+    [map, bounds, accessToken, open, location, dateReady, date, overlay] // Dependencies for memoization
   );
 
   return <div>{displayMap}</div>;
