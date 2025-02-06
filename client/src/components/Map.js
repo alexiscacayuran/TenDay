@@ -1,23 +1,24 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { MapContainer, LayerGroup } from "react-leaflet";
+import { MapContainer, LayerGroup, Pane } from "react-leaflet";
 import L from "leaflet";
 import axios from "axios";
 
 import MapControl from "./MapControl";
-import VectorBasemap from "./VectorBasemap";
+import Basemap from "./Basemap";
 import ReverseGeocode from "./ReverseGeocode";
 import DateNavigation from "./DateNavigation";
 import AppBar from "./AppBar";
 import ForecastContainer from "./ForecastContainer";
-import ForecastPopup from "./ForecastPopup";
 import OverlayMenu from "./OverlayMenu";
 
 import Box from "@mui/joy/Box";
+import Overlay from "./Overlay";
 
 const Map = () => {
   const accessToken =
     "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaWYypLJFqQTUuTnKsCor2bPmkCpMzOrhKexPvlodoF0x3XdMHV7blW62ufUMcT3gKihPOu4TcaTATBLWA_JI6CteZmk1RSE0SlFnhNfG2gSI8kl8egAcQiWmfV622MVLRCJyo5569gRgq-ct-dCD8eDVTOSW3pILfzsmmxvuTf_q96lARx7V_tstPR8WGt8vbg.AT1_tONBP2yK"; // Replace with your actual token
-  const basemapEnum = "arcgis/light-gray";
+  const baseEnum = "arcgis/light-gray/base";
+  const labelsEnum = "arcgis/light-gray/labels";
   const bounds = useMemo(
     () =>
       L.latLngBounds([
@@ -35,13 +36,12 @@ const Map = () => {
   const [map, setMap] = useState(null); // External state for the map instance
   const layerGroup = useRef(null); // Shared LayerGroup reference
   const [open, setOpen] = useState(false); // Slide up bottom container state
-
-  const [dateReady, setDateReady] = useState(false); // Track readiness of `latest_date`
-  const startDate = useRef(null); // Store the `latest_date`
+  const startDate = useRef(null);
   const [date, setDate] = useState(null);
-
+  const [dateReady, setDateReady] = useState(false);
   const [overlay, setOverlay] = useState("temperature_average");
-  console.log("Map rendered");
+  // console.log(startDate.current.latest_date);
+  // console.log(overlay);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -73,15 +73,23 @@ const Map = () => {
         />
         <MapContainer
           center={[13, 122]}
-          zoom={6}
-          minZoom={6}
+          zoom={8}
+          minZoom={8}
           maxZoom={20}
           maxBounds={bounds}
+          maxBoundsViscosity={1.0}
           zoomControl={false}
           ref={setMap} // Set map instance to external state
         >
           <LayerGroup ref={layerGroup} />
-          <VectorBasemap basemap={basemapEnum} accessToken={accessToken} />
+          <Basemap basemap={baseEnum} accessToken={accessToken} />
+
+          {dateReady && (
+            <Overlay startDate={startDate} overlay={overlay} date={date} />
+          )}
+
+          <Basemap basemap={labelsEnum} accessToken={accessToken} />
+
           {map && (
             <ReverseGeocode
               accessToken={accessToken}
@@ -95,6 +103,7 @@ const Map = () => {
             />
           )}
         </MapContainer>
+
         <OverlayMenu setOverlay={setOverlay} overlay={overlay} />
         {map && <MapControl map={map} />}
         {dateReady &&

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { vectorBasemapLayer } from "esri-leaflet-vector";
 import { useMap } from "react-leaflet";
 
-const VectorBasemap = ({ basemap, accessToken }) => {
+const Basemap = ({ basemap, accessToken }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -19,4 +19,4 @@ const VectorBasemap = ({ basemap, accessToken }) => {
   return null;
 };
 
-export default VectorBasemap;
+export default Basemap;

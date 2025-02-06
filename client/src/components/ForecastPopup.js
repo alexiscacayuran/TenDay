@@ -22,7 +22,6 @@ const ForecastPopup = ({
   isLocationReady,
   overlay,
 }) => {
-  console.log(layerGroup);
   const markerRef = useRef(null);
   const [forecast, setForecast] = useState({});
   const [isForecastReady, setIsForecastReady] = useState(false);

@@ -16,7 +16,7 @@ const CustomZoomControl = ({ map }) => {
   }, [map]);
 
   return (
-    <Box sx={{ position: "absolute", top: 60, right: 10 }}>
+    <Box sx={{ position: "absolute", top: 60, right: 10, zIndex: 999 }}>
       <Stack
         id="custom-zoom-control"
         direction="column"

@@ -94,6 +94,7 @@ const ForecastContainer = ({ open, setOpen, location, layerGroup }) => {
           bottom: 0,
           left: 0,
           width: "100%",
+          zIndex: 999,
         }}
       >
         <Sheet

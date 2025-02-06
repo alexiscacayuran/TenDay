@@ -61,7 +61,6 @@ const OVERLAY_CONFIG = {
 // Memoized CardContent to re-render only when forecast changes
 const PopupContent = React.memo(
   ({ forecast, setOpenContainer, markerRef, handlePopupClose, overlay }) => {
-    console.log("Popup content rendered");
     if (!forecast || !forecast.forecast) {
       return (
         <Card variant="soft" sx={{ minWidth: 320 }}>

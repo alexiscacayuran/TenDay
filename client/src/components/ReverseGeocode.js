@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from "react";
+import { useState } from "react";
 import { reverseGeocode } from "esri-leaflet-geocoder";
 import { useMapEvents } from "react-leaflet";
 import ForecastPopup from "./ForecastPopup";
@@ -14,7 +14,6 @@ const ReverseGeocode = ({
   overlay, // Prop that should trigger re-render
 }) => {
   const [isLocationReady, setIsLocationReady] = useState(false);
-  console.log("Reverse geocode rendered");
 
   // Map event handling
   useMapEvents({

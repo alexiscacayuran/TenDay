@@ -27,7 +27,6 @@ const OverlayMenu = ({ overlay, setOverlay }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [temp, setTemp] = useState("temperature_average");
   const [activeTooltip, setActiveTooltip] = useState("Temperature");
-  console.log(activeTooltip);
 
   const tooltipButtons = [
     { title: "Temperature", value: temp, icon: faTemperatureHalf },
@@ -44,7 +43,7 @@ const OverlayMenu = ({ overlay, setOverlay }) => {
 
   return (
     <>
-      <Box sx={{ position: "absolute", top: 60, left: 10 }}>
+      <Box sx={{ position: "absolute", top: 60, left: 10, zIndex: 999 }}>
         <Sheet
           color="primary"
           variant="soft"
@@ -98,7 +97,7 @@ const OverlayMenu = ({ overlay, setOverlay }) => {
         </Sheet>
       </Box>
       {isMenuOpen && (
-        <Box sx={{ position: "absolute", top: 310, left: 10 }}>
+        <Box sx={{ position: "absolute", top: 310, left: 10, zIndex: 999 }}>
           <RadioGroup
             size="sm"
             aria-labelledby="example-payment-channel-label"

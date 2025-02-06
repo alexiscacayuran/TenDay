@@ -57,6 +57,7 @@ const DateNavigation = ({ initialDate, range, setDate }) => {
           transform: "translateX(-50%)",
           width: "100%", // Optional width adjustment
           maxWidth: 1200, // Optional max width
+          zIndex: 999,
         }}
       >
         <ButtonGroup

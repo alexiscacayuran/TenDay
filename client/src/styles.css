@@ -22,8 +22,8 @@
   z-index: 0 !important;
 }
 
-.leaflet-pane {
-  z-index: 0 !important;
+.leaflet-esri-labels-pane {
+  z-index: 450 !important;
 }
 
 .leaflet-top,
