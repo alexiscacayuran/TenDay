@@ -47,7 +47,7 @@ import {
   NNWIcon,
 } from "./CustomIcons";
 
-const ForecastContainer = ({ open, setOpen, location, layerGroup }) => {
+const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
   const [forecast, setForecast] = useState(null);
   // console.log(forecast);
 
@@ -369,7 +369,7 @@ const ForecastContainer = ({ open, setOpen, location, layerGroup }) => {
                       variant="outlined"
                       aria-label="close"
                       onClick={() => {
-                        layerGroup.current.clearLayers();
+                        markerLayer.current.clearLayers();
                         setOpen(false);
                       }}
                     >

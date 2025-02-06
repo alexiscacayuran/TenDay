@@ -7,7 +7,7 @@ const ReverseGeocode = ({
   accessToken,
   location,
   setLocation,
-  layerGroup,
+  markerLayer,
   setOpenContainer,
   openContainer,
   date,
@@ -49,7 +49,7 @@ const ReverseGeocode = ({
     isLocationReady && (
       <ForecastPopup
         location={location}
-        layerGroup={layerGroup}
+        markerLayer={markerLayer}
         setLocation={setLocation}
         setOpenContainer={setOpenContainer}
         openContainer={openContainer}

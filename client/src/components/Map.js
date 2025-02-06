@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup, Pane } from "react-leaflet";
-import L from "leaflet";
+import L, { Layer } from "leaflet";
 import axios from "axios";
 
 import MapControl from "./MapControl";
 import Basemap from "./Basemap";
 import ReverseGeocode from "./ReverseGeocode";
 import DateNavigation from "./DateNavigation";
-import AppBar from "./AppBar";
+import Navbar from "./Navbar";
 import ForecastContainer from "./ForecastContainer";
 import OverlayMenu from "./OverlayMenu";
 
@@ -34,7 +34,7 @@ const Map = () => {
   });
 
   const [map, setMap] = useState(null); // External state for the map instance
-  const layerGroup = useRef(null); // Shared LayerGroup reference
+  const markerLayer = useRef(null);
   const [open, setOpen] = useState(false); // Slide up bottom container state
   const startDate = useRef(null);
   const [date, setDate] = useState(null);
@@ -62,10 +62,10 @@ const Map = () => {
   const displayMap = useMemo(
     () => (
       <Box sx={{ maxHeight: "100vh" }}>
-        <AppBar
+        <Navbar
           accessToken={accessToken}
           map={map}
-          layerGroup={layerGroup}
+          markerLayer={markerLayer}
           location={location}
           setLocation={setLocation}
           setOpenContainer={setOpen}
@@ -81,7 +81,7 @@ const Map = () => {
           zoomControl={false}
           ref={setMap} // Set map instance to external state
         >
-          <LayerGroup ref={layerGroup} />
+          <LayerGroup ref={markerLayer} />
           <Basemap basemap={baseEnum} accessToken={accessToken} />
 
           {dateReady && (
@@ -93,7 +93,7 @@ const Map = () => {
           {map && (
             <ReverseGeocode
               accessToken={accessToken}
-              layerGroup={layerGroup}
+              markerLayer={markerLayer}
               location={location}
               setLocation={setLocation}
               setOpenContainer={setOpen}
@@ -118,7 +118,7 @@ const Map = () => {
           open={open}
           setOpen={setOpen}
           location={location}
-          layerGroup={layerGroup}
+          markerLayer={markerLayer}
         />
       </Box>
     ),

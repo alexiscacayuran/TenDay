@@ -8,10 +8,10 @@ import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 
-const ButtonAppBar = ({
+const Navbar = ({
   accessToken,
   map,
-  layerGroup,
+  markerLayer,
   location,
   setLocation,
   setOpenContainer,
@@ -80,7 +80,7 @@ const ButtonAppBar = ({
                     accessToken={accessToken}
                     setLocation={setLocation}
                     map={map}
-                    layerGroup={layerGroup}
+                    markerLayer={markerLayer}
                     location={location}
                     setOpenModal={setOpen}
                     setOpenContainer={setOpenContainer}
@@ -100,4 +100,4 @@ const ButtonAppBar = ({
   );
 };
 
-export default ButtonAppBar;
+export default Navbar;

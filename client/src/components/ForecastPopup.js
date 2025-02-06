@@ -15,7 +15,7 @@ import PopupContent from "./PopupContent";
 
 const ForecastPopup = ({
   location,
-  layerGroup,
+  markerLayer,
   setOpenContainer,
   openContainer,
   date,
@@ -27,12 +27,12 @@ const ForecastPopup = ({
   const [isForecastReady, setIsForecastReady] = useState(false);
 
   useEffect(() => {
-    if (markerRef.current && layerGroup.current) {
+    if (markerRef.current && markerLayer.current) {
       const leafletMarker = markerRef.current;
-      layerGroup.current.clearLayers();
-      layerGroup.current.addLayer(leafletMarker);
+      markerLayer.current.clearLayers();
+      markerLayer.current.addLayer(leafletMarker);
     }
-  }, [markerRef, layerGroup]);
+  }, [markerRef, markerLayer]);
 
   useEffect(() => {
     if (!location || !date) return;
@@ -60,10 +60,10 @@ const ForecastPopup = ({
   }, [location, date]);
 
   const handlePopupClose = useCallback(() => {
-    if (layerGroup.current && markerRef.current) {
-      layerGroup.current.removeLayer(markerRef.current);
+    if (markerLayer.current && markerRef.current) {
+      markerLayer.current.removeLayer(markerRef.current);
     }
-  }, [layerGroup]);
+  }, [markerLayer]);
 
   const markerIcon = useMemo(
     () =>
@@ -93,7 +93,7 @@ const ForecastPopup = ({
           <PopupContent
             forecast={forecast}
             setOpenContainer={setOpenContainer}
-            layerGroup={layerGroup}
+            markerLayer={markerLayer}
             markerRef={markerRef}
             handlePopupClose={handlePopupClose}
             overlay={overlay}

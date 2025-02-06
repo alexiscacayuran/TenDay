@@ -26,7 +26,7 @@ const GeoSearch = ({
   accessToken,
   setLocation,
   map,
-  layerGroup,
+  markerLayer,
   setOpenModal,
   setOpenContainer,
 }) => {
@@ -120,7 +120,7 @@ const GeoSearch = ({
             }),
           });
 
-          marker.addTo(layerGroup.current);
+          marker.addTo(markerLayer.current);
           map.flyTo(result.latlng, 12, { duration: 2 });
 
           setOpenModal(false);

@@ -8,13 +8,13 @@ import * as Geotiff from "geotiff";
 import { format } from "date-fns";
 
 const overlayList = [
-  { name: "temperature_average", pathName: "MEAN" },
-  { name: "temperature_minimum", pathName: "MIN" },
-  { name: "temperature_maximum", pathName: "MAX" },
-  { name: "humidity", pathName: "RH" },
-  { name: "wind", pathName: "WS" },
-  { name: "rainfall", pathName: "TP" },
-  { name: "cloud", pathName: "TCC" },
+  { name: "temperature_average", pathName: "MEAN", min: 5, max: 45 },
+  { name: "temperature_minimum", pathName: "MIN", min: 5, max: 45 },
+  { name: "temperature_maximum", pathName: "MAX", min: 5, max: 45 },
+  { name: "humidity", pathName: "RH", min: 0, max: 100 },
+  { name: "wind", pathName: "WS", min: 0, max: 60 },
+  { name: "rainfall", pathName: "TP", min: 0, max: 30 },
+  { name: "cloud", pathName: "TCC", min: 0, max: 100 },
 ];
 
 const writeURL = (startDate, overlay, date) => {
