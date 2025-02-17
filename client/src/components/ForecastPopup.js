@@ -28,9 +28,8 @@ const ForecastPopup = ({
 
   useEffect(() => {
     if (markerRef.current && markerLayer.current) {
-      const leafletMarker = markerRef.current;
       markerLayer.current.clearLayers();
-      markerLayer.current.addLayer(leafletMarker);
+      markerLayer.current.addLayer(markerRef.current);
     }
   }, [markerRef, markerLayer]);
 

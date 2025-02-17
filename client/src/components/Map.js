@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { MapContainer, LayerGroup, Pane } from "react-leaflet";
-import L, { Layer } from "leaflet";
+import { MapContainer, LayerGroup } from "react-leaflet";
+import L from "leaflet";
 import axios from "axios";
 
 import MapControl from "./MapControl";
@@ -24,7 +24,7 @@ const Map = () => {
       L.latLngBounds([
         [4.64, 116.93],
         [20.94, 126.61],
-      ]).pad(0.2),
+      ]),
     []
   );
   const [location, setLocation] = useState({
@@ -40,8 +40,7 @@ const Map = () => {
   const [date, setDate] = useState(null);
   const [dateReady, setDateReady] = useState(false);
   const [overlay, setOverlay] = useState("temperature_average");
-  // console.log(startDate.current.latest_date);
-  // console.log(overlay);
+  const overlayLayer = useRef(null);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -74,7 +73,7 @@ const Map = () => {
         <MapContainer
           center={[13, 122]}
           zoom={8}
-          minZoom={8}
+          minZoom={5} //5
           maxZoom={20}
           maxBounds={bounds}
           maxBoundsViscosity={1.0}
@@ -82,10 +81,16 @@ const Map = () => {
           ref={setMap} // Set map instance to external state
         >
           <LayerGroup ref={markerLayer} />
+          <LayerGroup ref={overlayLayer} />
           <Basemap basemap={baseEnum} accessToken={accessToken} />
 
           {dateReady && (
-            <Overlay startDate={startDate} overlay={overlay} date={date} />
+            <Overlay
+              startDate={startDate}
+              overlay={overlay}
+              date={date}
+              overlayLayer={overlayLayer}
+            />
           )}
 
           <Basemap basemap={labelsEnum} accessToken={accessToken} />

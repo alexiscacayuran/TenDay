@@ -115,10 +115,6 @@ const DateNavigation = ({ initialDate, range, setDate }) => {
             <NavigateNextIcon />
           </IconButton>
         </ButtonGroup>
-
-        {/* <Typography variant="h6" align="center">
-        Selected Date: {format(currentDate, "EEE, MMM d")}
-      </Typography> */}
       </Box>
     </div>
   );

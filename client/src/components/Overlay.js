@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useMap } from "react-leaflet";
+import { useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "leaflet-geotiff-2";
@@ -8,16 +8,33 @@ import * as Geotiff from "geotiff";
 import { format } from "date-fns";
 
 const overlayList = [
-  { name: "temperature_average", pathName: "MEAN", min: 5, max: 45 },
-  { name: "temperature_minimum", pathName: "MIN", min: 5, max: 45 },
-  { name: "temperature_maximum", pathName: "MAX", min: 5, max: 45 },
-  { name: "humidity", pathName: "RH", min: 0, max: 100 },
-  { name: "wind", pathName: "WS", min: 0, max: 60 },
-  { name: "rainfall", pathName: "TP", min: 0, max: 30 },
-  { name: "cloud", pathName: "TCC", min: 0, max: 100 },
+  {
+    name: "temperature_average",
+    pathName: "MEAN",
+
+    colorScale: "rainbow",
+  },
+  {
+    name: "temperature_minimum",
+    pathName: "MIN",
+    min: 5,
+    max: 45,
+    colorScale: "rainbow",
+  },
+  {
+    name: "temperature_maximum",
+    pathName: "MAX",
+    min: 5,
+    max: 45,
+    colorScale: "rainbow",
+  },
+  { name: "humidity", pathName: "RH", min: 0, max: 100, colorScale: "viridis" },
+  { name: "wind", pathName: "WS", min: 0, max: 50, colorScale: "rainbow" },
+  { name: "rainfall", pathName: "TP", min: 0, max: 30, colorScale: "rainbow" },
+  { name: "cloud", pathName: "TCC", min: 0, max: 120, colorScale: "greys" },
 ];
 
-const writeURL = (startDate, overlay, date) => {
+const writeURL = (startDate, overlay, date, overlayLayer) => {
   const matchedOverlay = overlayList.find((item) => item.name === overlay);
   const overlayName = matchedOverlay.pathName;
 
@@ -35,14 +52,13 @@ const writeURL = (startDate, overlay, date) => {
   return `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/${overlayName}/${overlayName}_${formattedDate}.tif`;
 };
 
-const Overlay = ({ startDate, overlay, date }) => {
+const Overlay = ({ startDate, overlay, date, overlayLayer }) => {
   const map = useMap();
 
   useEffect(() => {
     const url = writeURL(startDate.current.latest_date, overlay, date);
     if (!url) return; // Skip if URL construction fails
 
-    // ✅ Step 1: Load the GeoTIFF
     const loadGeoTIFF = async () => {
       try {
         const response = await fetch(url);
@@ -50,29 +66,44 @@ const Overlay = ({ startDate, overlay, date }) => {
 
         const buffer = await response.arrayBuffer();
 
+        const rendererOptions = {
+          colorScale: overlayList.find((item) => item.name === overlay)
+            .colorScale,
+          displayMin: overlayList.find((item) => item.name === overlay).min,
+          displayMax: overlayList.find((item) => item.name === overlay).max,
+          applyDisplayRange: true,
+          useWebGL: true,
+          clampHigh: true,
+          clampLow: false,
+        };
+
+        const plottyRenderer = L.LeafletGeotiff.plotty(rendererOptions);
+
         const options = {
           sourceFunction: Geotiff.fromArrayBuffer,
           arrayBuffer: buffer,
-          renderer: L.LeafletGeotiff.plotty({
-            colorScale: "rainbow",
-            displayMin: 10,
-            displayMax: 35,
-          }),
+          renderer: plottyRenderer,
           opacity: 0.5,
           useWorker: true,
           clearBeforeMove: false,
+          blockSize: 131072,
         };
 
-        // ✅ Step 2: Add the Layer to the Map
-        const layer = L.leafletGeotiff(buffer, options);
-        layer.addTo(map);
+        let layer = L.leafletGeotiff(buffer, options);
+        console.log(layer);
+
+        if (overlayLayer.current) {
+          overlayLayer.current.clearLayers();
+          overlayLayer.current.addLayer(layer);
+          // layer = layer.options.renderer.setClamps(true, true);
+        }
       } catch (error) {
         console.error("Error loading GeoTIFF:", error);
       }
     };
 
     loadGeoTIFF();
-  }, [startDate, overlay, date, map]);
+  }, [startDate, overlay, date, map, overlayLayer]);
 
   return null;
 };
