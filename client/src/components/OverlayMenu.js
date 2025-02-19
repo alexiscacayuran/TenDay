@@ -75,7 +75,7 @@ const OverlayMenu = ({ overlay, setOverlay }) => {
                 placement="right"
                 size="lg"
                 variant="soft"
-                sx={{ fontWeight: 600 }}
+                sx={{ fontWeight: 600, zIndex: 500 }}
               >
                 <IconButton
                   value={value}
@@ -98,15 +98,7 @@ const OverlayMenu = ({ overlay, setOverlay }) => {
       </Box>
       {isMenuOpen && (
         <Box sx={{ position: "absolute", top: 310, left: 10, zIndex: 999 }}>
-          <RadioGroup
-            size="sm"
-            aria-labelledby="example-payment-channel-label"
-            overlay
-            color="primary"
-            variant="soft"
-            name="example-payment-channel"
-            defaultValue="Paypal"
-          >
+          <RadioGroup size="sm" overlay color="primary" variant="soft">
             <List
               component="div"
               variant="plain"

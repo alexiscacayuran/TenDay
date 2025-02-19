@@ -1,11 +1,16 @@
-import { useEffect } from "react";
-import { useMap, useMapEvents } from "react-leaflet";
+/* global d3 */
+
+import { useState, useEffect, useRef } from "react";
+import { useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import "leaflet-geotiff-2";
-import "leaflet-geotiff-2/dist/leaflet-geotiff-plotty";
-import * as Geotiff from "geotiff";
 import { format } from "date-fns";
+import parseGeoraster from "georaster";
+import GeorasterLayer from "georaster-layer-for-leaflet";
+import chroma from "chroma-js";
+import "ih-leaflet-canvaslayer-field/dist/leaflet.canvaslayer.field.js";
+import Button from "@mui/joy/Button";
+import Box from "@mui/joy/Box";
 
 const overlayList = [
   {
@@ -34,18 +39,21 @@ const overlayList = [
   { name: "cloud", pathName: "TCC", min: 0, max: 120, colorScale: "greys" },
 ];
 
-const writeURL = (startDate, overlay, date, overlayLayer) => {
+const writeURL = (startDate, overlay, date, isVector) => {
+  const formattedStartDate = format(startDate, "yyyyMMdd");
+  const formattedDate = format(date, "yyyyMMdd");
+
+  if (isVector) {
+    return isVector === "u"
+      ? `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/WIND/U_${formattedDate}.asc`
+      : `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/WIND/V_${formattedDate}.asc`;
+  }
+
   const matchedOverlay = overlayList.find((item) => item.name === overlay);
   const overlayName = matchedOverlay.pathName;
 
-  const formattedStartDate = format(startDate, "yyyyMMdd");
-  const formattedDate = format(date, "yyyyMMdd");
-  console.log(formattedStartDate);
-
   if (!overlayName) {
-    console.error(
-      `Invalid overlay name: "${overlay}" not found in overlayList.`
-    );
+    console.error(`Invalid overlay name: "${overlay}"`);
     return null; // Return null if the overlay is invalid
   }
 
@@ -54,55 +62,105 @@ const writeURL = (startDate, overlay, date, overlayLayer) => {
 
 const Overlay = ({ startDate, overlay, date, overlayLayer }) => {
   const map = useMap();
+  const colorScale = useRef(null);
+  const [isDiscrete, setIsDiscrete] = useState(true);
+  const scalarLayerRef = useRef(null);
+  const vectorLayerRef = useRef(null);
+
+  const colorScaleFn = (value) => {
+    let rgb = colorScale.current(value)._rgb;
+    return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${rgb[3]})`;
+  };
 
   useEffect(() => {
-    const url = writeURL(startDate.current.latest_date, overlay, date);
-    if (!url) return; // Skip if URL construction fails
+    console.log("Overlay group: ", overlayLayer.current);
+    console.log("Scalar layer: ", scalarLayerRef.current);
+    console.log("Vector layer: ", vectorLayerRef.current);
 
-    const loadGeoTIFF = async () => {
+    let _colorScale = chroma
+      .scale(["#376484", "#F9DA9A", "#A5322C"])
+      .mode("hsl")
+      .domain([15, 26.5, 38]);
+
+    colorScale.current = isDiscrete ? _colorScale.classes(10) : _colorScale;
+
+    if (!scalarLayerRef.current) {
+      setTimeout(() => {
+        if (scalarLayerRef.current) {
+          scalarLayerRef.current.options.pixelValuesToColorFn = colorScaleFn;
+          overlayLayer.current.removeLayer(scalarLayerRef.current);
+          overlayLayer.current.addLayer(scalarLayerRef.current);
+        }
+      }, 500); // Wait for 500ms before retrying
+      return;
+    }
+
+    console.log("Updating existing scalar layer...");
+    scalarLayerRef.current.options.pixelValuesToColorFn = colorScaleFn;
+    overlayLayer.current.removeLayer(scalarLayerRef.current);
+    overlayLayer.current.addLayer(scalarLayerRef.current);
+  }, [isDiscrete]);
+
+  useEffect(() => {
+    const url = writeURL(startDate.current.latest_date, overlay, date, false);
+    if (!url) return;
+
+    const loadScalar = async () => {
       try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error(`Failed to fetch: ${url}`);
-
         const buffer = await response.arrayBuffer();
+        const georaster = await parseGeoraster(buffer);
 
-        const rendererOptions = {
-          colorScale: overlayList.find((item) => item.name === overlay)
-            .colorScale,
-          displayMin: overlayList.find((item) => item.name === overlay).min,
-          displayMax: overlayList.find((item) => item.name === overlay).max,
-          applyDisplayRange: true,
-          useWebGL: true,
-          clampHigh: true,
-          clampLow: false,
-        };
-
-        const plottyRenderer = L.LeafletGeotiff.plotty(rendererOptions);
-
-        const options = {
-          sourceFunction: Geotiff.fromArrayBuffer,
-          arrayBuffer: buffer,
-          renderer: plottyRenderer,
+        let scalarLayer = new GeorasterLayer({
+          georaster: georaster,
           opacity: 0.5,
-          useWorker: true,
-          clearBeforeMove: false,
-          blockSize: 131072,
-        };
+          resolution: 128,
+          pixelValuesToColorFn: colorScaleFn,
+        });
 
-        let layer = L.leafletGeotiff(buffer, options);
-        console.log(layer);
-
-        if (overlayLayer.current) {
-          overlayLayer.current.clearLayers();
-          overlayLayer.current.addLayer(layer);
-          // layer = layer.options.renderer.setClamps(true, true);
+        // Replace scalar layer if it already exists
+        if (scalarLayerRef.current) {
+          overlayLayer.current.removeLayer(scalarLayerRef.current);
         }
+
+        overlayLayer.current.addLayer(scalarLayer);
+        scalarLayerRef.current = scalarLayer; // Store reference
       } catch (error) {
-        console.error("Error loading GeoTIFF:", error);
+        console.log("Error: ", error);
       }
     };
 
-    loadGeoTIFF();
+    loadScalar();
+
+    const loadVectorAnim = async () => {
+      try {
+        let u = await fetch(
+          writeURL(startDate.current.latest_date, overlay, date, "u")
+        ).then((res) => res.text());
+
+        let v = await fetch(
+          writeURL(startDate.current.latest_date, overlay, date, "v")
+        ).then((res) => res.text());
+
+        let vf = L.VectorField.fromASCIIGrids(u, v);
+        let vectorLayer = L.canvasLayer.vectorFieldAnim(vf, {
+          width: 2.0,
+          velocityScale: 1 / 1000,
+        });
+
+        // Replace vector layer if it already exists
+        if (vectorLayerRef.current) {
+          overlayLayer.current.removeLayer(vectorLayerRef.current);
+        }
+
+        overlayLayer.current.addLayer(vectorLayer);
+        vectorLayerRef.current = vectorLayer; // Store reference
+      } catch (error) {
+        console.error("Error loading vector layer: ", error);
+      }
+    };
+
+    loadVectorAnim();
   }, [startDate, overlay, date, map, overlayLayer]);
 
   return null;
