@@ -61,7 +61,7 @@ const DateNavigation = ({ initialDate, range, setDate }) => {
         }}
       >
         <ButtonGroup
-          size="sm"
+          size="md"
           variant="soft"
           color="neutral"
           aria-label="soft button group"

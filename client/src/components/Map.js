@@ -41,6 +41,7 @@ const Map = () => {
   const [dateReady, setDateReady] = useState(false);
   const [overlay, setOverlay] = useState("temperature_average");
   const overlayLayer = useRef(null);
+  const [isDiscrete, setIsDiscrete] = useState(false);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -90,6 +91,7 @@ const Map = () => {
               overlay={overlay}
               date={date}
               overlayLayer={overlayLayer}
+              isDiscrete={isDiscrete}
             />
           )}
 
@@ -109,7 +111,12 @@ const Map = () => {
           )}
         </MapContainer>
 
-        <OverlayMenu setOverlay={setOverlay} overlay={overlay} />
+        <OverlayMenu
+          setOverlay={setOverlay}
+          overlay={overlay}
+          setIsDiscrete={setIsDiscrete}
+          isDiscrete={isDiscrete}
+        />
         {map && <MapControl map={map} />}
         {dateReady &&
           !open && ( // Render DateNavigation only if `dateReady` is true
@@ -127,7 +134,17 @@ const Map = () => {
         />
       </Box>
     ),
-    [map, bounds, accessToken, open, location, dateReady, date, overlay] // Dependencies for memoization
+    [
+      map,
+      bounds,
+      accessToken,
+      open,
+      location,
+      dateReady,
+      date,
+      overlay,
+      isDiscrete,
+    ] // Dependencies for memoization
   );
 
   return <div>{displayMap}</div>;

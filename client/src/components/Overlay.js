@@ -60,12 +60,13 @@ const writeURL = (startDate, overlay, date, isVector) => {
   return `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/${overlayName}/${overlayName}_${formattedDate}.tif`;
 };
 
-const Overlay = ({ startDate, overlay, date, overlayLayer }) => {
+const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
   const map = useMap();
   const colorScale = useRef(null);
-  const [isDiscrete, setIsDiscrete] = useState(true);
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
+
+  console.log(isDiscrete);
 
   const colorScaleFn = (value) => {
     let rgb = colorScale.current(value)._rgb;
@@ -73,10 +74,6 @@ const Overlay = ({ startDate, overlay, date, overlayLayer }) => {
   };
 
   useEffect(() => {
-    console.log("Overlay group: ", overlayLayer.current);
-    console.log("Scalar layer: ", scalarLayerRef.current);
-    console.log("Vector layer: ", vectorLayerRef.current);
-
     let _colorScale = chroma
       .scale(["#376484", "#F9DA9A", "#A5322C"])
       .mode("hsl")
@@ -87,21 +84,19 @@ const Overlay = ({ startDate, overlay, date, overlayLayer }) => {
     if (!scalarLayerRef.current) {
       setTimeout(() => {
         if (scalarLayerRef.current) {
-          scalarLayerRef.current.options.pixelValuesToColorFn = colorScaleFn;
-          overlayLayer.current.removeLayer(scalarLayerRef.current);
-          overlayLayer.current.addLayer(scalarLayerRef.current);
+          console.log("Updating color scale using updateColors...");
+          scalarLayerRef.current.updateColors(colorScaleFn, { debugLevel: -1 });
         }
       }, 500); // Wait for 500ms before retrying
       return;
     }
 
     console.log("Updating existing scalar layer...");
-    scalarLayerRef.current.options.pixelValuesToColorFn = colorScaleFn;
-    overlayLayer.current.removeLayer(scalarLayerRef.current);
-    overlayLayer.current.addLayer(scalarLayerRef.current);
+    scalarLayerRef.current.updateColors(colorScaleFn, { debugLevel: 1 });
   }, [isDiscrete]);
 
   useEffect(() => {
+    console.log("Load raster renders.");
     const url = writeURL(startDate.current.latest_date, overlay, date, false);
     if (!url) return;
 
@@ -114,8 +109,9 @@ const Overlay = ({ startDate, overlay, date, overlayLayer }) => {
         let scalarLayer = new GeorasterLayer({
           georaster: georaster,
           opacity: 0.5,
-          resolution: 128,
+          resolution: 64,
           pixelValuesToColorFn: colorScaleFn,
+          keepBuffer: 200,
         });
 
         // Replace scalar layer if it already exists
@@ -161,7 +157,7 @@ const Overlay = ({ startDate, overlay, date, overlayLayer }) => {
     };
 
     loadVectorAnim();
-  }, [startDate, overlay, date, map, overlayLayer]);
+  }, [startDate, overlay, date, map]);
 
   return null;
 };
