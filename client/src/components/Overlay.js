@@ -1,42 +1,108 @@
 /* global d3 */
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 import parseGeoraster from "georaster";
 import GeorasterLayer from "georaster-layer-for-leaflet";
 import chroma from "chroma-js";
 import "ih-leaflet-canvaslayer-field/dist/leaflet.canvaslayer.field.js";
-import Button from "@mui/joy/Button";
-import Box from "@mui/joy/Box";
 
 const overlayList = [
   {
     name: "temperature_average",
     pathName: "MEAN",
-
-    colorScale: "rainbow",
+    scale: ["steelblue", "moccasin", "darkred"],
+    domain: [15, 26.5, 38],
+    mode: "hsl",
+    classes: 10,
+    colors: chroma
+      .scale(["steelblue", "moccasin", "darkred"])
+      .mode("hsl")
+      .domain([15, 26.5, 38])
+      .colors(10), //for discrete scale legend
   },
   {
     name: "temperature_minimum",
     pathName: "MIN",
-    min: 5,
-    max: 45,
-    colorScale: "rainbow",
+    scale: ["steelblue", "moccasin", "darkred"],
+    domain: [15, 26.5, 38],
+    mode: "hsl",
+    classes: 10,
+    colors: chroma
+      .scale(["steelblue", "moccasin", "darkred"])
+      .mode("hsl")
+      .domain([15, 26.5, 38])
+      .colors(10),
   },
   {
     name: "temperature_maximum",
     pathName: "MAX",
-    min: 5,
-    max: 45,
-    colorScale: "rainbow",
+    scale: ["steelblue", "moccasin", "darkred"],
+    domain: [15, 26.5, 38],
+    mode: "hsl",
+    classes: 10,
+    colors: chroma
+      .scale(["steelblue", "moccasin", "darkred"])
+      .mode("hsl")
+      .domain([15, 26.5, 38])
+      .colors(10),
   },
-  { name: "humidity", pathName: "RH", min: 0, max: 100, colorScale: "viridis" },
-  { name: "wind", pathName: "WS", min: 0, max: 50, colorScale: "rainbow" },
-  { name: "rainfall", pathName: "TP", min: 0, max: 30, colorScale: "rainbow" },
-  { name: "cloud", pathName: "TCC", min: 0, max: 120, colorScale: "greys" },
+  {
+    name: "humidity",
+    pathName: "RH",
+    scale: ["palegreen", "royalblue"],
+    domain: [50, 100],
+    mode: "hsl",
+    classes: 8,
+    colors: chroma
+      .scale(["palegreen", "royalblue"])
+      .domain([50, 100])
+      .colors(8),
+  },
+  {
+    name: "wind",
+    pathName: "WS",
+    scale: [
+      "mediumpurple",
+      "slateBlue",
+      "mediumseagreen",
+      "darkorange",
+      "mediumvioletred",
+    ],
+    domain: [0, 4, 10, 18, 30],
+    mode: "hsl",
+    classes: 10,
+  },
+  {
+    name: "rainfall",
+    pathName: "TP",
+    scale: [
+      chroma("cornflowerblue").alpha(0),
+      "cornflowerblue",
+      "mediumaquamarine",
+      "khaki",
+      "mediumvioletred",
+      "mediumorchid",
+    ],
+    domain: [0, 0.3, 5, 15, 25, 30],
+    mode: "hsl",
+    classes: 10,
+  },
+  {
+    name: "cloud",
+    pathName: "TCC",
+    scale: [
+      chroma("whitesmoke").alpha(0),
+      chroma("darkgray").alpha(0.5),
+      "whitesmoke",
+    ],
+    domain: [0, 40, 80],
+    mode: "hsl",
+    classes: 10,
+  },
 ];
 
 const writeURL = (startDate, overlay, date, isVector) => {
@@ -60,13 +126,33 @@ const writeURL = (startDate, overlay, date, isVector) => {
   return `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/${overlayName}/${overlayName}_${formattedDate}.tif`;
 };
 
+const getColorScale = (overlay, isDiscrete) => {
+  const matchedOverlay = overlayList.find((item) => item.name === overlay);
+
+  if (!matchedOverlay) {
+    console.error(`Invalid overlay name: "${overlay}"`);
+    return null; // Return null if the overlay is invalid
+  }
+
+  let colorScale = chroma.scale(matchedOverlay.scale);
+
+  if (matchedOverlay.mode) {
+    colorScale = colorScale.mode(matchedOverlay.mode);
+  }
+
+  if (matchedOverlay.domain) {
+    colorScale = colorScale.domain(matchedOverlay.domain);
+  }
+
+  return isDiscrete ? colorScale.classes(matchedOverlay.classes) : colorScale;
+};
+
 const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
   const map = useMap();
   const colorScale = useRef(null);
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
-
-  console.log(isDiscrete);
+  const [isLayerReady, setIsLayerReady] = useState(false);
 
   const colorScaleFn = (value) => {
     let rgb = colorScale.current(value)._rgb;
@@ -74,29 +160,18 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
   };
 
   useEffect(() => {
-    let _colorScale = chroma
-      .scale(["#376484", "#F9DA9A", "#A5322C"])
-      .mode("hsl")
-      .domain([15, 26.5, 38]);
+    if (!isLayerReady) return; // Ensure raster has been loaded before updating colors
 
-    colorScale.current = isDiscrete ? _colorScale.classes(10) : _colorScale;
+    console.log("Updating color scale due to isDiscrete change...");
+    colorScale.current = getColorScale(overlay, isDiscrete);
 
-    if (!scalarLayerRef.current) {
-      setTimeout(() => {
-        if (scalarLayerRef.current) {
-          console.log("Updating color scale using updateColors...");
-          scalarLayerRef.current.updateColors(colorScaleFn, { debugLevel: -1 });
-        }
-      }, 500); // Wait for 500ms before retrying
-      return;
+    if (scalarLayerRef.current) {
+      scalarLayerRef.current.updateColors(colorScaleFn, { debugLevel: -1 });
     }
-
-    console.log("Updating existing scalar layer...");
-    scalarLayerRef.current.updateColors(colorScaleFn, { debugLevel: 1 });
   }, [isDiscrete]);
 
   useEffect(() => {
-    console.log("Load raster renders.");
+    console.log("Loading raster due to overlay change...");
     const url = writeURL(startDate.current.latest_date, overlay, date, false);
     if (!url) return;
 
@@ -106,10 +181,12 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
         const buffer = await response.arrayBuffer();
         const georaster = await parseGeoraster(buffer);
 
+        colorScale.current = getColorScale(overlay, isDiscrete);
+
         let scalarLayer = new GeorasterLayer({
           georaster: georaster,
-          opacity: 0.5,
-          resolution: 64,
+          opacity: 0.6,
+          resolution: 128,
           pixelValuesToColorFn: colorScaleFn,
           keepBuffer: 200,
         });
@@ -121,6 +198,8 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
 
         overlayLayer.current.addLayer(scalarLayer);
         scalarLayerRef.current = scalarLayer; // Store reference
+
+        setIsLayerReady(true);
       } catch (error) {
         console.log("Error: ", error);
       }
