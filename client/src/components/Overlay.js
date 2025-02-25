@@ -22,7 +22,7 @@ const overlayList = [
       .scale(["steelblue", "moccasin", "darkred"])
       .mode("hsl")
       .domain([15, 26.5, 38])
-      .colors(10), //for discrete scale legend
+      .colors(10),
   },
   {
     name: "temperature_minimum",
@@ -144,6 +144,10 @@ const getColorScale = (overlay, isDiscrete) => {
     colorScale = colorScale.domain(matchedOverlay.domain);
   }
 
+  if (matchedOverlay.gamma) {
+    colorScale = colorScale.gamma(matchedOverlay.gamma);
+  }
+
   return isDiscrete ? colorScale.classes(matchedOverlay.classes) : colorScale;
 };
 
@@ -185,10 +189,12 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
 
         let scalarLayer = new GeorasterLayer({
           georaster: georaster,
-          opacity: 0.6,
           resolution: 128,
           pixelValuesToColorFn: colorScaleFn,
           keepBuffer: 200,
+          pane: "tilePane",
+          zIndex: 100,
+          opacity: 0.8,
         });
 
         // Replace scalar layer if it already exists

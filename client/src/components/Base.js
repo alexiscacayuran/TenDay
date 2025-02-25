@@ -8,6 +8,8 @@ const Basemap = ({ basemap, accessToken }) => {
   useEffect(() => {
     const vectorLayer = vectorBasemapLayer(basemap, {
       token: accessToken,
+      pane: "overlayPane",
+      zIndex: 200,
     });
     vectorLayer.addTo(map);
 
