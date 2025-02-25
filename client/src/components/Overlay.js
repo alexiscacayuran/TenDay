@@ -165,8 +165,6 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
 
   useEffect(() => {
     if (!isLayerReady) return; // Ensure raster has been loaded before updating colors
-
-    console.log("Updating color scale due to isDiscrete change...");
     colorScale.current = getColorScale(overlay, isDiscrete);
 
     if (scalarLayerRef.current) {
@@ -175,7 +173,6 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
   }, [isDiscrete]);
 
   useEffect(() => {
-    console.log("Loading raster due to overlay change...");
     const url = writeURL(startDate.current.latest_date, overlay, date, false);
     if (!url) return;
 
@@ -215,6 +212,11 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
 
     const loadVectorAnim = async () => {
       try {
+        if (!map) {
+          console.error("Map is not available yet!");
+          return;
+        }
+
         let u = await fetch(
           writeURL(startDate.current.latest_date, overlay, date, "u")
         ).then((res) => res.text());

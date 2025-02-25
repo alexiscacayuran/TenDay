@@ -125,6 +125,7 @@ const Map = () => {
               initialDate={new Date(startDate.current.latest_date)} // Pass the fetched `latest_date`
               range={10}
               setDate={setDate}
+              date={date}
             />
           )}
         <ForecastContainer

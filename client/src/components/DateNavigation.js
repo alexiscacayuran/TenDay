@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
 import Button from "@mui/joy/Button";
@@ -13,36 +13,41 @@ function generateDateRange(startDate, range) {
   return Array.from({ length: range }, (_, i) => addDays(startDate, i));
 }
 
-const DateNavigation = ({ initialDate, range, setDate }) => {
-  const [currentDate, setCurrentDate] = useState(initialDate);
+const DateNavigation = ({ initialDate, range, setDate, date }) => {
+  const [localDate, setlocalDate] = useState(initialDate);
   const [dateRange] = useState(generateDateRange(initialDate, range));
 
+  useEffect(() => {
+    setlocalDate(date);
+  }, [date]);
+
   const handleDateSelect = (date) => {
-    setCurrentDate(date);
     setDate(date.toLocaleString("en-PH").split(", ")[0]);
   };
 
   const handlePreviousDate = () => {
-    const previousDate = subDays(currentDate, 1);
+    const previousDate = subDays(localDate, 1)
+      .toLocaleString("en-PH")
+      .split(", ")[0];
     if (
       dateRange.some(
         (date) =>
           format(date, "yyyy-MM-dd") === format(previousDate, "yyyy-MM-dd")
       )
     ) {
-      setCurrentDate(previousDate);
       setDate(previousDate);
     }
   };
 
   const handleNextDate = () => {
-    const nextDate = addDays(currentDate, 1);
+    const nextDate = addDays(localDate, 1)
+      .toLocaleString("en-PH")
+      .split(", ")[0];
     if (
       dateRange.some(
         (date) => format(date, "yyyy-MM-dd") === format(nextDate, "yyyy-MM-dd")
       )
     ) {
-      setCurrentDate(nextDate);
       setDate(nextDate);
     }
   };
@@ -71,7 +76,7 @@ const DateNavigation = ({ initialDate, range, setDate }) => {
             className="glass"
             onClick={handlePreviousDate}
             disabled={
-              format(currentDate, "yyyy-MM-dd") ===
+              format(localDate, "yyyy-MM-dd") ===
               format(dateRange[0], "yyyy-MM-dd")
             }
           >
@@ -82,11 +87,11 @@ const DateNavigation = ({ initialDate, range, setDate }) => {
               key={index}
               className={
                 format(date, "yyyy-MM-dd") !==
-                  format(currentDate, "yyyy-MM-dd") && "glass"
+                  format(localDate, "yyyy-MM-dd") && "glass"
               }
               color="primary"
               variant={
-                format(date, "yyyy-MM-dd") === format(currentDate, "yyyy-MM-dd")
+                format(date, "yyyy-MM-dd") === format(localDate, "yyyy-MM-dd")
                   ? "solid"
                   : "neutral"
               }
@@ -108,7 +113,7 @@ const DateNavigation = ({ initialDate, range, setDate }) => {
             className="glass"
             onClick={handleNextDate}
             disabled={
-              format(currentDate, "yyyy-MM-dd") ===
+              format(localDate, "yyyy-MM-dd") ===
               format(dateRange[dateRange.length - 1], "yyyy-MM-dd")
             }
           >

@@ -49,7 +49,7 @@ import {
 
 const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
   const [forecast, setForecast] = useState(null);
-  // console.log(forecast);
+  console.log(location);
 
   useEffect(() => {
     // When open is true, disable body scroll
@@ -66,7 +66,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
   }, [open]);
 
   useEffect(() => {
-    if (!location) return;
+    if (!location.municity) return;
 
     axios
       .get("/full", {
