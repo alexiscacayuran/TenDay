@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup } from "react-leaflet";
 import L from "leaflet";
 import axios from "axios";
-
 import MapControl from "./MapControl";
 import Base from "./Base";
 import Labels from "./Labels";
@@ -11,9 +10,9 @@ import DateNavigation from "./DateNavigation";
 import Navbar from "./Navbar";
 import ForecastContainer from "./ForecastContainer";
 import OverlayMenu from "./OverlayMenu";
-
 import Box from "@mui/joy/Box";
 import Overlay from "./Overlay";
+import Legend from "./Legend";
 
 const Map = () => {
   const accessToken =
@@ -118,6 +117,9 @@ const Map = () => {
           setIsDiscrete={setIsDiscrete}
           isDiscrete={isDiscrete}
         />
+
+        <Legend overlay={overlay} isDiscrete={isDiscrete} />
+
         {map && <MapControl map={map} />}
         {dateReady &&
           !open && ( // Render DateNavigation only if `dateReady` is true

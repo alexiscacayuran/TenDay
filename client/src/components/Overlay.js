@@ -14,41 +14,36 @@ const overlayList = [
   {
     name: "temperature_average",
     pathName: "MEAN",
-    scale: ["steelblue", "moccasin", "darkred"],
-    domain: [15, 26.5, 38],
+    scale: [
+      "#3765AE",
+      "#4A93B1",
+      "#70E7B8",
+      "#B5E851",
+      "#FFFF5B",
+      "#F9DA9A",
+      "#F4B949",
+      "#ED763B",
+      "#A5322C",
+    ],
+    domain: chroma.limits([15, 27, 39], "e", 8),
     mode: "hsl",
-    classes: 10,
-    colors: chroma
-      .scale(["steelblue", "moccasin", "darkred"])
-      .mode("hsl")
-      .domain([15, 26.5, 38])
-      .colors(10),
+    classes: 9,
   },
   {
     name: "temperature_minimum",
     pathName: "MIN",
-    scale: ["steelblue", "moccasin", "darkred"],
-    domain: [15, 26.5, 38],
+    scale: ["steelblue", "yellow", "darkred"],
+    domain: chroma.limits([15, 27, 39], "e", 8),
     mode: "hsl",
-    classes: 10,
-    colors: chroma
-      .scale(["steelblue", "moccasin", "darkred"])
-      .mode("hsl")
-      .domain([15, 26.5, 38])
-      .colors(10),
+    classes: 9,
   },
   {
     name: "temperature_maximum",
     pathName: "MAX",
-    scale: ["steelblue", "moccasin", "darkred"],
-    domain: [15, 26.5, 38],
+    scale: ["steelblue", "yellow", "darkred"],
+    domain: chroma.limits([15, 27, 39], "e", 8),
     mode: "hsl",
-    classes: 10,
-    colors: chroma
-      .scale(["steelblue", "moccasin", "darkred"])
-      .mode("hsl")
-      .domain([15, 26.5, 38])
-      .colors(10),
+    classes: 9,
   },
   {
     name: "humidity",
@@ -57,10 +52,6 @@ const overlayList = [
     domain: [50, 100],
     mode: "hsl",
     classes: 8,
-    colors: chroma
-      .scale(["palegreen", "royalblue"])
-      .domain([50, 100])
-      .colors(8),
   },
   {
     name: "wind",
@@ -127,7 +118,7 @@ const writeURL = (startDate, overlay, date, isVector) => {
 };
 
 const getColorScale = (overlay, isDiscrete) => {
-  const matchedOverlay = overlayList.find((item) => item.name === overlay);
+  const matchedOverlay = overlayList.find((o) => o.name === overlay);
 
   if (!matchedOverlay) {
     console.error(`Invalid overlay name: "${overlay}"`);

@@ -37,6 +37,7 @@
   background: none !important;
   text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5) !important;
   width: 22vw !important;
+  z-index: 9999 !important;
 }
 
 .leaflet-container a {
@@ -187,4 +188,77 @@
   100% {
     opacity: 0;
   }
+}
+
+.legend-container {
+  position: absolute;
+  bottom: 25px;
+  right: 10px;
+  background: #696969 !important;
+  border-radius: 5px;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 999; /* Ensures the legend stays on top */
+}
+
+.legend-units {
+  text-align: center;
+  font-weight: bold;
+  font-size: 12px;
+  color: white;
+  margin: 5px 0;
+}
+
+/* Standard size for both legends */
+.legend-discrete,
+.legend-continuous {
+  width: 35px;
+  height: 250px;
+  display: flex;
+  flex-direction: column-reverse; /* Ensures values go from bottom to top */
+  align-items: center;
+}
+
+/* Discrete Mode: List items should have no gaps */
+.legend-discrete {
+  background: none; /* No background gradient */
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start; /* Ensures no gaps */
+}
+
+.legend-discrete .legend-item {
+  width: 100%;
+  flex: 1; /* Ensures all items take equal space */
+  text-align: center;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Continuous Mode: Gradient Background */
+.legend-continuous {
+  justify-content: space-between; /* Spread items evenly */
+  padding: 0;
+  margin: 0;
+}
+
+/* Spread legend values evenly in Continuous Mode */
+.legend-continuous .legend-item {
+  width: 100%;
+  flex: 1; /* Makes each item take equal vertical space */
+  text-align: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
