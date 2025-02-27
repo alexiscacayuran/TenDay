@@ -2,19 +2,27 @@ import { useEffect } from "react";
 import { vectorBasemapLayer } from "esri-leaflet-vector";
 import { useMap } from "react-leaflet";
 
-const Labels = ({ basemap, accessToken }) => {
+const Labels = ({ accessToken }) => {
   const map = useMap();
+  const labelsEnum = "arcgis/light-gray/labels";
+  const hillshadeEnum = "74463549688e4bb48092df8e5c789fd0";
 
   useEffect(() => {
-    const vectorLayer = vectorBasemapLayer(basemap, {
+    const labels = vectorBasemapLayer(labelsEnum, {
       token: accessToken,
     });
-    vectorLayer.addTo(map);
+    labels.addTo(map);
+
+    // const hillshade = vectorBasemapLayer(hillshadeEnum, {
+    //   token: accessToken,
+    // });
+    // hillshade.addTo(map);
 
     return () => {
-      map.removeLayer(vectorLayer);
+      map.removeLayer(labels);
+      // map.removeLayer(hillshade);
     };
-  }, [map, basemap, accessToken]);
+  }, [map, accessToken]);
 
   return null;
 };

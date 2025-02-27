@@ -17,8 +17,7 @@ import Legend from "./Legend";
 const Map = () => {
   const accessToken =
     "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaVG2ojxTBr-5nRVBxNkz2GPU7F3yhEetf5AjVaOJNz0DKs-0ZBCT2bi95Q5-eKNU-jrt5ESliwny0Wg9q86ezlZl0MdJ-s6UupkfpQqcwjOdfxBmkajgfMVWB5DbH-GloSWc009EAKmv8yixdu3uwElTcmw1_kIXuHrNS3wsvhaRbuCYfIesTWARfQq2Dr035HOOiTeBQTOdVk29zD6HSO9AT1_4iEh8Wxe";
-  const baseEnum = "8ece66cf764742f7ba0f3006481a7b75";
-  const labelsEnum = "arcgis/light-gray/labels";
+
   const bounds = useMemo(
     () =>
       L.latLngBounds([
@@ -93,9 +92,9 @@ const Map = () => {
               isDiscrete={isDiscrete}
             />
           )}
-          <Base basemap={baseEnum} accessToken={accessToken} />
+          <Base accessToken={accessToken} />
 
-          <Labels basemap={labelsEnum} accessToken={accessToken} />
+          <Labels accessToken={accessToken} />
 
           {map && (
             <ReverseGeocode
@@ -109,6 +108,7 @@ const Map = () => {
               overlay={overlay}
             />
           )}
+          <MapControl />
         </MapContainer>
 
         <OverlayMenu
@@ -120,7 +120,6 @@ const Map = () => {
 
         <Legend overlay={overlay} isDiscrete={isDiscrete} />
 
-        {map && <MapControl map={map} />}
         {dateReady &&
           !open && ( // Render DateNavigation only if `dateReady` is true
             <DateNavigation

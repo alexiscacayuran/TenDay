@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useMap } from "react-leaflet";
 import ButtonGroup from "@mui/joy/ButtonGroup";
 import Button from "@mui/joy/Button";
 import AddIcon from "@mui/icons-material/Add";
@@ -7,8 +8,9 @@ import MyLocationIcon from "@mui/icons-material/MyLocation";
 import Tooltip from "@mui/joy/Tooltip";
 import { Box, Stack } from "@mui/joy";
 
-const CustomZoomControl = ({ map }) => {
+const CustomZoomControl = () => {
   const [zoomLevel, setZoomLevel] = useState(null);
+  const map = useMap();
   // console.log(zoomLevel);
 
   useEffect(() => {

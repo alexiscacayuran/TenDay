@@ -2,12 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 import parseGeoraster from "georaster";
 import GeorasterLayer from "georaster-layer-for-leaflet";
 import chroma from "chroma-js";
 import "ih-leaflet-canvaslayer-field/dist/leaflet.canvaslayer.field.js";
 import { text } from "d3";
+import Dexie from "dexie";
+
+const db = new Dexie("OverlayCache");
+db.version(1).stores({
+  scalars: "url, scalarData", // Stores pre-built raster layers
+  vectors: "url, vectorData", // Stores pre-built vector layers
+});
 
 const overlayList = [
   {
@@ -167,15 +174,110 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
   const colorScale = useRef(null);
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
-  const [isLayerReady, setIsLayerReady] = useState(false);
 
   const colorScaleFn = (value) => {
     let rgb = colorScale.current(value)._rgb;
     return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${rgb[3]})`;
   };
 
+  const loadScalar = async () => {
+    const url = writeURL(startDate.current.latest_date, overlay, date, false);
+    if (!url) return;
+
+    try {
+      let cached = await db.scalars.get(url);
+      let buffer;
+
+      if (cached) {
+        console.log("Loaded array buffer from IndexedDB:", url);
+        buffer = cached.scalarData;
+      } else {
+        console.log("Fetching tif from AWS: ", url);
+        const response = await fetch(url);
+        buffer = await response.arrayBuffer();
+        await db.scalars.put({ url, scalarData: buffer }); // Store in IndexedDB
+      }
+
+      const georaster = await parseGeoraster(buffer);
+
+      colorScale.current = getColorScale(overlay, isDiscrete);
+
+      let scalarLayer = new GeorasterLayer({
+        georaster: georaster,
+        resolution: 128,
+        pixelValuesToColorFn: colorScaleFn,
+        keepBuffer: 200,
+        pane: "tilePane",
+        zIndex: 100,
+        opacity: 0.8,
+      });
+
+      // Replace scalar layer if it already exists
+      if (scalarLayerRef.current) {
+        overlayLayer.current.removeLayer(scalarLayerRef.current);
+      }
+
+      overlayLayer.current.addLayer(scalarLayer);
+      scalarLayerRef.current = scalarLayer; // Store reference
+    } catch (error) {
+      console.log("Error: ", error);
+    }
+  };
+
+  const loadVectorAnim = async () => {
+    const uUrl = writeURL(startDate.current.latest_date, overlay, date, "u");
+    const vUrl = writeURL(startDate.current.latest_date, overlay, date, "v");
+    const vectorUrl = `${uUrl}-${vUrl}`; // Unique key for vector layer
+
+    try {
+      if (!map) {
+        console.error("Map is not available yet!");
+        return;
+      }
+
+      let cachedU = await db.vectors.get(uUrl);
+      let cachedV = await db.vectors.get(vUrl);
+      let u, v;
+
+      if (cachedU && cachedV) {
+        console.log("Loaded vector data from IndexedDB:", vectorUrl);
+        u = cachedU.vectorData;
+        v = cachedV.vectorData;
+      } else {
+        console.log("Fetching vector data from AWS...");
+        u = await text(uUrl);
+        v = await text(vUrl);
+
+        // ✅ Store raw ASCII grids in IndexedDB
+        await db.vectors.put({ url: uUrl, vectorData: u });
+        await db.vectors.put({ url: vUrl, vectorData: v });
+      }
+
+      let vf = L.VectorField.fromASCIIGrids(u, v);
+
+      let vectorLayer = L.canvasLayer.vectorFieldAnim(vf, {
+        width: 2.0,
+        velocityScale: 1 / 1000,
+      });
+
+      if (!vectorLayer) {
+        console.error("Vector layer was not created properly.");
+        return;
+      }
+
+      // Replace vector layer if it already exists
+      if (vectorLayerRef.current) {
+        overlayLayer.current.removeLayer(vectorLayerRef.current);
+      }
+
+      overlayLayer.current.addLayer(vectorLayer);
+      vectorLayerRef.current = vectorLayer; // Store reference
+    } catch (error) {
+      console.error("Error loading vector layer: ", error);
+    }
+  };
+
   useEffect(() => {
-    if (!isLayerReady) return; // Ensure raster has been loaded before updating colors
     colorScale.current = getColorScale(overlay, isDiscrete);
 
     if (scalarLayerRef.current) {
@@ -184,89 +286,13 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
   }, [isDiscrete]);
 
   useEffect(() => {
-    const url = writeURL(startDate.current.latest_date, overlay, date, false);
-    if (!url) return;
-
-    const loadScalar = async () => {
-      try {
-        const response = await fetch(url);
-        const buffer = await response.arrayBuffer();
-        const georaster = await parseGeoraster(buffer);
-
-        colorScale.current = getColorScale(overlay, isDiscrete);
-
-        let scalarLayer = new GeorasterLayer({
-          georaster: georaster,
-          resolution: 128,
-          pixelValuesToColorFn: colorScaleFn,
-          keepBuffer: 200,
-          pane: "tilePane",
-          zIndex: 100,
-          opacity: 0.8,
-        });
-
-        // Replace scalar layer if it already exists
-        if (scalarLayerRef.current) {
-          overlayLayer.current.removeLayer(scalarLayerRef.current);
-        }
-
-        overlayLayer.current.addLayer(scalarLayer);
-        scalarLayerRef.current = scalarLayer; // Store reference
-
-        setIsLayerReady(true);
-      } catch (error) {
-        console.log("Error: ", error);
-      }
-    };
-
+    if (!map) {
+      console.error("Map is not ready yet!");
+      return;
+    }
     loadScalar();
-
-    const loadVectorAnim = async () => {
-      try {
-        if (!map) {
-          console.error("Map is not available yet!");
-          return;
-        }
-
-        let u = await text(
-          writeURL(startDate.current.latest_date, overlay, date, "u")
-        );
-
-        let v = await text(
-          writeURL(startDate.current.latest_date, overlay, date, "v")
-        );
-
-        let vf = L.VectorField.fromASCIIGrids(u, v);
-
-        setTimeout(() => {
-          let vectorLayer = L.canvasLayer.vectorFieldAnim(vf, {
-            width: 2.0,
-            velocityScale: 1 / 1000,
-          });
-
-          // Replace vector layer if it already exists
-          if (vectorLayerRef.current) {
-            overlayLayer.current.removeLayer(vectorLayerRef.current);
-          }
-
-          overlayLayer.current.addLayer(vectorLayer);
-          vectorLayerRef.current = vectorLayer; // Store reference
-
-          // Replace vector layer if it already exists
-          if (vectorLayerRef.current) {
-            overlayLayer.current.removeLayer(vectorLayerRef.current);
-          }
-
-          overlayLayer.current.addLayer(vectorLayer);
-          vectorLayerRef.current = vectorLayer; // Store reference
-        }, 500);
-      } catch (error) {
-        console.error("Error loading vector layer: ", error);
-      }
-    };
-
     loadVectorAnim();
-  }, [startDate, overlay, date, map]);
+  }, [startDate, overlay, date, map, isDiscrete, overlayLayer]);
 
   return null;
 };

@@ -27,9 +27,12 @@
   z-index: 450 !important;
 }
 
-.leaflet-top,
-.leaflet-bottom {
+.leaflet-top {
   z-index: 0 !important;
+}
+
+.leaflet-bottom {
+  z-index: 9999 !important;
 }
 
 .leaflet-control-attribution {
@@ -37,7 +40,6 @@
   background: none !important;
   text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5) !important;
   width: 22vw !important;
-  z-index: 9999 !important;
 }
 
 .leaflet-container a {

@@ -21,6 +21,7 @@
     "chroma-js": "^3.1.2",
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
+    "dexie": "^4.0.11",
     "dotenv": "^16.4.5",
     "esri-leaflet": "^3.0.13",
     "esri-leaflet-geocoder": "^3.1.5",

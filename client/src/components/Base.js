@@ -2,23 +2,24 @@ import { useEffect } from "react";
 import { vectorBasemapLayer } from "esri-leaflet-vector";
 import { useMap } from "react-leaflet";
 
-const Basemap = ({ basemap, accessToken }) => {
+const Base = ({ accessToken }) => {
   const map = useMap();
+  const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
 
   useEffect(() => {
-    const vectorLayer = vectorBasemapLayer(basemap, {
+    const weatherBasemap = vectorBasemapLayer(weatherBasemapEnum, {
       token: accessToken,
       pane: "overlayPane",
       zIndex: 200,
     });
-    vectorLayer.addTo(map);
+    weatherBasemap.addTo(map);
 
     return () => {
-      map.removeLayer(vectorLayer);
+      map.removeLayer(weatherBasemap);
     };
-  }, [map, basemap, accessToken]);
+  }, [map, accessToken]);
 
   return null;
 };
 
-export default Basemap;
+export default Base;
