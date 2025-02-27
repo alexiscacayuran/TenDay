@@ -49,7 +49,6 @@ import {
 
 const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
   const [forecast, setForecast] = useState(null);
-  console.log(location);
 
   useEffect(() => {
     // When open is true, disable body scroll

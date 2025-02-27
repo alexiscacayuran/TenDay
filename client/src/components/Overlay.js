@@ -1,5 +1,3 @@
-/* global d3 */
-
 import { useEffect, useRef, useState } from "react";
 import { useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -9,6 +7,7 @@ import parseGeoraster from "georaster";
 import GeorasterLayer from "georaster-layer-for-leaflet";
 import chroma from "chroma-js";
 import "ih-leaflet-canvaslayer-field/dist/leaflet.canvaslayer.field.js";
+import { text } from "d3";
 
 const overlayList = [
   {
@@ -27,31 +26,51 @@ const overlayList = [
     ],
     domain: chroma.limits([15, 27, 39], "e", 8),
     mode: "hsl",
-    classes: 9,
+    classes: 15,
   },
   {
     name: "temperature_minimum",
     pathName: "MIN",
-    scale: ["steelblue", "yellow", "darkred"],
+    scale: [
+      "#3765AE",
+      "#4A93B1",
+      "#70E7B8",
+      "#B5E851",
+      "#FFFF5B",
+      "#F9DA9A",
+      "#F4B949",
+      "#ED763B",
+      "#A5322C",
+    ],
     domain: chroma.limits([15, 27, 39], "e", 8),
     mode: "hsl",
-    classes: 9,
+    classes: 15,
   },
   {
     name: "temperature_maximum",
     pathName: "MAX",
-    scale: ["steelblue", "yellow", "darkred"],
+    scale: [
+      "#3765AE",
+      "#4A93B1",
+      "#70E7B8",
+      "#B5E851",
+      "#FFFF5B",
+      "#F9DA9A",
+      "#F4B949",
+      "#ED763B",
+      "#A5322C",
+    ],
     domain: chroma.limits([15, 27, 39], "e", 8),
     mode: "hsl",
-    classes: 9,
+    classes: 15,
   },
   {
     name: "humidity",
     pathName: "RH",
     scale: ["palegreen", "royalblue"],
-    domain: [50, 100],
+    domain: chroma.limits([80, 100], "e", 10),
     mode: "hsl",
-    classes: 8,
+    classes: 15,
   },
   {
     name: "wind",
@@ -63,9 +82,9 @@ const overlayList = [
       "darkorange",
       "mediumvioletred",
     ],
-    domain: [0, 4, 10, 18, 30],
+    domain: [0, 0.5, 1, 2, 4, 10, 18, 30],
     mode: "hsl",
-    classes: 10,
+    classes: 15,
   },
   {
     name: "rainfall",
@@ -78,21 +97,22 @@ const overlayList = [
       "mediumvioletred",
       "mediumorchid",
     ],
-    domain: [0, 0.3, 5, 15, 25, 30],
+    domain: [0, 0.1, 5, 15, 25, 30],
     mode: "hsl",
-    classes: 10,
+    classes: 25,
   },
   {
     name: "cloud",
     pathName: "TCC",
     scale: [
-      chroma("whitesmoke").alpha(0),
-      chroma("darkgray").alpha(0.5),
+      "SteelBlue",
+      "lightsteelblue",
+      chroma("linen").darken(0.2),
       "whitesmoke",
     ],
-    domain: [0, 40, 80],
-    mode: "hsl",
-    classes: 10,
+    domain: [0, 20, 50, 100],
+    mode: "lab",
+    classes: 15,
   },
 ];
 
@@ -208,27 +228,38 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
           return;
         }
 
-        let u = await fetch(
+        let u = await text(
           writeURL(startDate.current.latest_date, overlay, date, "u")
-        ).then((res) => res.text());
+        );
 
-        let v = await fetch(
+        let v = await text(
           writeURL(startDate.current.latest_date, overlay, date, "v")
-        ).then((res) => res.text());
+        );
 
         let vf = L.VectorField.fromASCIIGrids(u, v);
-        let vectorLayer = L.canvasLayer.vectorFieldAnim(vf, {
-          width: 2.0,
-          velocityScale: 1 / 1000,
-        });
 
-        // Replace vector layer if it already exists
-        if (vectorLayerRef.current) {
-          overlayLayer.current.removeLayer(vectorLayerRef.current);
-        }
+        setTimeout(() => {
+          let vectorLayer = L.canvasLayer.vectorFieldAnim(vf, {
+            width: 2.0,
+            velocityScale: 1 / 1000,
+          });
 
-        overlayLayer.current.addLayer(vectorLayer);
-        vectorLayerRef.current = vectorLayer; // Store reference
+          // Replace vector layer if it already exists
+          if (vectorLayerRef.current) {
+            overlayLayer.current.removeLayer(vectorLayerRef.current);
+          }
+
+          overlayLayer.current.addLayer(vectorLayer);
+          vectorLayerRef.current = vectorLayer; // Store reference
+
+          // Replace vector layer if it already exists
+          if (vectorLayerRef.current) {
+            overlayLayer.current.removeLayer(vectorLayerRef.current);
+          }
+
+          overlayLayer.current.addLayer(vectorLayer);
+          vectorLayerRef.current = vectorLayer; // Store reference
+        }, 500);
       } catch (error) {
         console.error("Error loading vector layer: ", error);
       }

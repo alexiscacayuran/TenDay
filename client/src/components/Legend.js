@@ -17,22 +17,45 @@ const Legend = ({ isDiscrete, overlay }) => {
         "#EA3F34",
       ],
       domain: chroma.limits([15, 27, 39], "e", 8),
-      units: "&deg",
+      units: "°C", //needs to be toggleable, should be a switch statement
     },
     {
       name: "temperature_minimum",
-      scale: ["steelblue", "yellow", "darkred"],
+      scale: [
+        "#3765AE",
+        "#4A93B1",
+        "#70E7B8",
+        "#B5E851",
+        "#FFFF5B",
+        "#F9DA9A",
+        "#F4B949",
+        "#ED763B",
+        "#EA3F34",
+      ],
       domain: chroma.limits([15, 27, 39], "e", 8),
+      units: "°C",
     },
     {
       name: "temperature_maximum",
-      scale: ["steelblue", "yellow", "darkred"],
+      scale: [
+        "#3765AE",
+        "#4A93B1",
+        "#70E7B8",
+        "#B5E851",
+        "#FFFF5B",
+        "#F9DA9A",
+        "#F4B949",
+        "#ED763B",
+        "#EA3F34",
+      ],
       domain: chroma.limits([15, 27, 39], "e", 8),
+      units: "°C",
     },
     {
       name: "humidity",
       scale: ["palegreen", "royalblue"],
-      domain: [50, 100],
+      domain: chroma.limits([80, 100], "e", 10),
+      units: "%",
     },
     {
       name: "wind",
@@ -43,12 +66,13 @@ const Legend = ({ isDiscrete, overlay }) => {
         "darkorange",
         "mediumvioletred",
       ],
-      domain: [0, 4, 10, 18, 30],
+      domain: [0, 0.5, 1, 2, 4, 10, 18, 30],
+      units: "m/s",
     },
     {
       name: "rainfall",
       scale: [
-        chroma("cornflowerblue").alpha(0),
+        "cornflowerblue",
         "cornflowerblue",
         "mediumaquamarine",
         "khaki",
@@ -56,15 +80,18 @@ const Legend = ({ isDiscrete, overlay }) => {
         "mediumorchid",
       ],
       domain: [0, 0.3, 5, 15, 25, 30],
+      units: "mm/24h",
     },
     {
       name: "cloud",
       scale: [
-        chroma("whitesmoke").alpha(0),
-        chroma("darkgray").alpha(0.5),
+        "SteelBlue",
+        "lightsteelblue",
+        chroma("linen").darken(0.2),
         "whitesmoke",
       ],
-      domain: [0, 40, 80],
+      domain: chroma.limits([0, 100], "e", 10),
+      units: "%",
     },
   ];
 
@@ -72,10 +99,7 @@ const Legend = ({ isDiscrete, overlay }) => {
     return overlayList.find((o) => o.name === overlay);
   };
 
-  const [colorScale, setColorScale] = useState(() => {
-    const overlayData = getColorScale();
-    return chroma.scale(overlayData.scale).domain(overlayData.domain);
-  });
+  const [colorScale, setColorScale] = useState(null);
 
   useEffect(() => {
     const overlayData = getColorScale();
@@ -88,7 +112,7 @@ const Legend = ({ isDiscrete, overlay }) => {
     if (!colorScale) return "transparent"; // Prevent error on first render
     const overlayData = getColorScale();
     return `linear-gradient(to top, ${overlayData.domain
-      .map((val) => colorScale(val).css()) // Ensure colorScale is a function
+      .map((val) => colorScale(val).alpha(0.8).css())
       .join(", ")})`;
   };
 
@@ -97,33 +121,35 @@ const Legend = ({ isDiscrete, overlay }) => {
   return (
     <div className="legend-container">
       <div className="legend-units">
-        <span>&deg;C</span>
+        <span>{overlayData.units}</span>
       </div>
 
-      {isDiscrete ? (
-        <ul className="legend-discrete">
-          {overlayData.domain.map((value, index) => (
-            <li
-              key={index}
-              className="legend-item"
-              style={{ backgroundColor: colorScale(value).css() }}
-            >
-              {value}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <ul
-          className="legend-continuous"
-          style={{ background: generateGradient() }}
-        >
-          {overlayData.domain.map((value, index) => (
-            <li key={index} className="legend-item">
-              {value}
-            </li>
-          ))}
-        </ul>
-      )}
+      <div class="legend-scale">
+        {isDiscrete ? (
+          <ul className="legend-discrete">
+            {overlayData.domain.map((value, index) => (
+              <li
+                key={index}
+                className="legend-item"
+                style={{ backgroundColor: colorScale(value).alpha(0.8).css() }}
+              >
+                {value}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul
+            className="legend-continuous"
+            style={{ background: generateGradient() }}
+          >
+            {overlayData.domain.map((value, index) => (
+              <li key={index} className="legend-item">
+                {value}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };

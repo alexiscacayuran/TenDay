@@ -194,7 +194,7 @@
   position: absolute;
   bottom: 25px;
   right: 10px;
-  background: #696969 !important;
+  background: #e3effb !important;
   border-radius: 5px;
   font-family: Arial, sans-serif;
   display: flex;
@@ -206,16 +206,24 @@
 .legend-units {
   text-align: center;
   font-weight: bold;
-  font-size: 12px;
-  color: white;
+  font-size: 14px;
+  color: #12467b;
   margin: 5px 0;
+  width: 36px; /* Set the desired width */
+  word-wrap: break-word; /* For older browsers */
+  overflow-wrap: break-word; /* Standard property */
+  white-space: normal; /* Allow text to wrap */
+}
+
+.legend-scale {
+  background-color: #696969 !important;
 }
 
 /* Standard size for both legends */
 .legend-discrete,
 .legend-continuous {
-  width: 35px;
-  height: 250px;
+  width: 36px;
+  height: 320px;
   display: flex;
   flex-direction: column-reverse; /* Ensures values go from bottom to top */
   align-items: center;
@@ -236,11 +244,12 @@
   flex: 1; /* Ensures all items take equal space */
   text-align: center;
   color: white;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
 }
 
 /* Continuous Mode: Gradient Background */
@@ -255,7 +264,7 @@
   width: 100%;
   flex: 1; /* Makes each item take equal vertical space */
   text-align: center;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   color: white;
   display: flex;
