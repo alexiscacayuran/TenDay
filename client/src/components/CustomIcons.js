@@ -40,7 +40,7 @@ import { ReactComponent as NW } from "../assets/icons/wind-direction/14-nw.svg";
 import { ReactComponent as NNW } from "../assets/icons/wind-direction/15-nnw.svg";
 
 const ImgWrapper = ({ Icon, ...props }) => (
-  <img src={Icon} {...props} style={{ width: "24px" }}></img>
+  <img src={Icon} {...props} style={{ width: "32px" }}></img>
 );
 
 const SvgWrapper = ({ Icon, ...props }) => (

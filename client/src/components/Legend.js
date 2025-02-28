@@ -124,7 +124,7 @@ const Legend = ({ isDiscrete, overlay }) => {
         <span>{overlayData.units}</span>
       </div>
 
-      <div class="legend-scale">
+      <div className="legend-scale">
         {isDiscrete ? (
           <ul className="legend-discrete">
             {overlayData.domain.map((value, index) => (

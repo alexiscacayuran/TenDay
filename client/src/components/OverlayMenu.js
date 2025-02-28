@@ -141,7 +141,7 @@ const OverlayMenu = ({ overlay, setOverlay, isDiscrete, setIsDiscrete }) => {
           </RadioGroup>
         )}
       </Box>
-      <Box sx={{ position: "absolute", bottom: 25, left: 10, zIndex: 999 }}>
+      <Box sx={{ position: "absolute", bottom: 20, left: 10, zIndex: 999 }}>
         <Sheet
           color="primary"
           variant="soft"

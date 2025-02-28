@@ -34,7 +34,7 @@ const ForecastPopup = ({
   }, [markerRef, markerLayer]);
 
   useEffect(() => {
-    if (!location || !date) return;
+    if (!location.municity || !date) return;
 
     setIsForecastReady(false);
     const fetchForecast = async () => {
@@ -79,8 +79,8 @@ const ForecastPopup = ({
         position={location.latLng}
         icon={markerIcon}
         eventHandlers={{
-          add: !openContainer && ((e) => e.target.openPopup()),
-          click: openContainer && ((e) => e.target.closePopup()),
+          add: !openContainer ? (e) => e.target.openPopup() : () => {},
+          click: openContainer ? (e) => e.target.closePopup() : () => {},
         }}
       >
         <Popup

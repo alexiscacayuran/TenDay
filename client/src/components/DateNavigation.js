@@ -105,7 +105,7 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
                   alignItems: "center",
                 }}
               >
-                {format(date, "EEE d")}
+                {format(date, "EEE M/d")}
               </Stack>
             </Button>
           ))}

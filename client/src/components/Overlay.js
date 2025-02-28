@@ -189,17 +189,16 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
       let buffer;
 
       if (cached) {
-        console.log("Loaded array buffer from IndexedDB:", url);
+        // console.log("Loaded array buffer from IndexedDB:", url);
         buffer = cached.scalarData;
       } else {
-        console.log("Fetching tif from AWS: ", url);
+        // console.log("Fetching tif from AWS: ", url);
         const response = await fetch(url);
         buffer = await response.arrayBuffer();
         await db.scalars.put({ url, scalarData: buffer }); // Store in IndexedDB
       }
 
       const georaster = await parseGeoraster(buffer);
-
       colorScale.current = getColorScale(overlay, isDiscrete);
 
       let scalarLayer = new GeorasterLayer({
@@ -220,7 +219,7 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
       overlayLayer.current.addLayer(scalarLayer);
       scalarLayerRef.current = scalarLayer; // Store reference
     } catch (error) {
-      console.log("Error: ", error);
+      console.error("Error: ", error);
     }
   };
 
@@ -240,11 +239,11 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
       let u, v;
 
       if (cachedU && cachedV) {
-        console.log("Loaded vector data from IndexedDB:", vectorUrl);
+        // console.log("Loaded vector data from IndexedDB:", vectorUrl);
         u = cachedU.vectorData;
         v = cachedV.vectorData;
       } else {
-        console.log("Fetching vector data from AWS...");
+        // console.log("Fetching vector data from AWS...");
         u = await text(uUrl);
         v = await text(vUrl);
 
@@ -259,11 +258,6 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
         width: 2.0,
         velocityScale: 1 / 1000,
       });
-
-      if (!vectorLayer) {
-        console.error("Vector layer was not created properly.");
-        return;
-      }
 
       // Replace vector layer if it already exists
       if (vectorLayerRef.current) {
@@ -286,13 +280,9 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
   }, [isDiscrete]);
 
   useEffect(() => {
-    if (!map) {
-      console.error("Map is not ready yet!");
-      return;
-    }
     loadScalar();
     loadVectorAnim();
-  }, [startDate, overlay, date, map, isDiscrete, overlayLayer]);
+  }, [startDate, overlay, date, map, overlayLayer]);
 
   return null;
 };

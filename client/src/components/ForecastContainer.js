@@ -90,17 +90,16 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
           display: "flex",
           justifyContent: "center",
           position: "fixed",
-          bottom: 0,
+          bottom: 20,
           left: 0,
           width: "100%",
           zIndex: 999,
         }}
       >
         <Sheet
-          className="glass"
           sx={{
             position: "relative",
-            bgcolor: "background.body",
+            // bgcolor: "background.body",
             borderRadius: "sm",
             boxShadow: "lg",
             display: "flex",
@@ -120,23 +119,44 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
             {forecast && (
               <>
                 <Table
+                  color="neutral"
+                  variant="plain"
                   size="sm"
                   borderAxis="yBetween"
                   sx={{
-                    width: "800px",
+                    // Table width
+                    width: "1000px",
+
+                    // Table header
+                    "& thead > tr *": {
+                      bgcolor: "neutral.100",
+                    },
+                    "& thead > tr th:last-child": {
+                      borderTopRightRadius: 0,
+                    },
+
+                    // Table cells (values)
                     "& td": { height: "24px" },
-                    "& thead th:nth-of-type(1)": {
+
+                    //First column (parameters)
+                    "& tr > *:first-child": {
                       width: "15%",
+                      textAlign: "right",
                     },
-                    "& thead td:nth-of-type(2)": {
-                      width: "5%",
+
+                    // Second column (units)
+                    "& thead th:nth-child(2)": {
+                      width: "10%",
                     },
-                    "& tr > *:first-child": { textAlign: "right" },
+
                     "& tr > *:not(:first-child)": {
                       textAlign: "center",
-                      width: "8.2%",
+                      width: "8.5%",
                     },
-                    "& tr > *:nth-child(2)": { borderLeftStyle: "none" },
+
+                    "& tr > *:nth-child(2)": {
+                      borderLeftStyle: "none",
+                    },
 
                     "& tr > *:last-child": {
                       borderRightStyle: "solid",
@@ -151,7 +171,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                       <th></th>
                       {forecast.forecasts.map((data, index) => (
                         <th key={index}>
-                          <Typography level="title-xs">
+                          <Typography level="title-md">
                             {format(data.date, "EEE d")}
                           </Typography>
                         </th>
@@ -160,9 +180,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                   </thead>
                   <tbody>
                     <tr>
-                      <th>
-                        <Typography level="title-sm">Weather</Typography>
-                      </th>
+                      <th></th>
                       <th></th>
                       {forecast.forecasts.map((data, index) => (
                         <td key={index}>
@@ -238,11 +256,11 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                           size="sm"
                           variant="plain"
                         >
-                          C
+                          &deg;C
                         </Button>
                       </th>
                       {forecast.forecasts.map((data, index) => (
-                        <td key={index}>{data.temperature.mean}&deg;</td>
+                        <td key={index}>{data.temperature.mean}</td>
                       ))}
                     </tr>
                     <tr>
@@ -344,7 +362,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                     </tr>
                   </tbody>
                 </Table>
-                <Box sx={{ p: 1, width: "20%" }}>
+                <Box sx={{ p: 1, width: "20%", height: "100%" }}>
                   <Stack
                     direction="row"
                     spacing={1}
