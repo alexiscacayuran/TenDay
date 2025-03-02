@@ -15,8 +15,6 @@ const Base = ({ accessToken }) => {
     });
     weatherBasemap.addTo(map);
 
-    console.log(weatherBasemap);
-
     map.attributionControl.setPrefix(false);
     map.attributionControl.setPosition("bottomleft");
 

@@ -24,7 +24,8 @@ const ForecastPopup = ({
 }) => {
   const markerRef = useRef(null);
   const [forecast, setForecast] = useState({});
-  const [isForecastReady, setIsForecastReady] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [forecastRetrieval, setForecastRetrieval] = useState(false);
 
   useEffect(() => {
     if (markerRef.current && markerLayer.current) {
@@ -34,11 +35,10 @@ const ForecastPopup = ({
   }, [markerRef, markerLayer]);
 
   useEffect(() => {
-    if (!location.municity || !date) return;
-
-    setIsForecastReady(false);
     const fetchForecast = async () => {
       try {
+        setForecastRetrieval(false);
+        setLoading(true);
         const response = await axios.get("/date", {
           params: {
             municity: location.municity,
@@ -47,11 +47,13 @@ const ForecastPopup = ({
           },
         });
         setForecast(response.data);
-        setIsForecastReady(true);
+        setLoading(false);
+        setForecastRetrieval(true);
       } catch (error) {
         console.error("Error fetching forecast:", error);
         setForecast(null);
-        setIsForecastReady(true);
+        setLoading(false);
+        setForecastRetrieval(false);
       }
     };
 
@@ -73,33 +75,33 @@ const ForecastPopup = ({
   );
 
   return (
-    isLocationReady && (
-      <Marker
-        ref={markerRef}
-        position={location.latLng}
-        icon={markerIcon}
-        eventHandlers={{
-          add: !openContainer ? (e) => e.target.openPopup() : () => {},
-          click: openContainer ? (e) => e.target.closePopup() : () => {},
-        }}
+    <Marker
+      ref={markerRef}
+      position={location.latLng}
+      icon={markerIcon}
+      eventHandlers={{
+        add: !openContainer ? (e) => e.target.openPopup() : () => {},
+        click: openContainer ? (e) => e.target.closePopup() : () => {},
+      }}
+    >
+      <Popup
+        offset={[0, -30]}
+        minWidth="320"
+        onClose={handlePopupClose}
+        closeButton={false}
       >
-        <Popup
-          offset={[0, -30]}
-          minWidth="320"
-          onClose={handlePopupClose}
-          closeButton={false}
-        >
-          <PopupContent
-            forecast={forecast}
-            setOpenContainer={setOpenContainer}
-            markerLayer={markerLayer}
-            markerRef={markerRef}
-            handlePopupClose={handlePopupClose}
-            overlay={overlay}
-          />
-        </Popup>
-      </Marker>
-    )
+        <PopupContent
+          forecast={forecast}
+          setOpenContainer={setOpenContainer}
+          markerLayer={markerLayer}
+          markerRef={markerRef}
+          handlePopupClose={handlePopupClose}
+          overlay={overlay}
+          forecastRetrieval={forecastRetrieval}
+          loading={loading}
+        />
+      </Popup>
+    </Marker>
   );
 };
 

@@ -11,7 +11,7 @@ const ReverseGeocode = ({
   setOpenContainer,
   openContainer,
   date,
-  overlay, // Prop that should trigger re-render
+  overlay,
 }) => {
   const [isLocationReady, setIsLocationReady] = useState(false);
 
@@ -33,7 +33,7 @@ const ReverseGeocode = ({
             return;
           }
 
-          console.log(result);
+          console.log(result.address);
 
           setLocation({
             latLng: result.latlng,

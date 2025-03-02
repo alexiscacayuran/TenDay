@@ -15,6 +15,7 @@ import Divider from "@mui/joy/Divider";
 import { Stack } from "@mui/material";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import ButtonGroup from "@mui/joy/ButtonGroup";
+import Skeleton from "@mui/joy/Skeleton";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -60,30 +61,27 @@ const OVERLAY_CONFIG = {
 
 // Memoized CardContent to re-render only when forecast changes
 const PopupContent = React.memo(
-  ({ forecast, setOpenContainer, markerRef, handlePopupClose, overlay }) => {
-    if (!forecast || !forecast.forecast) {
-      return (
-        <Card variant="soft" sx={{ minWidth: 320 }}>
-          <Box>
-            <Typography level="body-sm" sx={{ textAlign: "center" }}>
-              No data available
-            </Typography>
-          </Box>
-        </Card>
-      );
-    }
-
-    const { temperature, humidity, wind, rainfall, cloud_cover } =
-      forecast.forecast;
-
-    return (
+  ({
+    forecast,
+    setOpenContainer,
+    markerRef,
+    handlePopupClose,
+    overlay,
+    forecastRetrieval,
+    loading,
+  }) => {
+    return !forecastRetrieval ? (
       <Card variant="plain" sx={{ minWidth: 320 }}>
         <Stack>
           <Typography level="title-lg">
-            {forecast.municity + ", " + forecast.province}
+            <Skeleton loading={loading}>
+              {loading ? "Quezon City, Metro Manila" : "Oops, sorry..."}
+            </Skeleton>
           </Typography>
           <Typography level="body-sm">
-            {format(forecast.forecast.date, "EEEE, MMMM  d")}
+            <Skeleton loading={loading}>
+              {loading ? "Friday, February 14, 2024" : " "}
+            </Skeleton>
           </Typography>
 
           <IconButton
@@ -98,50 +96,99 @@ const PopupContent = React.memo(
         </Stack>
         <CardOverflow color="primary" variant="soft">
           <CardContent orientation="horizontal" sx={{ alignItems: "center" }}>
+            {loading ? (
+              <Skeleton variant="circular" width={34} height={34} />
+            ) : (
+              <FontAwesomeIcon
+                icon={OVERLAY_CONFIG[overlay].icon}
+                style={{ fontSize: "2rem" }}
+              />
+            )}
+            {loading ? (
+              <Skeleton variant="rectangular" width={40} height={30} />
+            ) : (
+              <Typography color="--variant-softColor" level="body-sm">
+                No municipal level forecast available
+              </Typography>
+            )}
+          </CardContent>
+        </CardOverflow>
+      </Card>
+    ) : (
+      <Card variant="plain" sx={{ minWidth: 320 }}>
+        <Stack>
+          <Typography level="title-lg">
+            <Skeleton loading={loading}>
+              {loading
+                ? "Quezon City, Metro Manila"
+                : forecast.municity + ", " + forecast.province}
+            </Skeleton>
+          </Typography>
+          <Typography level="body-sm">
+            <Skeleton loading={loading}>
+              {loading
+                ? "Friday, February 14, 2024"
+                : format(forecast.forecast.date, "EEEE, MMMM  d")}
+            </Skeleton>
+          </Typography>
+
+          <IconButton
+            variant="plain"
+            color="neutral"
+            size="sm"
+            sx={{ position: "absolute", top: "0.875rem", right: "0.5rem" }}
+            onClick={handlePopupClose}
+          >
+            <CloseIcon />
+          </IconButton>
+        </Stack>
+        <CardOverflow color="primary" variant="soft">
+          <CardContent orientation="horizontal" sx={{ alignItems: "center" }}>
+            {loading ? (
+              <Skeleton variant="circular" width={34} height={34} />
+            ) : (
+              <FontAwesomeIcon
+                icon={OVERLAY_CONFIG[overlay].icon}
+                style={{ fontSize: "2rem" }}
+              />
+            )}
             {(() => {
               const config = OVERLAY_CONFIG[overlay];
               if (!config) return null;
 
               return overlay !== "rainfall" && overlay !== "cloud" ? (
-                <>
-                  <FontAwesomeIcon
-                    icon={config.icon}
-                    style={{ fontSize: "2rem" }}
-                  />
-                  {
-                    <Typography color="--variant-softColor" level="h3">
-                      {config.getValue(forecast.forecast)}
-                    </Typography>
-                  }
-                </>
+                <Typography color="--variant-softColor" level="h3">
+                  <Skeleton loading={loading}>
+                    {loading ? "28°C" : config.getValue(forecast.forecast)}
+                  </Skeleton>
+                </Typography>
               ) : (
-                <>
-                  <FontAwesomeIcon
-                    icon={config.icon}
-                    style={{ fontSize: "2rem" }}
-                  />
-                  <Typography color="--variant-softColor" level="title-md">
-                    {config.getValue(forecast.forecast)}
-                  </Typography>
-                </>
+                <Typography color="--variant-softColor" level="title-md">
+                  <Skeleton loading={loading}>
+                    {loading
+                      ? "Light rains"
+                      : config.getValue(forecast.forecast)}
+                  </Skeleton>
+                </Typography>
               );
             })()}
-
-            <Button
-              variant="solid"
-              size="sm"
-              color="primary"
-              aria-label="See Forecast"
-              sx={{ ml: "auto", alignSelf: "center", fontWeight: 600 }}
-              endDecorator={<ExpandMoreIcon />}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent map interaction when button is clicked
-                markerRef.current.closePopup();
-                setOpenContainer(true);
-              }}
-            >
-              Forecast
-            </Button>
+            {!loading && (
+              <Button
+                variant="solid"
+                size="sm"
+                color="primary"
+                aria-label="See Forecast"
+                sx={{ ml: "auto", alignSelf: "center", fontWeight: 600 }}
+                endDecorator={<ExpandMoreIcon />}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent map interaction when button is clicked
+                  markerRef.current.closePopup();
+                  setOpenContainer(true);
+                }}
+              >
+                Forecast
+              </Button>
+            )}
           </CardContent>
         </CardOverflow>
       </Card>

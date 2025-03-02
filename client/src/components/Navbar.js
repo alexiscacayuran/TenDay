@@ -40,7 +40,7 @@ const Navbar = ({
             component="div"
             sx={{ mr: 4, flexGrow: 0, fontWeight: "lg" }}
           >
-            PAGASA 10-Day Climate Forecast
+            PAGASA 10-Day Forecast
           </Typography>
           <Box sx={{ flexGrow: 1 }}>
             <React.Fragment>

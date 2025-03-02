@@ -11,7 +11,6 @@ import {
   IconButton,
   Table,
   Button,
-  Tooltip,
 } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -46,10 +45,117 @@ import {
   NWIcon,
   NNWIcon,
 } from "./CustomIcons";
+import chroma from "chroma-js";
+
+const overlayList = [
+  {
+    name: "temperature_average",
+    pathName: "MEAN",
+    scale: [
+      "#3765AE",
+      "#4A93B1",
+      "#70E7B8",
+      "#B5E851",
+      "#FFFF5B",
+      "#F9DA9A",
+      "#F4B949",
+      "#ED763B",
+      "#A5322C",
+    ],
+    domain: chroma.limits([15, 27, 39], "e", 8),
+    mode: "hsl",
+    classes: 15,
+  },
+  {
+    name: "temperature_minimum",
+    pathName: "MIN",
+    scale: [
+      "#3765AE",
+      "#4A93B1",
+      "#70E7B8",
+      "#B5E851",
+      "#FFFF5B",
+      "#F9DA9A",
+      "#F4B949",
+      "#ED763B",
+      "#A5322C",
+    ],
+    domain: chroma.limits([15, 27, 39], "e", 8),
+    mode: "hsl",
+    classes: 15,
+  },
+  {
+    name: "temperature_maximum",
+    pathName: "MAX",
+    scale: [
+      "#3765AE",
+      "#4A93B1",
+      "#70E7B8",
+      "#B5E851",
+      "#FFFF5B",
+      "#F9DA9A",
+      "#F4B949",
+      "#ED763B",
+      "#A5322C",
+    ],
+    domain: chroma.limits([15, 27, 39], "e", 8),
+    mode: "hsl",
+    classes: 15,
+  },
+  {
+    name: "humidity",
+    pathName: "RH",
+    scale: ["palegreen", "royalblue"],
+    domain: chroma.limits([80, 100], "e", 10),
+    mode: "hsl",
+    classes: 15,
+  },
+  {
+    name: "wind",
+    pathName: "WS",
+    scale: [
+      "mediumpurple",
+      "slateBlue",
+      "mediumseagreen",
+      "darkorange",
+      "mediumvioletred",
+    ],
+    domain: [0, 0.5, 1, 2, 4, 10, 18, 30],
+    mode: "hsl",
+    classes: 15,
+  },
+  {
+    name: "rainfall",
+    pathName: "TP",
+    scale: [
+      chroma("cornflowerblue").alpha(0),
+      "cornflowerblue",
+      "mediumaquamarine",
+      "khaki",
+      "mediumvioletred",
+      "mediumorchid",
+    ],
+    domain: [0, 0.1, 5, 15, 25, 30],
+    mode: "hsl",
+    classes: 25,
+  },
+  {
+    name: "cloud",
+    pathName: "TCC",
+    scale: [
+      "SteelBlue",
+      "lightsteelblue",
+      chroma("linen").darken(0.2),
+      "whitesmoke",
+    ],
+    domain: [0, 20, 50, 100],
+    mode: "lab",
+    classes: 15,
+  },
+];
 
 const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
   const [forecast, setForecast] = useState(null);
-  console.log(forecast);
 
   useEffect(() => {
     // When open is true, disable body scroll
@@ -280,7 +386,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                           size="sm"
                           variant="plain"
                         >
-                          mm/day
+                          mm/24h
                         </Button>
                       </th>
                       {forecast.forecasts.map((data, index) => (

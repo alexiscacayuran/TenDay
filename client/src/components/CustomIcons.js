@@ -41,7 +41,7 @@ import { ReactComponent as NW } from "../assets/icons/wind-direction/14-nw.svg";
 import { ReactComponent as NNW } from "../assets/icons/wind-direction/15-nnw.svg";
 
 const ImgWrapper = ({ Icon, Title, ...props }) => (
-  <Tooltip title={Title} color="primary" placement="right-end" variant="soft">
+  <Tooltip title={Title} color="primary" placement="bottom" variant="soft">
     <img src={Icon} {...props} style={{ width: "32px" }}></img>
   </Tooltip>
 );
