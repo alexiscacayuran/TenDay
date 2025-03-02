@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { vectorBasemapLayer } from "esri-leaflet-vector";
 import { useMap } from "react-leaflet";
+import L from "leaflet";
 
 const Base = ({ accessToken }) => {
   const map = useMap();
@@ -13,6 +14,11 @@ const Base = ({ accessToken }) => {
       zIndex: 200,
     });
     weatherBasemap.addTo(map);
+
+    console.log(weatherBasemap);
+
+    map.attributionControl.setPrefix(false);
+    map.attributionControl.setPosition("bottomleft");
 
     return () => {
       map.removeLayer(weatherBasemap);

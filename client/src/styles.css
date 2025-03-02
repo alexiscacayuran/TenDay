@@ -32,14 +32,13 @@
 }
 
 .leaflet-bottom {
-  z-index: 9999 !important;
+  z-index: 999 !important;
 }
 
 .leaflet-control-attribution {
   color: white !important;
   background: none !important;
   text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5) !important;
-  width: 15vw !important;
 }
 
 .leaflet-container a {

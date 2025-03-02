@@ -1,5 +1,6 @@
 import React from "react";
-import { SvgIcon } from "@mui/material";
+import { Tooltip } from "@mui/joy";
+import { SvgIcon, Typography } from "@mui/material";
 
 import Sunny from "../assets/icons/0-sunny.svg";
 
@@ -39,8 +40,10 @@ import { ReactComponent as WNW } from "../assets/icons/wind-direction/13-wnw.svg
 import { ReactComponent as NW } from "../assets/icons/wind-direction/14-nw.svg";
 import { ReactComponent as NNW } from "../assets/icons/wind-direction/15-nnw.svg";
 
-const ImgWrapper = ({ Icon, ...props }) => (
-  <img src={Icon} {...props} style={{ width: "32px" }}></img>
+const ImgWrapper = ({ Icon, Title, ...props }) => (
+  <Tooltip title={Title} color="primary" placement="right-end" variant="soft">
+    <img src={Icon} {...props} style={{ width: "32px" }}></img>
+  </Tooltip>
 );
 
 const SvgWrapper = ({ Icon, ...props }) => (
@@ -49,46 +52,168 @@ const SvgWrapper = ({ Icon, ...props }) => (
   </SvgIcon>
 );
 
-export const SunnyIcon = (props) => <ImgWrapper Icon={Sunny} {...props} />;
+export const SunnyIcon = (props) => (
+  <ImgWrapper Icon={Sunny} Title={<>Sunny</>} {...props} />
+);
 
 export const NoRainParCloudyIcon = (props) => (
-  <ImgWrapper Icon={NoRainParCloudy} {...props} />
+  <ImgWrapper
+    Icon={NoRainParCloudy}
+    Title={
+      <>
+        No Rain
+        <br />
+        Partly Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 export const NoRainMosCloudyIcon = (props) => (
-  <ImgWrapper Icon={NoRainMosCloudy} {...props} />
+  <ImgWrapper
+    Icon={NoRainMosCloudy}
+    Title={
+      <>
+        No Rain
+        <br />
+        Mostly Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 export const NoRainCloudyIcon = (props) => (
-  <ImgWrapper Icon={NoRainCloudy} {...props} />
+  <ImgWrapper
+    Icon={NoRainCloudy}
+    Title={
+      <>
+        No Rain
+        <br />
+        Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 
 export const LightRainsParCloudyIcon = (props) => (
-  <ImgWrapper Icon={LightRainsParCloudy} {...props} />
+  <ImgWrapper
+    Icon={LightRainsParCloudy}
+    Title={
+      <>
+        Light Rains
+        <br />
+        Partly Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 export const LightRainsMosCloudyIcon = (props) => (
-  <ImgWrapper Icon={LightRainsMosCloudy} {...props} />
+  <ImgWrapper
+    Icon={LightRainsMosCloudy}
+    Title={
+      <>
+        Light Rains
+        <br />
+        Mostly Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 export const LightRainsCloudyIcon = (props) => (
-  <ImgWrapper Icon={LightRainsCloudy} {...props} />
+  <ImgWrapper
+    Icon={LightRainsCloudy}
+    Title={
+      <>
+        Light Rains
+        <br />
+        Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 
 export const ModRainsParCloudyIcon = (props) => (
-  <ImgWrapper Icon={ModRainsParCloudy} {...props} />
+  <ImgWrapper
+    Icon={ModRainsParCloudy}
+    Title={
+      <>
+        Moderate Rains
+        <br />
+        Partly Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 export const ModRainsMosCloudyIcon = (props) => (
-  <ImgWrapper Icon={ModRainsMosCloudy} {...props} />
+  <ImgWrapper
+    Icon={ModRainsMosCloudy}
+    Title={
+      <>
+        Moderate Rains
+        <br />
+        Mostly Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 export const ModRainsCloudyIcon = (props) => (
-  <ImgWrapper Icon={ModRainsCloudy} {...props} />
+  <ImgWrapper
+    Icon={ModRainsCloudy}
+    Title={
+      <>
+        Moderate Rains
+        <br />
+        Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 
 export const HeavyRainsParCloudyIcon = (props) => (
-  <ImgWrapper Icon={HeavyRainsParCloudy} {...props} />
+  <ImgWrapper
+    Icon={HeavyRainsParCloudy}
+    Title={
+      <>
+        Heavy Rains
+        <br />
+        Partly Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 export const HeavyRainsMosCloudyIcon = (props) => (
-  <ImgWrapper Icon={HeavyRainsMosCloudy} {...props} />
+  <ImgWrapper
+    Icon={HeavyRainsMosCloudy}
+    Title={
+      <>
+        Heavy Rains
+        <br />
+        Mostly Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 export const HeavyRainsCloudyIcon = (props) => (
-  <ImgWrapper Icon={HeavyRainsCloudy} {...props} />
+  <ImgWrapper
+    Icon={HeavyRainsCloudy}
+    Title={
+      <>
+        Heavy Rains
+        <br />
+        Cloudy
+      </>
+    }
+    {...props}
+  />
 );
 
 export const NIcon = (props) => <SvgWrapper Icon={N} {...props} />;

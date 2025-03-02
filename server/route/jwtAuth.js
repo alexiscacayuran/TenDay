@@ -1,5 +1,5 @@
 import { Router } from "express"; 
-import pool from "../db.js";  
+import { pool } from "../db.js";  
 import bcrypt from "bcrypt";  //hashing
 import jwtGenerator from "../utils/jwtGenerator.js";  
 import validInfo from "../middleware/validInfo.js"; 

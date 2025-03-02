@@ -16,8 +16,8 @@ function jwtGenerator(user_id) {
         user: user_id // In this case, we're including the user's ID in the token
     };
 
-    // Generate and return the token, signed with the secret key and set to expire in 1 hour
-    return jwt.sign(payload, process.env.jwtSecret, { expiresIn: "1h" });
+    // Generate and return the token, signed with the secret key and set to expire in 7 days
+    return jwt.sign(payload, process.env.jwtSecret, { expiresIn: "7d" });
 }
 
 // Export the jwtGenerator function as a default export

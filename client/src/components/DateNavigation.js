@@ -57,7 +57,7 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
       <Box
         sx={{
           position: "fixed",
-          bottom: 25,
+          bottom: 20,
           left: "50%",
           transform: "translateX(-50%)",
           width: "100%", // Optional width adjustment

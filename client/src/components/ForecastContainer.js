@@ -10,8 +10,8 @@ import {
   Typography,
   IconButton,
   Table,
-  Divider,
   Button,
+  Tooltip,
 } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -49,6 +49,7 @@ import {
 
 const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
   const [forecast, setForecast] = useState(null);
+  console.log(forecast);
 
   useEffect(() => {
     // When open is true, disable body scroll
@@ -93,7 +94,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
           bottom: 20,
           left: 0,
           width: "100%",
-          zIndex: 999,
+          zIndex: 800,
         }}
       >
         <Sheet
@@ -114,6 +115,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
             sx={{
               justifyContent: "center",
               alignItems: "flex-start",
+              maxWidth: 1500,
             }}
           >
             {forecast && (
@@ -163,6 +165,10 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                       borderWidth: "1px",
                       borderColor: "--TableCell-borderColor",
                     },
+
+                    "& tbody tr:last-child > th:first-child": {
+                      borderBottomLeftRadius: "var(--unstable_actionRadius)",
+                    },
                   }}
                 >
                   <thead>
@@ -185,7 +191,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                       {forecast.forecasts.map((data, index) => (
                         <td key={index}>
                           {(() => {
-                            switch (data.rainfall) {
+                            switch (data.rainfall.description) {
                               case "NO RAIN":
                                 switch (data.cloud_cover) {
                                   case "SUNNY":
@@ -261,6 +267,24 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                       </th>
                       {forecast.forecasts.map((data, index) => (
                         <td key={index}>{data.temperature.mean}</td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <th>
+                        <Typography level="title-sm">Rain</Typography>
+                      </th>
+                      <th>
+                        <Button
+                          color="neutral"
+                          onClick={function () {}}
+                          size="sm"
+                          variant="plain"
+                        >
+                          mm/day
+                        </Button>
+                      </th>
+                      {forecast.forecasts.map((data, index) => (
+                        <td key={index}>{data.rainfall.total}</td>
                       ))}
                     </tr>
                     <tr>
