@@ -15,8 +15,7 @@ import Overlay from "./Overlay";
 import Legend from "./Legend";
 
 const Map = () => {
-  const accessToken =
-    "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaVG2ojxTBr-5nRVBxNkz2GPU7F3yhEetf5AjVaOJNz0DKs-0ZBCT2bi95Q5-eKNU-jrt5ESliwny0Wg9q86ezlZl0MdJ-s6UupkfpQqcwjOdfxBmkajgfMVWB5DbH-GloSWc009EAKmv8yixdu3uwElTcmw1_kIXuHrNS3wsvhaRbuCYfIesTWARfQq2Dr035HOOiTeBQTOdVk29zD6HSO9AT1_4iEh8Wxe";
+  const accessToken = "<ACCESS TOKEN>";
 
   const bounds = useMemo(
     () =>
