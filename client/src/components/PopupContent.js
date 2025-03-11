@@ -109,7 +109,7 @@ const PopupContent = React.memo(
             {loading ? (
               <Skeleton variant="rectangular" width={40} height={30} />
             ) : (
-              <Typography color="--variant-softColor" level="body-sm">
+              <Typography color="primary.softColor" level="body-sm">
                 No municipal level forecast available
               </Typography>
             )}
@@ -160,7 +160,7 @@ const PopupContent = React.memo(
 
               return (
                 <Typography
-                  color="--variant-softColor"
+                  color="primary.softColor"
                   level={overlay === "cloud" ? "title-md" : "h3"}
                 >
                   <Skeleton loading={loading}>

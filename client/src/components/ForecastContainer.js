@@ -45,117 +45,25 @@ import {
   NWIcon,
   NNWIcon,
 } from "./CustomIcons";
-import chroma from "chroma-js";
 
-const overlayList = [
-  {
-    name: "temperature_average",
-    pathName: "MEAN",
-    scale: [
-      "#3765AE",
-      "#4A93B1",
-      "#70E7B8",
-      "#B5E851",
-      "#FFFF5B",
-      "#F9DA9A",
-      "#F4B949",
-      "#ED763B",
-      "#A5322C",
-    ],
-    domain: chroma.limits([15, 27, 39], "e", 8),
-    mode: "hsl",
-    classes: 15,
-  },
-  {
-    name: "temperature_minimum",
-    pathName: "MIN",
-    scale: [
-      "#3765AE",
-      "#4A93B1",
-      "#70E7B8",
-      "#B5E851",
-      "#FFFF5B",
-      "#F9DA9A",
-      "#F4B949",
-      "#ED763B",
-      "#A5322C",
-    ],
-    domain: chroma.limits([15, 27, 39], "e", 8),
-    mode: "hsl",
-    classes: 15,
-  },
-  {
-    name: "temperature_maximum",
-    pathName: "MAX",
-    scale: [
-      "#3765AE",
-      "#4A93B1",
-      "#70E7B8",
-      "#B5E851",
-      "#FFFF5B",
-      "#F9DA9A",
-      "#F4B949",
-      "#ED763B",
-      "#A5322C",
-    ],
-    domain: chroma.limits([15, 27, 39], "e", 8),
-    mode: "hsl",
-    classes: 15,
-  },
-  {
-    name: "humidity",
-    pathName: "RH",
-    scale: ["palegreen", "royalblue"],
-    domain: chroma.limits([80, 100], "e", 10),
-    mode: "hsl",
-    classes: 15,
-  },
-  {
-    name: "wind",
-    pathName: "WS",
-    scale: [
-      "mediumpurple",
-      "slateBlue",
-      "mediumseagreen",
-      "darkorange",
-      "mediumvioletred",
-    ],
-    domain: [0, 0.5, 1, 2, 4, 10, 18, 30],
-    mode: "hsl",
-    classes: 15,
-  },
-  {
-    name: "rainfall",
-    pathName: "TP",
-    scale: [
-      chroma("cornflowerblue").alpha(0),
-      "cornflowerblue",
-      "mediumaquamarine",
-      "khaki",
-      "mediumvioletred",
-      "mediumorchid",
-    ],
-    domain: [0, 0.1, 5, 15, 25, 30],
-    mode: "hsl",
-    classes: 25,
-  },
-  {
-    name: "cloud",
-    pathName: "TCC",
-    scale: [
-      "SteelBlue",
-      "lightsteelblue",
-      chroma("linen").darken(0.2),
-      "whitesmoke",
-    ],
-    domain: [0, 20, 50, 100],
-    mode: "lab",
-    classes: 15,
-  },
-];
+import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
+const temperatureTypes = ["mean", "max", "min"];
+
+const ForecastContainer = ({
+  open,
+  setOpen,
+  location,
+  markerLayer,
+  overlay,
+}) => {
   const [forecast, setForecast] = useState(null);
+  const [tempTypeIndex, setTempTypeIndex] = useState(0);
+
+  const handleRowClick = () => {
+    setTempTypeIndex((prevIndex) => (prevIndex + 1) % temperatureTypes.length);
+  };
 
   useEffect(() => {
     // When open is true, disable body scroll
@@ -230,14 +138,17 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                   color="neutral"
                   variant="plain"
                   size="sm"
-                  borderAxis="yBetween"
+                  borderAxis="none"
                   sx={{
+                    // Prevent acciodental text selection
+                    userSelect: "none",
                     // Table width
                     width: "1000px",
 
                     // Table header
                     "& thead > tr *": {
-                      bgcolor: "neutral.100",
+                      bgcolor: "primary.softBg",
+                      color: "primary.softColor",
                     },
                     "& thead > tr th:last-child": {
                       borderTopRightRadius: 0,
@@ -246,7 +157,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                     // Table cells (values)
                     "& td": { height: "24px" },
 
-                    //First column (parameters)
+                    //First column (legend)
                     "& tr > *:first-child": {
                       width: "15%",
                       textAlign: "right",
@@ -254,12 +165,13 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
 
                     // Second column (units)
                     "& thead th:nth-child(2)": {
-                      width: "10%",
+                      width: "7%",
                     },
 
-                    "& tr > *:not(:first-child)": {
+                    // All columns except (legend, units)
+                    "& tr > *:not(:first-child):not(:nth-child(2))": {
                       textAlign: "center",
-                      width: "8.5%",
+                      width: "6%",
                     },
 
                     "& tr > *:nth-child(2)": {
@@ -274,6 +186,21 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
 
                     "& tbody tr:last-child > th:first-child": {
                       borderBottomLeftRadius: "var(--unstable_actionRadius)",
+                    },
+
+                    //tbody first column
+                    "& tbody tr > *:first-child": {
+                      bgcolor: "neutral.100",
+                    },
+
+                    //tbody second column
+                    "& tbody tr > *:nth-child(2)": {
+                      bgcolor: "neutral.100",
+                    },
+
+                    //tbody first row (weather)
+                    "& tbody > tr:first-child": {
+                      height: "64px",
                     },
                   }}
                 >
@@ -358,21 +285,42 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                       ))}
                     </tr>
                     <tr>
-                      <th>
-                        <Typography level="title-sm">Temperature</Typography>
+                      <th
+                        onClick={handleRowClick}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Typography
+                          startDecorator={
+                            <FontAwesomeIcon
+                              icon={faCaretDown}
+                              style={{
+                                fontSize: "1rem",
+                                marginLeft: "12px",
+                                color:
+                                  "var(--joy-palette-primary-700, #12467B)",
+                              }}
+                            />
+                          }
+                          sx={{ justifyContent: "space-between" }}
+                          level="title-sm"
+                        >
+                          Temperature ({temperatureTypes[tempTypeIndex]})
+                        </Typography>
                       </th>
                       <th>
                         <Button
                           color="neutral"
-                          onClick={function () {}}
                           size="sm"
                           variant="plain"
+                          sx={{ fontSize: "0.8rem" }}
                         >
                           &deg;C
                         </Button>
                       </th>
                       {forecast.forecasts.map((data, index) => (
-                        <td key={index}>{data.temperature.mean}</td>
+                        <td key={index}>
+                          {data.temperature[temperatureTypes[tempTypeIndex]]}
+                        </td>
                       ))}
                     </tr>
                     <tr>
@@ -385,6 +333,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                           onClick={function () {}}
                           size="sm"
                           variant="plain"
+                          sx={{ fontSize: "0.8rem" }}
                         >
                           mm/24h
                         </Button>
@@ -405,6 +354,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                           onClick={function () {}}
                           size="sm"
                           variant="plain"
+                          sx={{ fontSize: "0.8rem" }}
                         >
                           %
                         </Button>
@@ -424,6 +374,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                           onClick={function () {}}
                           size="sm"
                           variant="plain"
+                          sx={{ fontSize: "0.8rem" }}
                         >
                           m/s
                         </Button>
@@ -443,6 +394,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                           onClick={function () {}}
                           size="sm"
                           variant="plain"
+                          sx={{ fontSize: "0.8rem" }}
                         >
                           desc
                         </Button>
@@ -492,7 +444,7 @@ const ForecastContainer = ({ open, setOpen, location, markerLayer }) => {
                     </tr>
                   </tbody>
                 </Table>
-                <Box sx={{ p: 1, width: "20%", height: "100%" }}>
+                <Box sx={{ p: 1, width: "15%", height: "100%" }}>
                   <Stack
                     direction="row"
                     spacing={1}

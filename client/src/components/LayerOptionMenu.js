@@ -15,7 +15,8 @@ const LayerOptionMenu = ({
   const [checkedAnim, setCheckedAnim] = useState(isAnimHidden);
 
   return (
-    <Box sx={{ position: "absolute", bottom: 20, left: 10, zIndex: 999 }}>
+    // <Box sx={{ position: "absolute", bottom: 20, left: 10, zIndex: 999 }}>
+    <Box sx={{ zIndex: 999, mt: 2 }}>
       <Stack
         direction="column"
         spacing={1}
@@ -36,8 +37,13 @@ const LayerOptionMenu = ({
             p: 1,
           }}
         >
-          <Typography component="label" level="title-sm" sx={{ flexGrow: 1 }}>
-            Show Edges
+          <Typography
+            component="label"
+            color="primary.softColor"
+            level="title-sm"
+            sx={{ flexGrow: 1 }}
+          >
+            Show edges
           </Typography>
           <Switch
             sx={{ ml: "auto" }}
@@ -60,8 +66,13 @@ const LayerOptionMenu = ({
             p: 1,
           }}
         >
-          <Typography component="label" level="title-sm" sx={{ flexGrow: 1 }}>
-            Wind Animation
+          <Typography
+            component="label"
+            color="primary.softColor"
+            level="title-sm"
+            sx={{ flexGrow: 1 }}
+          >
+            Wind animation
           </Typography>
           <Switch
             sx={{ ml: "auto" }}

@@ -13,7 +13,6 @@ import LayerMenu from "./LayerMenu";
 import Box from "@mui/joy/Box";
 import WeatherLayer from "./WeatherLayer";
 import Legend from "./Legend";
-import LayerOptionMenu from "./LayerOptionMenu";
 
 const Map = () => {
   const accessToken =
@@ -119,13 +118,9 @@ const Map = () => {
           overlay={overlay}
           setIsDiscrete={setIsDiscrete}
           isDiscrete={isDiscrete}
-        />
-        <LayerOptionMenu
-          setIsDiscrete={setIsDiscrete}
-          isDiscrete={isDiscrete}
           setIsAnimHidden={setIsAnimHidden}
           isAnimHidden={isAnimHidden}
-        ></LayerOptionMenu>
+        />
 
         <Legend overlay={overlay} isDiscrete={isDiscrete} />
 
@@ -143,6 +138,7 @@ const Map = () => {
           setOpen={setOpen}
           location={location}
           markerLayer={markerLayer}
+          overlay={overlay}
         />
       </Box>
     ),

@@ -22,8 +22,18 @@ import RadioGroup from "@mui/joy/RadioGroup";
 import Typography from "@mui/joy/Typography";
 import Tooltip from "@mui/joy/Tooltip";
 import Switch from "@mui/joy/Switch";
+import LayerOptionMenu from "./LayerOptionMenu";
+import Grow from "@mui/material/Grow";
+import { TransitionGroup } from "react-transition-group";
 
-const LayerMenu = ({ overlay, setOverlay, isDiscrete, setIsDiscrete }) => {
+const LayerMenu = ({
+  overlay,
+  setOverlay,
+  isDiscrete,
+  setIsDiscrete,
+  isAnimHidden,
+  setIsAnimHidden,
+}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [checked, setChecked] = useState(isDiscrete);
@@ -101,45 +111,66 @@ const LayerMenu = ({ overlay, setOverlay, isDiscrete, setIsDiscrete }) => {
             ))}
           </ToggleButtonGroup>
         </Sheet>
-        {isMenuOpen && (
-          <RadioGroup
-            size="sm"
-            overlay
-            color="primary"
-            variant="soft"
-            sx={{ mt: 1 }}
-          >
-            <List
-              component="div"
-              variant="plain"
-              sx={{
-                minWidth: 160,
-              }}
+        <Box
+          style={{
+            position: "relative",
+            minHeight: isMenuOpen ? "155px" : "auto", // Adjust height to match RadioGroup
+            transition: "min-height 0.3s ease", // Smooth transition when hiding
+          }}
+        >
+          <Grow in={isMenuOpen} timeout={300}>
+            <RadioGroup
+              size="sm"
+              overlay
+              color="primary"
+              variant="soft"
+              sx={{ mt: 1, position: "absolute", width: "100%" }}
             >
-              {["Maximum", "Average", "Minimum"].map((value, index) => (
-                <React.Fragment key={value}>
-                  {index !== 0 && <ListDivider />}
-                  <ListItem>
-                    <Radio
-                      color="primary"
-                      variant="outlined"
-                      sx={{ flexGrow: 1, flexDirection: "row-reverse" }}
-                      id={value}
-                      value={"temperature_" + value.toLowerCase()}
-                      label={<Typography level="title-sm">{value}</Typography>}
-                      onChange={(e) => {
-                        setTemp(e.target.value);
-                        setLocalOverlay(e.target.value);
-                        setOverlay(e.target.value);
-                      }}
-                      checked={temp === "temperature_" + value.toLowerCase()}
-                    />
-                  </ListItem>
-                </React.Fragment>
-              ))}
-            </List>
-          </RadioGroup>
-        )}
+              <List
+                component="div"
+                variant="plain"
+                sx={{
+                  minWidth: 160,
+                }}
+              >
+                {["Maximum", "Average", "Minimum"].map((value, index) => (
+                  <React.Fragment key={value}>
+                    {index !== 0 && <ListDivider />}
+                    <ListItem>
+                      <Radio
+                        color="primary"
+                        variant="outlined"
+                        sx={{ flexGrow: 1, flexDirection: "row-reverse" }}
+                        id={value}
+                        value={"temperature_" + value.toLowerCase()}
+                        label={
+                          <Typography
+                            sx={{ color: "primary.softColor" }}
+                            level="title-sm"
+                          >
+                            {value}
+                          </Typography>
+                        }
+                        onChange={(e) => {
+                          setTemp(e.target.value);
+                          setLocalOverlay(e.target.value);
+                          setOverlay(e.target.value);
+                        }}
+                        checked={temp === "temperature_" + value.toLowerCase()}
+                      />
+                    </ListItem>
+                  </React.Fragment>
+                ))}
+              </List>
+            </RadioGroup>
+          </Grow>
+        </Box>
+        <LayerOptionMenu
+          setIsDiscrete={setIsDiscrete}
+          isDiscrete={isDiscrete}
+          setIsAnimHidden={setIsAnimHidden}
+          isAnimHidden={isAnimHidden}
+        ></LayerOptionMenu>
       </Box>
     </>
   );
