@@ -9,13 +9,15 @@ import ReverseGeocode from "./ReverseGeocode";
 import DateNavigation from "./DateNavigation";
 import Navbar from "./Navbar";
 import ForecastContainer from "./ForecastContainer";
-import OverlayMenu from "./OverlayMenu";
+import LayerMenu from "./LayerMenu";
 import Box from "@mui/joy/Box";
-import Overlay from "./Overlay";
+import WeatherLayer from "./WeatherLayer";
 import Legend from "./Legend";
+import LayerOptionMenu from "./LayerOptionMenu";
 
 const Map = () => {
-  const accessToken = "<ACCESS TOKEN>";
+  const accessToken =
+    "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaVG2ojxTBr-5nRVBxNkz2GPU7F3yhEetf5AjVaOJNz0DKs-0ZBCT2bi95Q5-eKNU-jrt5ESliwny0Wg9q86ezlZl0MdJ-s6UupkfpQqcwjOdfxBmkajgfMVWB5DbH-GloSWc009EAKmv8yixdu3uwElTcmw1_kIXuHrNS3wsvhaRbuCYfIesTWARfQq2Dr035HOOiTeBQTOdVk29zD6HSO9AT1_4iEh8Wxe";
 
   const bounds = useMemo(
     () =>
@@ -40,6 +42,7 @@ const Map = () => {
   const [overlay, setOverlay] = useState("temperature_average");
   const overlayLayer = useRef(null);
   const [isDiscrete, setIsDiscrete] = useState(false);
+  const [isAnimHidden, setIsAnimHidden] = useState(false);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -83,12 +86,13 @@ const Map = () => {
           <LayerGroup ref={markerLayer} />
           <LayerGroup ref={overlayLayer} />
           {dateReady && (
-            <Overlay
+            <WeatherLayer
               startDate={startDate}
               overlay={overlay}
               date={date}
               overlayLayer={overlayLayer}
               isDiscrete={isDiscrete}
+              isAnimHidden={isAnimHidden}
             />
           )}
           <Base accessToken={accessToken} />
@@ -110,12 +114,18 @@ const Map = () => {
           <MapControl />
         </MapContainer>
 
-        <OverlayMenu
+        <LayerMenu
           setOverlay={setOverlay}
           overlay={overlay}
           setIsDiscrete={setIsDiscrete}
           isDiscrete={isDiscrete}
         />
+        <LayerOptionMenu
+          setIsDiscrete={setIsDiscrete}
+          isDiscrete={isDiscrete}
+          setIsAnimHidden={setIsAnimHidden}
+          isAnimHidden={isAnimHidden}
+        ></LayerOptionMenu>
 
         <Legend overlay={overlay} isDiscrete={isDiscrete} />
 
@@ -146,6 +156,7 @@ const Map = () => {
       date,
       overlay,
       isDiscrete,
+      isAnimHidden,
     ] // Dependencies for memoization
   );
 

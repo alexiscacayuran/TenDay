@@ -21,17 +21,28 @@ const overlayList = [
     name: "temperature_average",
     pathName: "MEAN",
     scale: [
-      "#3765AE",
-      "#4A93B1",
-      "#70E7B8",
-      "#B5E851",
-      "#FFFF5B",
-      "#F9DA9A",
-      "#F4B949",
-      "#ED763B",
-      "#A5322C",
+      "#0031FF",
+      "#0061FF",
+      "#0092FF",
+      "#00C2FF",
+      "#00F3FF",
+      "#24FFDB",
+      "#55FFAA",
+      "#86FF79",
+      "#B6FF49",
+      "#E7FF18",
+      "#E7FF18",
+      "#FFE500",
+      "#FFD400",
+      "#FFC300",
+      "#FFB200",
+      "#FF9D00",
+      "#FF7E00",
+      "#FF5E00",
+      "#FF3F00",
+      "#FF1F00",
     ],
-    domain: chroma.limits([15, 27, 39], "e", 8),
+    domain: chroma.limits([0, 40], "e", 10).map(Math.round),
     mode: "hsl",
     classes: 15,
   },
@@ -39,17 +50,28 @@ const overlayList = [
     name: "temperature_minimum",
     pathName: "MIN",
     scale: [
-      "#3765AE",
-      "#4A93B1",
-      "#70E7B8",
-      "#B5E851",
-      "#FFFF5B",
-      "#F9DA9A",
-      "#F4B949",
-      "#ED763B",
-      "#A5322C",
+      "#0031FF",
+      "#0061FF",
+      "#0092FF",
+      "#00C2FF",
+      "#00F3FF",
+      "#24FFDB",
+      "#55FFAA",
+      "#86FF79",
+      "#B6FF49",
+      "#E7FF18",
+      "#E7FF18",
+      "#FFE500",
+      "#FFD400",
+      "#FFC300",
+      "#FFB200",
+      "#FF9D00",
+      "#FF7E00",
+      "#FF5E00",
+      "#FF3F00",
+      "#FF1F00",
     ],
-    domain: chroma.limits([15, 27, 39], "e", 8),
+    domain: chroma.limits([0, 40], "e", 20).map(Math.round),
     mode: "hsl",
     classes: 15,
   },
@@ -57,25 +79,36 @@ const overlayList = [
     name: "temperature_maximum",
     pathName: "MAX",
     scale: [
-      "#3765AE",
-      "#4A93B1",
-      "#70E7B8",
-      "#B5E851",
-      "#FFFF5B",
-      "#F9DA9A",
-      "#F4B949",
-      "#ED763B",
-      "#A5322C",
+      "#0031FF",
+      "#0061FF",
+      "#0092FF",
+      "#00C2FF",
+      "#00F3FF",
+      "#24FFDB",
+      "#55FFAA",
+      "#86FF79",
+      "#B6FF49",
+      "#E7FF18",
+      "#E7FF18",
+      "#FFE500",
+      "#FFD400",
+      "#FFC300",
+      "#FFB200",
+      "#FF9D00",
+      "#FF7E00",
+      "#FF5E00",
+      "#FF3F00",
+      "#FF1F00",
     ],
-    domain: chroma.limits([15, 27, 39], "e", 8),
+    domain: chroma.limits([0, 40], "e", 20).map(Math.round),
     mode: "hsl",
     classes: 15,
   },
   {
     name: "humidity",
     pathName: "RH",
-    scale: ["palegreen", "royalblue"],
-    domain: chroma.limits([80, 100], "e", 10),
+    scale: ["#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8"],
+    domain: [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
     mode: "hsl",
     classes: 15,
   },
@@ -89,7 +122,9 @@ const overlayList = [
       "darkorange",
       "mediumvioletred",
     ],
-    domain: [0, 0.5, 1, 2, 4, 10, 18, 30],
+    domain: [
+      0.65, 2.5, 4.45, 6.75, 9.4, 12.35, 15.55, 19, 22.65, 26.5, 30.6, 42,
+    ],
     mode: "hsl",
     classes: 15,
   },
@@ -97,16 +132,19 @@ const overlayList = [
     name: "rainfall",
     pathName: "TP",
     scale: [
-      chroma("cornflowerblue").alpha(0),
-      "cornflowerblue",
-      "mediumaquamarine",
-      "khaki",
-      "mediumvioletred",
-      "mediumorchid",
+      chroma("#BAB8B8").alpha(0),
+      "#BAB8B8",
+      "#00C5FF",
+      "#6BFB90",
+      "#FFFF00",
+      "#FFAA00",
+      "#FF0000",
+      "#FF73DF",
+      "#8400A8",
     ],
-    domain: [0, 0.1, 5, 15, 25, 30],
-    mode: "hsl",
-    classes: 25,
+    domain: [0, 5, 15, 37.5, 75, 150, 250, 400, 500],
+    mode: "rgb",
+    classes: 35,
   },
   {
     name: "cloud",
@@ -169,7 +207,14 @@ const getColorScale = (overlay, isDiscrete) => {
   return isDiscrete ? colorScale.classes(matchedOverlay.classes) : colorScale;
 };
 
-const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
+const WeatherLayer = ({
+  startDate,
+  overlay,
+  date,
+  overlayLayer,
+  isDiscrete,
+  isAnimHidden,
+}) => {
   const map = useMap();
   const colorScale = useRef(null);
   const scalarLayerRef = useRef(null);
@@ -224,50 +269,52 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
   };
 
   const loadVectorAnim = async () => {
-    const uUrl = writeURL(startDate.current.latest_date, overlay, date, "u");
-    const vUrl = writeURL(startDate.current.latest_date, overlay, date, "v");
-    const vectorUrl = `${uUrl}-${vUrl}`; // Unique key for vector layer
+    if (!isAnimHidden) {
+      const uUrl = writeURL(startDate.current.latest_date, overlay, date, "u");
+      const vUrl = writeURL(startDate.current.latest_date, overlay, date, "v");
+      const vectorUrl = `${uUrl}-${vUrl}`; // Unique key for vector layer
 
-    try {
-      if (!map) {
-        console.error("Map is not available yet!");
-        return;
+      try {
+        if (!map) {
+          console.error("Map is not available yet!");
+          return;
+        }
+
+        let cachedU = await db.vectors.get(uUrl);
+        let cachedV = await db.vectors.get(vUrl);
+        let u, v;
+
+        if (cachedU && cachedV) {
+          // console.log("Loaded vector data from IndexedDB:", vectorUrl);
+          u = cachedU.vectorData;
+          v = cachedV.vectorData;
+        } else {
+          // console.log("Fetching vector data from AWS...");
+          u = await text(uUrl);
+          v = await text(vUrl);
+
+          // ✅ Store raw ASCII grids in IndexedDB
+          await db.vectors.put({ url: uUrl, vectorData: u });
+          await db.vectors.put({ url: vUrl, vectorData: v });
+        }
+
+        let vf = L.VectorField.fromASCIIGrids(u, v);
+
+        let vectorLayer = L.canvasLayer.vectorFieldAnim(vf, {
+          width: 2.0,
+          velocityScale: 1 / 1000,
+        });
+
+        // Replace vector layer if it already exists
+        if (vectorLayerRef.current) {
+          overlayLayer.current.removeLayer(vectorLayerRef.current);
+        }
+
+        overlayLayer.current.addLayer(vectorLayer);
+        vectorLayerRef.current = vectorLayer; // Store reference
+      } catch (error) {
+        console.error("Error loading vector layer: ", error);
       }
-
-      let cachedU = await db.vectors.get(uUrl);
-      let cachedV = await db.vectors.get(vUrl);
-      let u, v;
-
-      if (cachedU && cachedV) {
-        // console.log("Loaded vector data from IndexedDB:", vectorUrl);
-        u = cachedU.vectorData;
-        v = cachedV.vectorData;
-      } else {
-        // console.log("Fetching vector data from AWS...");
-        u = await text(uUrl);
-        v = await text(vUrl);
-
-        // ✅ Store raw ASCII grids in IndexedDB
-        await db.vectors.put({ url: uUrl, vectorData: u });
-        await db.vectors.put({ url: vUrl, vectorData: v });
-      }
-
-      let vf = L.VectorField.fromASCIIGrids(u, v);
-
-      let vectorLayer = L.canvasLayer.vectorFieldAnim(vf, {
-        width: 2.0,
-        velocityScale: 1 / 1000,
-      });
-
-      // Replace vector layer if it already exists
-      if (vectorLayerRef.current) {
-        overlayLayer.current.removeLayer(vectorLayerRef.current);
-      }
-
-      overlayLayer.current.addLayer(vectorLayer);
-      vectorLayerRef.current = vectorLayer; // Store reference
-    } catch (error) {
-      console.error("Error loading vector layer: ", error);
     }
   };
 
@@ -284,7 +331,21 @@ const Overlay = ({ startDate, overlay, date, overlayLayer, isDiscrete }) => {
     loadVectorAnim();
   }, [startDate, overlay, date, map, overlayLayer]);
 
+  useEffect(() => {
+    if (isAnimHidden) {
+      // Remove the vector layer if it exists
+      if (vectorLayerRef.current) {
+        overlayLayer.current.removeLayer(vectorLayerRef.current);
+      }
+    } else {
+      // Add the vector layer if it exists
+      if (vectorLayerRef.current) {
+        overlayLayer.current.addLayer(vectorLayerRef.current);
+      }
+    }
+  }, [map, isAnimHidden]);
+
   return null;
 };
 
-export default Overlay;
+export default WeatherLayer;

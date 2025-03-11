@@ -226,7 +226,7 @@
 .legend-discrete,
 .legend-continuous {
   width: 36px;
-  height: 320px;
+  height: 450px; /* 320px */
   display: flex;
   flex-direction: column-reverse; /* Ensures values go from bottom to top */
   align-items: center;

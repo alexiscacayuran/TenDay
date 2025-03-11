@@ -6,56 +6,93 @@ const Legend = ({ isDiscrete, overlay }) => {
     {
       name: "temperature_average",
       scale: [
-        "#3765AE",
-        "#4A93B1",
-        "#70E7B8",
-        "#B5E851",
-        "#FFFF5B",
-        "#F9DA9A",
-        "#F4B949",
-        "#ED763B",
-        "#EA3F34",
+        "#0031FF",
+        "#0061FF",
+        "#0092FF",
+        "#00C2FF",
+        "#00F3FF",
+        "#24FFDB",
+        "#55FFAA",
+        "#86FF79",
+        "#B6FF49",
+        "#E7FF18",
+        "#E7FF18",
+        "#FFE500",
+        "#FFD400",
+        "#FFC300",
+        "#FFB200",
+        "#FF9D00",
+        "#FF7E00",
+        "#FF5E00",
+        "#FF3F00",
+        "#FF1F00",
       ],
-      domain: chroma.limits([15, 27, 39], "e", 8),
-      units: "°C", //needs to be toggleable, should be a switch statement
+      domain: chroma.limits([0, 40], "e", 10).map(Math.round),
+      units: "°C", //needs to be a toggle, should be a switch statement
+      height: "320px",
     },
     {
       name: "temperature_minimum",
       scale: [
-        "#3765AE",
-        "#4A93B1",
-        "#70E7B8",
-        "#B5E851",
-        "#FFFF5B",
-        "#F9DA9A",
-        "#F4B949",
-        "#ED763B",
-        "#EA3F34",
+        "#0031FF",
+        "#0061FF",
+        "#0092FF",
+        "#00C2FF",
+        "#00F3FF",
+        "#24FFDB",
+        "#55FFAA",
+        "#86FF79",
+        "#B6FF49",
+        "#E7FF18",
+        "#E7FF18",
+        "#FFE500",
+        "#FFD400",
+        "#FFC300",
+        "#FFB200",
+        "#FF9D00",
+        "#FF7E00",
+        "#FF5E00",
+        "#FF3F00",
+        "#FF1F00",
       ],
-      domain: chroma.limits([15, 27, 39], "e", 8),
+      domain: chroma.limits([0, 40], "e", 10).map(Math.round),
       units: "°C",
+      height: "320px",
     },
     {
       name: "temperature_maximum",
       scale: [
-        "#3765AE",
-        "#4A93B1",
-        "#70E7B8",
-        "#B5E851",
-        "#FFFF5B",
-        "#F9DA9A",
-        "#F4B949",
-        "#ED763B",
-        "#EA3F34",
+        "#0031FF",
+        "#0061FF",
+        "#0092FF",
+        "#00C2FF",
+        "#00F3FF",
+        "#24FFDB",
+        "#55FFAA",
+        "#86FF79",
+        "#B6FF49",
+        "#E7FF18",
+        "#E7FF18",
+        "#FFE500",
+        "#FFD400",
+        "#FFC300",
+        "#FFB200",
+        "#FF9D00",
+        "#FF7E00",
+        "#FF5E00",
+        "#FF3F00",
+        "#FF1F00",
       ],
-      domain: chroma.limits([15, 27, 39], "e", 8),
+      domain: chroma.limits([0, 40], "e", 10).map(Math.round),
       units: "°C",
+      height: "320px",
     },
     {
       name: "humidity",
-      scale: ["palegreen", "royalblue"],
-      domain: chroma.limits([80, 100], "e", 10),
+      scale: ["#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8"],
+      domain: [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
       units: "%",
+      height: "320px",
     },
     {
       name: "wind",
@@ -66,21 +103,28 @@ const Legend = ({ isDiscrete, overlay }) => {
         "darkorange",
         "mediumvioletred",
       ],
-      domain: [0, 0.5, 1, 2, 4, 10, 18, 30],
+      domain: [
+        0.65, 2.5, 4.45, 6.75, 9.4, 12.35, 15.55, 19, 22.65, 26.5, 30.6, 42,
+      ].map(Math.round),
       units: "m/s",
+      height: "320px",
     },
     {
       name: "rainfall",
       scale: [
-        "cornflowerblue",
-        "cornflowerblue",
-        "mediumaquamarine",
-        "khaki",
-        "mediumvioletred",
-        "mediumorchid",
+        chroma("#BAB8B8").alpha(0),
+        "#BAB8B8",
+        "#00C5FF",
+        "#6BFB90",
+        "#FFFF00",
+        "#FFAA00",
+        "#FF0000",
+        "#FF73DF",
+        "#8400A8",
       ],
-      domain: [0, 0.3, 5, 15, 25, 30],
+      domain: [0, 5, 15, 38, 75, 150, 250, 400, 500],
       units: "mm/24h",
+      height: "320px",
     },
     {
       name: "cloud",
@@ -92,6 +136,7 @@ const Legend = ({ isDiscrete, overlay }) => {
       ],
       domain: chroma.limits([0, 100], "e", 10),
       units: "%",
+      height: "320px",
     },
   ];
 
@@ -126,7 +171,10 @@ const Legend = ({ isDiscrete, overlay }) => {
 
       <div className="legend-scale">
         {isDiscrete ? (
-          <ul className="legend-discrete">
+          <ul
+            className="legend-discrete"
+            style={{ height: overlayData.height }}
+          >
             {overlayData.domain.map((value, index) => (
               <li
                 key={index}
@@ -140,7 +188,10 @@ const Legend = ({ isDiscrete, overlay }) => {
         ) : (
           <ul
             className="legend-continuous"
-            style={{ background: generateGradient() }}
+            style={{
+              background: generateGradient(),
+              height: overlayData.height,
+            }}
           >
             {overlayData.domain.map((value, index) => (
               <li key={index} className="legend-item">

@@ -61,19 +61,23 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
           left: "50%",
           transform: "translateX(-50%)",
           width: "100%", // Optional width adjustment
-          maxWidth: 1200, // Optional max width
+          maxWidth: 1000, // Optional max width
           zIndex: 999,
         }}
       >
         <ButtonGroup
           size="md"
-          variant="soft"
+          variant="solid"
           color="neutral"
           aria-label="soft button group"
-          sx={{ width: "100%", justifyContent: "center" }}
+          sx={{
+            width: "100%",
+            justifyContent: "center",
+            gap: "5px",
+            "--ButtonGroup-separatorColor": "transparent",
+          }}
         >
           <IconButton
-            className="glass"
             onClick={handlePreviousDate}
             disabled={
               format(localDate, "yyyy-MM-dd") ===
@@ -85,15 +89,11 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
           {dateRange.map((date, index) => (
             <Button
               key={index}
-              className={
-                format(date, "yyyy-MM-dd") !==
-                  format(localDate, "yyyy-MM-dd") && "glass"
-              }
-              color="primary"
+              color="neutral"
               variant={
                 format(date, "yyyy-MM-dd") === format(localDate, "yyyy-MM-dd")
-                  ? "solid"
-                  : "neutral"
+                  ? "soft"
+                  : "solid"
               }
               onClick={() => handleDateSelect(date)}
             >
@@ -110,7 +110,6 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
             </Button>
           ))}
           <IconButton
-            className="glass"
             onClick={handleNextDate}
             disabled={
               format(localDate, "yyyy-MM-dd") ===

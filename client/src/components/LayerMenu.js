@@ -23,7 +23,7 @@ import Typography from "@mui/joy/Typography";
 import Tooltip from "@mui/joy/Tooltip";
 import Switch from "@mui/joy/Switch";
 
-const OverlayMenu = ({ overlay, setOverlay, isDiscrete, setIsDiscrete }) => {
+const LayerMenu = ({ overlay, setOverlay, isDiscrete, setIsDiscrete }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [checked, setChecked] = useState(isDiscrete);
@@ -32,9 +32,9 @@ const OverlayMenu = ({ overlay, setOverlay, isDiscrete, setIsDiscrete }) => {
 
   const tooltipButtons = [
     { title: "Temperature", value: temp, icon: faTemperatureHalf },
+    { title: "Rainfall", value: "rainfall", icon: faUmbrella },
     { title: "Humidity", value: "humidity", icon: faDroplet },
     { title: "Wind", value: "wind", icon: faWind },
-    { title: "Rainfall", value: "rainfall", icon: faUmbrella },
     { title: "Clouds", value: "cloud", icon: faCloud },
   ];
 
@@ -113,10 +113,10 @@ const OverlayMenu = ({ overlay, setOverlay, isDiscrete, setIsDiscrete }) => {
               component="div"
               variant="plain"
               sx={{
-                minWidth: 120,
+                minWidth: 160,
               }}
             >
-              {["Average", "Minimum", "Maximum"].map((value, index) => (
+              {["Maximum", "Average", "Minimum"].map((value, index) => (
                 <React.Fragment key={value}>
                   {index !== 0 && <ListDivider />}
                   <ListItem>
@@ -141,32 +141,8 @@ const OverlayMenu = ({ overlay, setOverlay, isDiscrete, setIsDiscrete }) => {
           </RadioGroup>
         )}
       </Box>
-      <Box sx={{ position: "absolute", bottom: 20, left: 10, zIndex: 999 }}>
-        <Sheet
-          color="primary"
-          variant="soft"
-          sx={{ borderRadius: "md", display: "inline-flex", gap: 2, p: 1 }}
-        >
-          <Typography
-            component="label"
-            level="title-sm"
-            endDecorator={
-              <Switch
-                sx={{ ml: 1 }}
-                checked={checked}
-                onChange={(event) => {
-                  setChecked(event.target.checked);
-                  setIsDiscrete(event.target.checked);
-                }}
-              />
-            }
-          >
-            Show Edges
-          </Typography>
-        </Sheet>
-      </Box>
     </>
   );
 };
 
-export default OverlayMenu;
+export default LayerMenu;

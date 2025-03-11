@@ -31,27 +31,27 @@ import {
 const OVERLAY_CONFIG = {
   temperature_average: {
     icon: faTemperatureHalf,
-    getValue: (data) => `${data.temperature.mean}°C`,
+    getValue: (data) => `${data.temperature.mean} °C`,
   },
   temperature_minimum: {
     icon: faTemperatureEmpty,
-    getValue: (data) => `${data.temperature.min}°C`,
+    getValue: (data) => `${data.temperature.min} °C`,
   },
   temperature_maximum: {
     icon: faTemperatureFull,
-    getValue: (data) => `${data.temperature.max}°C`,
+    getValue: (data) => `${data.temperature.max} °C`,
   },
   humidity: {
     icon: faDroplet,
-    getValue: (data) => `${data.humidity}%`,
+    getValue: (data) => `${data.humidity} %`,
   },
   wind: {
     icon: faWind,
-    getValue: (data) => `${data.wind.speed}m/s`,
+    getValue: (data) => `${data.wind.speed} m/s`,
   },
   rainfall: {
     icon: faUmbrella,
-    getValue: (data) => `${data.rainfall}`,
+    getValue: (data) => `${data.rainfall.total} mm`,
   },
   cloud: {
     icon: faCloud,
@@ -70,8 +70,10 @@ const PopupContent = React.memo(
     forecastRetrieval,
     loading,
   }) => {
+    console.log(forecast);
+
     return !forecastRetrieval ? (
-      <Card variant="plain" sx={{ minWidth: 320 }}>
+      <Card variant="plain" sx={{ minWidth: 360 }}>
         <Stack>
           <Typography level="title-lg">
             <Skeleton loading={loading}>
@@ -115,7 +117,7 @@ const PopupContent = React.memo(
         </CardOverflow>
       </Card>
     ) : (
-      <Card variant="plain" sx={{ minWidth: 320 }}>
+      <Card variant="plain" sx={{ minWidth: 360 }}>
         <Stack>
           <Typography level="title-lg">
             <Skeleton loading={loading}>
@@ -156,18 +158,13 @@ const PopupContent = React.memo(
               const config = OVERLAY_CONFIG[overlay];
               if (!config) return null;
 
-              return overlay !== "rainfall" && overlay !== "cloud" ? (
-                <Typography color="--variant-softColor" level="h3">
+              return (
+                <Typography
+                  color="--variant-softColor"
+                  level={overlay === "cloud" ? "title-md" : "h3"}
+                >
                   <Skeleton loading={loading}>
                     {loading ? "28°C" : config.getValue(forecast.forecast)}
-                  </Skeleton>
-                </Typography>
-              ) : (
-                <Typography color="--variant-softColor" level="title-md">
-                  <Skeleton loading={loading}>
-                    {loading
-                      ? "Light rains"
-                      : config.getValue(forecast.forecast)}
                   </Skeleton>
                 </Typography>
               );

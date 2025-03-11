@@ -7,7 +7,9 @@ router.get("/", async (req, res) => {
   const { municity, province, date } = req.query;
 
   if (!municity || !province || !date) {
-    return res.status(400).json({ error: "municity, province, and date are required" });
+    return res
+      .status(400)
+      .json({ error: "municity, province, and date are required" });
   }
 
   const cacheKey = `dateForecast:${municity}:${province}:${date}`;
@@ -29,7 +31,8 @@ router.get("/", async (req, res) => {
         d.id AS date_id, 
         d.date,
         d.start_date,
-        r.description as rainfall, 
+        r.total as total,
+        r.description as desc, 
         c.description as cloud_cover, 
         t.mean, t.min, t.max, 
         h.mean as humidity, 
@@ -65,7 +68,8 @@ router.get("/", async (req, res) => {
       date_id,
       date: forecast_date,
       start_date,
-      rainfall,
+      total,
+      desc,
       cloud_cover,
       mean,
       min,
@@ -83,7 +87,10 @@ router.get("/", async (req, res) => {
         forecast_id: date_id,
         date: forecast_date.toLocaleString("en-PH").split(", ")[0],
         start_date: start_date.toLocaleString("en-PH").split(", ")[0],
-        rainfall,
+        rainfall: {
+          total,
+          desc,
+        },
         cloud_cover,
         temperature: {
           mean,
