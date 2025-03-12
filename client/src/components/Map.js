@@ -139,9 +139,11 @@ const Map = () => {
           location={location}
           markerLayer={markerLayer}
           overlay={overlay}
+          setOverlay={setOverlay}
         />
       </Box>
     ),
+
     [
       map,
       bounds,

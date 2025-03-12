@@ -58,13 +58,9 @@ const ForecastContainer = ({
   location,
   markerLayer,
   overlay,
+  setOverlay,
 }) => {
   const [forecast, setForecast] = useState(null);
-  const [tempTypeIndex, setTempTypeIndex] = useState(0);
-
-  const handleRowClick = () => {
-    setTempTypeIndex((prevIndex) => (prevIndex + 1) % temperatureTypes.length);
-  };
 
   useEffect(() => {
     // When open is true, disable body scroll
@@ -130,7 +126,6 @@ const ForecastContainer = ({
             sx={{
               justifyContent: "center",
               alignItems: "flex-start",
-              maxWidth: 1500,
             }}
           >
             {forecast && (
@@ -139,7 +134,7 @@ const ForecastContainer = ({
                   color="neutral"
                   variant="plain"
                   size="sm"
-                  borderAxis="yBetween"
+                  borderAxis="none"
                   sx={{
                     // Prevent acciodental text selection
                     userSelect: "none",
@@ -211,7 +206,7 @@ const ForecastContainer = ({
                       <th></th>
                       {forecast.forecasts.map((data, index) => (
                         <th key={index}>
-                          <Typography level="title-md">
+                          <Typography level="title-sm">
                             {format(data.date, "EEE d")}
                           </Typography>
                         </th>
@@ -285,7 +280,11 @@ const ForecastContainer = ({
                         </td>
                       ))}
                     </tr>
-                    <ForecastTable forecast={forecast} overlay={overlay} />
+                    <ForecastTable
+                      forecast={forecast}
+                      overlay={overlay}
+                      setOverlay={setOverlay}
+                    />
                     <tr>
                       <th>
                         <Typography level="title-sm">Wind direction</Typography>

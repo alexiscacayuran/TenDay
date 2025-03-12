@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import chroma from "chroma-js";
 import { Typography, Button } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -149,12 +149,38 @@ const overlayList = [
   },
 ];
 
-// Mapping for temperature overlay names
-const temperatureOverlayMap = {
-  mean: "temperature_average",
-  min: "temperature_minimum",
-  max: "temperature_maximum",
-};
+// Weather parameters configuration
+const weatherParams = [
+  {
+    name: "Temperature",
+    key: "temperature",
+    unit: "°C",
+    overlays: {
+      temperature_average: "mean",
+      temperature_minimum: "min",
+      temperature_maximum: "max",
+    },
+    icon: faCaretDown,
+  },
+  {
+    name: "Rain",
+    key: "rainfall.total",
+    unit: "mm/24h",
+    overlay: "rainfall",
+  },
+  {
+    name: "Humidity",
+    key: "humidity",
+    unit: "%",
+    overlay: "humidity",
+  },
+  {
+    name: "Wind speed",
+    key: "wind.speed",
+    unit: "m/s",
+    overlay: "wind",
+  },
+];
 
 // Function to get the correct color scale
 const getColorScale = (overlayName) => {
@@ -169,110 +195,129 @@ const getColorScale = (overlayName) => {
 // Function to compute median
 const getMedian = (a, b) => (a + b) / 2;
 
-const ForecastTable = ({ forecast }) => {
-  console.log(forecast);
-  const [tempTypeIndex, setTempTypeIndex] = useState(0);
+const ForecastTable = ({ forecast, overlay, setOverlay }) => {
+  const [localOverlay, setLocalOverlay] = useState(overlay);
+  const [lastTempOverlay, setLastTempOverlay] = useState("temperature_average"); // Stores last selected temperature overlay
 
-  // Handles cycling through temperature types
-  const handleRowClick = () => {
-    setTempTypeIndex(
-      (prevIndex) => (prevIndex + 1) % Object.keys(temperatureOverlayMap).length
-    );
-  };
-
-  const weatherParams = [
-    {
-      name: "Temperature",
-      key: `temperature.${Object.keys(temperatureOverlayMap)[tempTypeIndex]}`,
-      unit: "°C",
-      overlay:
-        temperatureOverlayMap[
-          Object.keys(temperatureOverlayMap)[tempTypeIndex]
-        ], // Correct overlay name
-      onClick: handleRowClick,
-      icon: faCaretDown,
-    },
-    {
-      name: "Rain",
-      key: "rainfall.total",
-      unit: "mm/24h",
-      overlay: "rainfall",
-    },
-    { name: "Humidity", key: "humidity", unit: "%", overlay: "humidity" },
-    { name: "Wind speed", key: "wind.speed", unit: "m/s", overlay: "wind" },
-  ];
+  useEffect(() => {
+    // If the selected overlay is a temperature type, update lastTempOverlay
+    if (
+      [
+        "temperature_average",
+        "temperature_minimum",
+        "temperature_maximum",
+      ].includes(overlay)
+    ) {
+      setLastTempOverlay(overlay);
+      setLocalOverlay(overlay); // Sync with local state
+    }
+  }, [overlay]);
 
   return (
     <>
-      {weatherParams.map(({ name, key, unit, overlay, onClick, icon }) => {
-        const colorScale = getColorScale(overlay);
+      {weatherParams.map(
+        ({ name, key, unit, overlay: paramOverlay, overlays, icon }) => {
+          // If this parameter has multiple overlays (temperature), determine the active type
+          let activeOverlay = paramOverlay || localOverlay;
+          let displayName = name;
+          let dataKey = key;
 
-        return (
-          <tr key={name}>
-            <th
-              onClick={onClick}
-              style={{ cursor: onClick ? "pointer" : "default" }}
-            >
-              <Typography
-                startDecorator={
-                  icon && (
-                    <FontAwesomeIcon
-                      icon={icon}
-                      style={{
-                        fontSize: "1rem",
-                        marginLeft: "12px",
-                        color: "#12467B",
-                      }}
-                    />
-                  )
-                }
-                sx={{ justifyContent: "space-between" }}
-                level="title-sm"
+          if (overlays) {
+            activeOverlay = lastTempOverlay; // Always show last selected temperature type
+            displayName = `${name} (${overlays[lastTempOverlay]})`;
+            dataKey = `${key}.${overlays[lastTempOverlay]}`;
+          }
+
+          const colorScale = getColorScale(activeOverlay);
+
+          // Handles cycling through temperature overlays when clicked
+          const handleRowClick = () => {
+            if (overlays) {
+              const overlayKeys = Object.keys(overlays);
+              const nextIndex =
+                (overlayKeys.indexOf(lastTempOverlay) + 1) % overlayKeys.length;
+              const newOverlay = overlayKeys[nextIndex];
+
+              setLastTempOverlay(newOverlay); // Update last selected temp type
+              setOverlay(newOverlay); // Update parent state (syncs with the map)
+            }
+          };
+
+          return (
+            <tr key={name}>
+              <th
+                onClick={overlays ? handleRowClick : undefined}
+                style={{ cursor: overlays ? "pointer" : "default" }}
               >
-                {name}{" "}
-                {name === "Temperature"
-                  ? `(${Object.keys(temperatureOverlayMap)[tempTypeIndex]})`
-                  : ""}
-              </Typography>
-            </th>
-            <th>
-              <Button
-                color="neutral"
-                size="sm"
-                variant="plain"
-                sx={{ fontSize: "0.8rem" }}
-              >
-                {unit}
-              </Button>
-            </th>
-            {forecast.forecasts.map((data, index, arr) => {
-              // Extract values safely
-              const values = arr.map(
-                (d) => key.split(".").reduce((o, k) => o?.[k], d) ?? 0
-              );
-              const left = values[index - 1] ?? values[index];
-              const current = values[index];
-              const right = values[index + 1] ?? values[index];
-
-              // Compute colors
-              const leftColor = colorScale(getMedian(left, current)).css();
-              const currentColor = colorScale(current).css();
-              const rightColor = colorScale(getMedian(current, right)).css();
-
-              return (
-                <td
-                  key={index}
-                  style={{
-                    background: `linear-gradient(to right, ${leftColor}, ${currentColor}, ${rightColor})`,
-                  }}
+                <Typography
+                  startDecorator={
+                    icon && (
+                      <FontAwesomeIcon
+                        icon={icon}
+                        style={{
+                          fontSize: "1rem",
+                          marginLeft: "12px",
+                          color: "#12467B",
+                        }}
+                      />
+                    )
+                  }
+                  sx={{ justifyContent: "space-between" }}
+                  level="title-sm"
                 >
-                  {current}
-                </td>
-              );
-            })}
-          </tr>
-        );
-      })}
+                  {displayName}
+                </Typography>
+              </th>
+              <th>
+                <Button
+                  color="neutral"
+                  size="sm"
+                  variant="plain"
+                  sx={{ fontSize: "0.8rem" }}
+                >
+                  {unit}
+                </Button>
+              </th>
+              {forecast.forecasts.map((data, index, arr) => {
+                // Extract values safely
+                const values = arr.map((d) => {
+                  let val = key.split(".").reduce((o, k) => o?.[k], d);
+                  return typeof val === "object"
+                    ? val[overlays?.[lastTempOverlay]]
+                    : val ?? 0;
+                });
+
+                const left = values[index - 1] ?? values[index];
+                const current = values[index];
+                const right = values[index + 1] ?? values[index];
+
+                // Apply gradient only if the row matches the selected overlay
+                const background =
+                  activeOverlay === overlay
+                    ? `linear-gradient(to right, ${colorScale(
+                        getMedian(left, current)
+                      ).css()}, ${colorScale(current).css()}, ${colorScale(
+                        getMedian(current, right)
+                      ).css()})`
+                    : "transparent";
+
+                const color =
+                  activeOverlay === overlay
+                    ? chroma.deltaE(colorScale(current), "white") <= 40
+                      ? "inherit"
+                      : "white"
+                    : "inherit";
+
+                return (
+                  <td key={index} style={{ background, color }}>
+                    {current}
+                  </td>
+                );
+              })}
+            </tr>
+          );
+        }
+      )}
     </>
   );
 };
