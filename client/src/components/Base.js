@@ -16,12 +16,12 @@ const Base = ({ accessToken }) => {
     });
     weatherBasemap.addTo(map);
 
-    const hillshade = vectorBasemapLayer(hilshadeEnum, {
-      token: accessToken,
+    // const hillshade = vectorBasemapLayer(hilshadeEnum, {
+    //   token: accessToken,
 
-      zIndex: 200,
-    });
-    hillshade.addTo(map);
+    //   zIndex: 200,
+    // });
+    // hillshade.addTo(map);
 
     map.attributionControl.setPrefix(false);
     map.attributionControl.setPosition("bottomleft");

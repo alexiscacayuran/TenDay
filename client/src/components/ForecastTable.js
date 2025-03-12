@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import chroma from "chroma-js";
+import { Typography, Button } from "@mui/joy";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 
 const overlayList = [
   {
@@ -146,123 +149,130 @@ const overlayList = [
   },
 ];
 
-const temperatureOverlay = overlayList.find(
-  (o) => o.name === "temperature_average"
-);
+// Mapping for temperature overlay names
+const temperatureOverlayMap = {
+  mean: "temperature_average",
+  min: "temperature_minimum",
+  max: "temperature_maximum",
+};
 
-const colorScale = chroma
-  .scale(temperatureOverlay.scale)
-  .domain(temperatureOverlay.domain)
-  .mode(temperatureOverlay.mode);
+// Function to get the correct color scale
+const getColorScale = (overlayName) => {
+  const overlay = overlayList.find((o) => o.name === overlayName);
+  if (!overlay) {
+    console.error(`Overlay not found: ${overlayName}`);
+    return chroma.scale(["#ffffff", "#000000"]).domain([0, 1]); // Fallback grayscale
+  }
+  return chroma.scale(overlay.scale).domain(overlay.domain).mode(overlay.mode);
+};
 
-const getColorForTemperature = (temperature) => colorScale(temperature).css();
-
+// Function to compute median
 const getMedian = (a, b) => (a + b) / 2;
 
 const ForecastTable = ({ forecast }) => {
+  console.log(forecast);
   const [tempTypeIndex, setTempTypeIndex] = useState(0);
 
+  // Handles cycling through temperature types
   const handleRowClick = () => {
-    setTempTypeIndex((prevIndex) => (prevIndex + 1) % temperatureTypes.length);
+    setTempTypeIndex(
+      (prevIndex) => (prevIndex + 1) % Object.keys(temperatureOverlayMap).length
+    );
   };
+
+  const weatherParams = [
+    {
+      name: "Temperature",
+      key: `temperature.${Object.keys(temperatureOverlayMap)[tempTypeIndex]}`,
+      unit: "°C",
+      overlay:
+        temperatureOverlayMap[
+          Object.keys(temperatureOverlayMap)[tempTypeIndex]
+        ], // Correct overlay name
+      onClick: handleRowClick,
+      icon: faCaretDown,
+    },
+    {
+      name: "Rain",
+      key: "rainfall.total",
+      unit: "mm/24h",
+      overlay: "rainfall",
+    },
+    { name: "Humidity", key: "humidity", unit: "%", overlay: "humidity" },
+    { name: "Wind speed", key: "wind.speed", unit: "m/s", overlay: "wind" },
+  ];
 
   return (
     <>
-      <tr>
-        <th onClick={handleRowClick} style={{ cursor: "pointer" }}>
-          <Typography
-            startDecorator={
-              <FontAwesomeIcon
-                icon={faCaretDown}
-                style={{
-                  fontSize: "1rem",
-                  marginLeft: "12px",
-                  color: "var(--joy-palette-primary-700, #12467B)",
-                }}
-              />
-            }
-            sx={{ justifyContent: "space-between" }}
-            level="title-sm"
-          >
-            Temperature ({temperatureTypes[tempTypeIndex]})
-          </Typography>
-        </th>
-        <th>
-          <Button
-            color="neutral"
-            size="sm"
-            variant="plain"
-            sx={{ fontSize: "0.8rem" }}
-          >
-            &deg;C
-          </Button>
-        </th>
-        {forecast.forecasts.map((data, index) => (
-          <td key={index}>
-            {data.temperature[temperatureTypes[tempTypeIndex]]}
-          </td>
-        ))}
-      </tr>
-      <tr>
-        <th>
-          <Typography level="title-sm">Rain</Typography>
-        </th>
-        <th>
-          <Button
-            color="neutral"
-            onClick={function () {}}
-            size="sm"
-            variant="plain"
-            sx={{ fontSize: "0.8rem" }}
-          >
-            mm/24h
-          </Button>
-        </th>
-        {forecast.forecasts.map((data, index) => (
-          <td key={index}>{data.rainfall.total}</td>
-        ))}
-      </tr>
-      <tr>
-        <th>
-          <Typography level="title-sm">Humidity</Typography>
-        </th>
+      {weatherParams.map(({ name, key, unit, overlay, onClick, icon }) => {
+        const colorScale = getColorScale(overlay);
 
-        <th>
-          {" "}
-          <Button
-            color="neutral"
-            onClick={function () {}}
-            size="sm"
-            variant="plain"
-            sx={{ fontSize: "0.8rem" }}
-          >
-            %
-          </Button>
-        </th>
-        {forecast.forecasts.map((data, index) => (
-          <td key={index}>{data.humidity}</td>
-        ))}
-      </tr>
-      <tr>
-        <th>
-          <Typography level="title-sm">Wind speed</Typography>
-        </th>
-        <th>
-          {" "}
-          <Button
-            color="neutral"
-            onClick={function () {}}
-            size="sm"
-            variant="plain"
-            sx={{ fontSize: "0.8rem" }}
-          >
-            m/s
-          </Button>
-        </th>
-        {forecast.forecasts.map((data, index) => (
-          <td key={index}>{data.wind.speed}</td>
-        ))}
-      </tr>
+        return (
+          <tr key={name}>
+            <th
+              onClick={onClick}
+              style={{ cursor: onClick ? "pointer" : "default" }}
+            >
+              <Typography
+                startDecorator={
+                  icon && (
+                    <FontAwesomeIcon
+                      icon={icon}
+                      style={{
+                        fontSize: "1rem",
+                        marginLeft: "12px",
+                        color: "#12467B",
+                      }}
+                    />
+                  )
+                }
+                sx={{ justifyContent: "space-between" }}
+                level="title-sm"
+              >
+                {name}{" "}
+                {name === "Temperature"
+                  ? `(${Object.keys(temperatureOverlayMap)[tempTypeIndex]})`
+                  : ""}
+              </Typography>
+            </th>
+            <th>
+              <Button
+                color="neutral"
+                size="sm"
+                variant="plain"
+                sx={{ fontSize: "0.8rem" }}
+              >
+                {unit}
+              </Button>
+            </th>
+            {forecast.forecasts.map((data, index, arr) => {
+              // Extract values safely
+              const values = arr.map(
+                (d) => key.split(".").reduce((o, k) => o?.[k], d) ?? 0
+              );
+              const left = values[index - 1] ?? values[index];
+              const current = values[index];
+              const right = values[index + 1] ?? values[index];
+
+              // Compute colors
+              const leftColor = colorScale(getMedian(left, current)).css();
+              const currentColor = colorScale(current).css();
+              const rightColor = colorScale(getMedian(current, right)).css();
+
+              return (
+                <td
+                  key={index}
+                  style={{
+                    background: `linear-gradient(to right, ${leftColor}, ${currentColor}, ${rightColor})`,
+                  }}
+                >
+                  {current}
+                </td>
+              );
+            })}
+          </tr>
+        );
+      })}
     </>
   );
 };

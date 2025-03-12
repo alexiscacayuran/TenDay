@@ -48,6 +48,7 @@ import {
 
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import ForecastTable from "./ForecastTable";
 
 const temperatureTypes = ["mean", "max", "min"];
 
@@ -138,7 +139,7 @@ const ForecastContainer = ({
                   color="neutral"
                   variant="plain"
                   size="sm"
-                  borderAxis="none"
+                  borderAxis="yBetween"
                   sx={{
                     // Prevent acciodental text selection
                     userSelect: "none",
@@ -284,105 +285,7 @@ const ForecastContainer = ({
                         </td>
                       ))}
                     </tr>
-                    <tr>
-                      <th
-                        onClick={handleRowClick}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <Typography
-                          startDecorator={
-                            <FontAwesomeIcon
-                              icon={faCaretDown}
-                              style={{
-                                fontSize: "1rem",
-                                marginLeft: "12px",
-                                color:
-                                  "var(--joy-palette-primary-700, #12467B)",
-                              }}
-                            />
-                          }
-                          sx={{ justifyContent: "space-between" }}
-                          level="title-sm"
-                        >
-                          Temperature ({temperatureTypes[tempTypeIndex]})
-                        </Typography>
-                      </th>
-                      <th>
-                        <Button
-                          color="neutral"
-                          size="sm"
-                          variant="plain"
-                          sx={{ fontSize: "0.8rem" }}
-                        >
-                          &deg;C
-                        </Button>
-                      </th>
-                      {forecast.forecasts.map((data, index) => (
-                        <td key={index}>
-                          {data.temperature[temperatureTypes[tempTypeIndex]]}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <th>
-                        <Typography level="title-sm">Rain</Typography>
-                      </th>
-                      <th>
-                        <Button
-                          color="neutral"
-                          onClick={function () {}}
-                          size="sm"
-                          variant="plain"
-                          sx={{ fontSize: "0.8rem" }}
-                        >
-                          mm/24h
-                        </Button>
-                      </th>
-                      {forecast.forecasts.map((data, index) => (
-                        <td key={index}>{data.rainfall.total}</td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <th>
-                        <Typography level="title-sm">Humidity</Typography>
-                      </th>
-
-                      <th>
-                        {" "}
-                        <Button
-                          color="neutral"
-                          onClick={function () {}}
-                          size="sm"
-                          variant="plain"
-                          sx={{ fontSize: "0.8rem" }}
-                        >
-                          %
-                        </Button>
-                      </th>
-                      {forecast.forecasts.map((data, index) => (
-                        <td key={index}>{data.humidity}</td>
-                      ))}
-                    </tr>
-                    <tr>
-                      <th>
-                        <Typography level="title-sm">Wind speed</Typography>
-                      </th>
-                      <th>
-                        {" "}
-                        <Button
-                          color="neutral"
-                          onClick={function () {}}
-                          size="sm"
-                          variant="plain"
-                          sx={{ fontSize: "0.8rem" }}
-                        >
-                          m/s
-                        </Button>
-                      </th>
-                      {forecast.forecasts.map((data, index) => (
-                        <td key={index}>{data.wind.speed}</td>
-                      ))}
-                    </tr>
+                    <ForecastTable forecast={forecast} overlay={overlay} />
                     <tr>
                       <th>
                         <Typography level="title-sm">Wind direction</Typography>
