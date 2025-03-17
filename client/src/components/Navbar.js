@@ -7,6 +7,7 @@ import { Box, Typography, Button, IconButton, Sheet, Modal } from "@mui/joy";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
+import Logo from "../assets/logo-text.png";
 
 const Navbar = ({
   accessToken,
@@ -36,12 +37,9 @@ const Navbar = ({
           >
             <MenuIcon />
           </IconButton>
-          <Typography
-            component="div"
-            sx={{ mr: 4, flexGrow: 0, fontWeight: "lg" }}
-          >
-            PAGASA 10-Day Forecast
-          </Typography>
+          <Box sx={{ mr: 4, flexGrow: 0 }}>
+            <img src={Logo} alt="10-Day Forecast Logo" height="35" />
+          </Box>
           <Box sx={{ flexGrow: 1 }}>
             <React.Fragment>
               <Button

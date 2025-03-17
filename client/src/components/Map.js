@@ -16,7 +16,7 @@ import Legend from "./Legend";
 
 const Map = () => {
   const accessToken =
-    "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaVG2ojxTBr-5nRVBxNkz2GPU7F3yhEetf5AjVaOJNz0DKs-0ZBCT2bi95Q5-eKNU-jrt5ESliwny0Wg9q86ezlZl0MdJ-s6UupkfpQqcwjOdfxBmkajgfMVWB5DbH-GloSWc009EAKmv8yixdu3uwElTcmw1_kIXuHrNS3wsvhaRbuCYfIesTWARfQq2Dr035HOOiTeBQTOdVk29zD6HSO9AT1_4iEh8Wxe";
+    "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaW8gooZhPPaWlG6GWhaK4Lztb1bd6UA2hH_P5yQ49eq7NXXMgu35LwVXhayi3UQ1CJRBIxXc0b8foiF9VIBngSb_SJcr-xKeyq288VsyaVQflwjmt_nIdjK0hwRwV0hA1hXJeDt3JoSWY5i4qY-H-qqjgtH6KactySPDG616x1RkyJDJmLuHaCaFtaNCSn4osZcTiTg8gilry4-fOQ7eYPPAT1_4iEh8Wxe";
 
   const bounds = useMemo(
     () =>
@@ -42,6 +42,10 @@ const Map = () => {
   const overlayLayer = useRef(null);
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const [temp, setTemp] = useState("temperature_average");
+  const [activeTooltip, setActiveTooltip] = useState("Temperature");
+  const [isLayerClipped, setIsLayerClipped] = useState(false);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -120,6 +124,14 @@ const Map = () => {
           isDiscrete={isDiscrete}
           setIsAnimHidden={setIsAnimHidden}
           isAnimHidden={isAnimHidden}
+          isMenuOpen={isMenuOpen}
+          setIsMenuOpen={setIsMenuOpen}
+          temp={temp}
+          setTemp={setTemp}
+          activeTooltip={activeTooltip}
+          setActiveTooltip={setActiveTooltip}
+          setIsLayerClipped={setIsLayerClipped}
+          isLayerClipped={isLayerClipped}
         />
 
         <Legend overlay={overlay} isDiscrete={isDiscrete} />
@@ -140,6 +152,10 @@ const Map = () => {
           markerLayer={markerLayer}
           overlay={overlay}
           setOverlay={setOverlay}
+          setIsMenuOpen={setIsMenuOpen}
+          temp={temp}
+          setTemp={setTemp}
+          setActiveTooltip={setActiveTooltip}
         />
       </Box>
     ),
@@ -155,7 +171,11 @@ const Map = () => {
       overlay,
       isDiscrete,
       isAnimHidden,
-    ] // Dependencies for memoization
+      isMenuOpen,
+      temp,
+      activeTooltip,
+      isLayerClipped,
+    ]
   );
 
   return <div>{displayMap}</div>;

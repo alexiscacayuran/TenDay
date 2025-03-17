@@ -9,6 +9,7 @@ import chroma from "chroma-js";
 import "ih-leaflet-canvaslayer-field/dist/leaflet.canvaslayer.field.js";
 import { text } from "d3";
 import Dexie from "dexie";
+import Box from "@mui/joy/Box";
 
 const db = new Dexie("OverlayCache");
 db.version(1).stores({
@@ -44,7 +45,7 @@ const overlayList = [
     ],
     domain: chroma.limits([0, 40], "e", 10).map(Math.round),
     mode: "hsl",
-    classes: 15,
+    classNamees: 15,
   },
   {
     name: "temperature_minimum",
@@ -73,7 +74,7 @@ const overlayList = [
     ],
     domain: chroma.limits([0, 40], "e", 20).map(Math.round),
     mode: "hsl",
-    classes: 15,
+    classNamees: 15,
   },
   {
     name: "temperature_maximum",
@@ -102,7 +103,7 @@ const overlayList = [
     ],
     domain: chroma.limits([0, 40], "e", 20).map(Math.round),
     mode: "hsl",
-    classes: 15,
+    classNamees: 15,
   },
   {
     name: "humidity",
@@ -110,7 +111,7 @@ const overlayList = [
     scale: ["#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8"],
     domain: [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
     mode: "hsl",
-    classes: 15,
+    classNamees: 15,
   },
   {
     name: "wind",
@@ -126,7 +127,7 @@ const overlayList = [
       0.65, 2.5, 4.45, 6.75, 9.4, 12.35, 15.55, 19, 22.65, 26.5, 30.6, 42,
     ],
     mode: "hsl",
-    classes: 15,
+    classNamees: 15,
   },
   {
     name: "rainfall",
@@ -144,7 +145,7 @@ const overlayList = [
     ],
     domain: [0, 5, 15, 37.5, 75, 150, 250, 400, 500],
     mode: "rgb",
-    classes: 35,
+    classNamees: 35,
   },
   {
     name: "cloud",
@@ -157,7 +158,7 @@ const overlayList = [
     ],
     domain: [0, 20, 50, 100],
     mode: "lab",
-    classes: 15,
+    classNamees: 15,
   },
 ];
 
@@ -219,6 +220,8 @@ const WeatherLayer = ({
   const colorScale = useRef(null);
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  console.log(loading);
 
   const colorScaleFn = (value) => {
     let rgb = colorScale.current(value)._rgb;
@@ -254,6 +257,8 @@ const WeatherLayer = ({
         pane: "tilePane",
         zIndex: 100,
         opacity: 0.8,
+        mask: "https://tendayforecast.s3.ap-southeast-1.amazonaws.com/geojson/country_lowres_dissolved.geojson",
+        mask_strategy: "outside",
       });
 
       // Replace scalar layer if it already exists
@@ -327,8 +332,14 @@ const WeatherLayer = ({
   }, [isDiscrete]);
 
   useEffect(() => {
-    loadScalar();
-    loadVectorAnim();
+    const loadData = async () => {
+      setLoading(true);
+      await loadScalar();
+      await loadVectorAnim();
+      setLoading(false);
+    };
+
+    loadData();
   }, [startDate, overlay, date, map, overlayLayer]);
 
   useEffect(() => {
@@ -345,7 +356,26 @@ const WeatherLayer = ({
     }
   }, [map, isAnimHidden]);
 
-  return null;
+  return (
+    loading && (
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 70,
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 999,
+        }}
+      >
+        <div className="loader">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </Box>
+    )
+  );
 };
 
 export default WeatherLayer;

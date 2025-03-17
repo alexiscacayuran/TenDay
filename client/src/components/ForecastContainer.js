@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { format } from "date-fns";
+import { format, set } from "date-fns";
 
 import { Slide } from "@mui/material";
 import {
@@ -59,6 +59,10 @@ const ForecastContainer = ({
   markerLayer,
   overlay,
   setOverlay,
+  setIsMenuOpen,
+  temp,
+  setTemp,
+  setActiveTooltip,
 }) => {
   const [forecast, setForecast] = useState(null);
 
@@ -284,6 +288,10 @@ const ForecastContainer = ({
                       forecast={forecast}
                       overlay={overlay}
                       setOverlay={setOverlay}
+                      setIsMenuOpen={setIsMenuOpen}
+                      temp={temp}
+                      setTemp={setTemp}
+                      setActiveTooltip={setActiveTooltip}
                     />
                     <tr>
                       <th>

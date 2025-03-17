@@ -195,7 +195,15 @@ const getColorScale = (overlayName) => {
 // Function to compute median
 const getMedian = (a, b) => (a + b) / 2;
 
-const ForecastTable = ({ forecast, overlay, setOverlay }) => {
+const ForecastTable = ({
+  forecast,
+  overlay,
+  setOverlay,
+  setIsMenuOpen,
+  temp,
+  setTemp,
+  setActiveTooltip,
+}) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_average"); // Stores last selected temperature overlay
 
@@ -217,20 +225,18 @@ const ForecastTable = ({ forecast, overlay, setOverlay }) => {
     <>
       {weatherParams.map(
         ({ name, key, unit, overlay: paramOverlay, overlays, icon }) => {
-          // If this parameter has multiple overlays (temperature), determine the active type
           let activeOverlay = paramOverlay || localOverlay;
           let displayName = name;
           let dataKey = key;
 
           if (overlays) {
-            activeOverlay = lastTempOverlay; // Always show last selected temperature type
+            activeOverlay = lastTempOverlay;
             displayName = `${name} (${overlays[lastTempOverlay]})`;
             dataKey = `${key}.${overlays[lastTempOverlay]}`;
           }
 
           const colorScale = getColorScale(activeOverlay);
 
-          // Handles cycling through temperature overlays when clicked
           const handleRowClick = () => {
             if (overlays) {
               const overlayKeys = Object.keys(overlays);
@@ -238,8 +244,11 @@ const ForecastTable = ({ forecast, overlay, setOverlay }) => {
                 (overlayKeys.indexOf(lastTempOverlay) + 1) % overlayKeys.length;
               const newOverlay = overlayKeys[nextIndex];
 
-              setLastTempOverlay(newOverlay); // Update last selected temp type
-              setOverlay(newOverlay); // Update parent state (syncs with the map)
+              setLastTempOverlay(newOverlay);
+              setOverlay(newOverlay);
+              setTemp(newOverlay); // Update temp in LayerMenu
+              setIsMenuOpen(true); // Open the menu
+              setActiveTooltip("Temperature"); // Sync tooltip to Temperature
             }
           };
 
@@ -279,7 +288,6 @@ const ForecastTable = ({ forecast, overlay, setOverlay }) => {
                 </Button>
               </th>
               {forecast.forecasts.map((data, index, arr) => {
-                // Extract values safely
                 const values = arr.map((d) => {
                   let val = key.split(".").reduce((o, k) => o?.[k], d);
                   return typeof val === "object"
@@ -291,7 +299,6 @@ const ForecastTable = ({ forecast, overlay, setOverlay }) => {
                 const current = values[index];
                 const right = values[index + 1] ?? values[index];
 
-                // Apply gradient only if the row matches the selected overlay
                 const background =
                   activeOverlay === overlay
                     ? `linear-gradient(to right, ${colorScale(

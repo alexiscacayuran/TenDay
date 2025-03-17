@@ -1,6 +1,6 @@
 import React from "react";
 import { Tooltip } from "@mui/joy";
-import { SvgIcon, Typography } from "@mui/material";
+import { SvgIcon } from "@mui/material";
 
 import Sunny from "../assets/icons/0-sunny.svg";
 

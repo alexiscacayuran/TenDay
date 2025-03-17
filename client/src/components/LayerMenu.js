@@ -25,6 +25,7 @@ import Switch from "@mui/joy/Switch";
 import LayerOptionMenu from "./LayerOptionMenu";
 import Grow from "@mui/material/Grow";
 import { TransitionGroup } from "react-transition-group";
+import Popover from "@mui/material/Popover";
 
 const LayerMenu = ({
   overlay,
@@ -33,12 +34,16 @@ const LayerMenu = ({
   setIsDiscrete,
   isAnimHidden,
   setIsAnimHidden,
+  isMenuOpen,
+  setIsMenuOpen,
+  temp,
+  setTemp,
+  activeTooltip,
+  setActiveTooltip,
+  isLayerClipped,
+  setIsLayerClipped,
 }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [localOverlay, setLocalOverlay] = useState(overlay);
-  const [checked, setChecked] = useState(isDiscrete);
-  const [temp, setTemp] = useState("temperature_average");
-  const [activeTooltip, setActiveTooltip] = useState("Temperature");
 
   const tooltipButtons = [
     { title: "Temperature", value: temp, icon: faTemperatureHalf },
@@ -48,14 +53,9 @@ const LayerMenu = ({
     { title: "Clouds", value: "cloud", icon: faCloud },
   ];
 
-  // Synchronize localOverlay with the parent prop
   useEffect(() => {
     setLocalOverlay(overlay);
   }, [overlay]);
-
-  useEffect(() => {
-    setChecked(isDiscrete);
-  }, [isDiscrete]);
 
   return (
     <>
@@ -74,11 +74,12 @@ const LayerMenu = ({
             value={localOverlay}
             onChange={(event, value) => {
               if (value) {
-                setLocalOverlay(value); // Update local state for immediate UI change
-                setOverlay(value); // Update parent state
-                setIsMenuOpen((prev) =>
-                  value.startsWith("temperature") ? !prev : false
-                );
+                setLocalOverlay(value);
+                setOverlay(value);
+                setIsMenuOpen(value.startsWith("temperature"));
+                setActiveTooltip(
+                  tooltipButtons.find((btn) => btn.value === value)?.title || ""
+                ); // Sync tooltip
               }
             }}
             aria-label="overlay"
@@ -96,11 +97,7 @@ const LayerMenu = ({
                 <IconButton
                   value={value}
                   aria-label={value}
-                  onClick={() =>
-                    setActiveTooltip(
-                      activeTooltip === title ? activeTooltip : title
-                    )
-                  }
+                  onClick={() => setActiveTooltip(title)}
                 >
                   <FontAwesomeIcon
                     icon={icon}
@@ -114,8 +111,8 @@ const LayerMenu = ({
         <Box
           style={{
             position: "relative",
-            minHeight: isMenuOpen ? "155px" : "auto", // Adjust height to match RadioGroup
-            transition: "min-height 0.3s ease", // Smooth transition when hiding
+            minHeight: isMenuOpen ? "155px" : "auto",
+            transition: "min-height 0.3s ease",
           }}
         >
           <Grow in={isMenuOpen} timeout={300}>
@@ -126,13 +123,7 @@ const LayerMenu = ({
               variant="soft"
               sx={{ mt: 1, position: "absolute", width: "100%" }}
             >
-              <List
-                component="div"
-                variant="plain"
-                sx={{
-                  minWidth: 160,
-                }}
-              >
+              <List component="div" variant="plain" sx={{ minWidth: 160 }}>
                 {["Maximum", "Average", "Minimum"].map((value, index) => (
                   <React.Fragment key={value}>
                     {index !== 0 && <ListDivider />}
@@ -155,6 +146,7 @@ const LayerMenu = ({
                           setTemp(e.target.value);
                           setLocalOverlay(e.target.value);
                           setOverlay(e.target.value);
+                          setActiveTooltip("Temperature"); // Sync tooltip when switching temp
                         }}
                         checked={temp === "temperature_" + value.toLowerCase()}
                       />
@@ -170,7 +162,9 @@ const LayerMenu = ({
           isDiscrete={isDiscrete}
           setIsAnimHidden={setIsAnimHidden}
           isAnimHidden={isAnimHidden}
-        ></LayerOptionMenu>
+          setIsLayerClipped={setIsLayerClipped}
+          isLayerClipped={isLayerClipped}
+        />
       </Box>
     </>
   );
