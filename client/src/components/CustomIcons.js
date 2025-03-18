@@ -40,6 +40,14 @@ import { ReactComponent as WNW } from "../assets/icons/wind-direction/13-wnw.svg
 import { ReactComponent as NW } from "../assets/icons/wind-direction/14-nw.svg";
 import { ReactComponent as NNW } from "../assets/icons/wind-direction/15-nnw.svg";
 
+import { ReactComponent as TMax } from "../assets/tmax.svg";
+import { ReactComponent as TMean } from "../assets/tmean.svg";
+import { ReactComponent as TMin } from "../assets/tmin.svg";
+
+import { ReactComponent as LayerStyle } from "../assets/layer-style.svg";
+import { ReactComponent as Gradient } from "../assets/gradient.svg";
+import { ReactComponent as Particles } from "../assets/particles.svg";
+
 const ImgWrapper = ({ Icon, Title, ...props }) => (
   <Tooltip title={Title} color="primary" placement="bottom" variant="soft">
     <img src={Icon} {...props} style={{ width: "32px" }}></img>
@@ -49,6 +57,40 @@ const ImgWrapper = ({ Icon, Title, ...props }) => (
 const SvgWrapper = ({ Icon, ...props }) => (
   <SvgIcon {...props} style={{ width: "20px" }}>
     <Icon />
+  </SvgIcon>
+);
+
+export const LayerStyleIcon = (props) => (
+  <SvgIcon {...props}>
+    <LayerStyle />
+  </SvgIcon>
+);
+
+export const GradientIcon = (props) => (
+  <SvgIcon {...props}>
+    <Gradient />
+  </SvgIcon>
+);
+
+export const ParticlesIcon = (props) => (
+  <SvgIcon {...props}>
+    <Particles />
+  </SvgIcon>
+);
+
+export const TMaxIcon = (props) => (
+  <SvgIcon {...props}>
+    <TMax />
+  </SvgIcon>
+);
+export const TMeanIcon = (props) => (
+  <SvgIcon {...props}>
+    <TMean />
+  </SvgIcon>
+);
+export const TMinIcon = (props) => (
+  <SvgIcon {...props}>
+    <TMin />
   </SvgIcon>
 );
 

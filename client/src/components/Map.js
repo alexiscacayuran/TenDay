@@ -46,6 +46,7 @@ const Map = () => {
   const [temp, setTemp] = useState("temperature_average");
   const [activeTooltip, setActiveTooltip] = useState("Temperature");
   const [isLayerClipped, setIsLayerClipped] = useState(false);
+  console.log("isDiscrete from the map component:", isDiscrete);
 
   useEffect(() => {
     // Function to fetch data from the API

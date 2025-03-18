@@ -37,8 +37,8 @@ const Navbar = ({
           >
             <MenuIcon />
           </IconButton>
-          <Box sx={{ mr: 4, flexGrow: 0 }}>
-            <img src={Logo} alt="10-Day Forecast Logo" height="35" />
+          <Box sx={{ mr: 4, flexGrow: 0, pt: "0.3em" }}>
+            <img src={Logo} alt="10-Day Forecast Logo" height="40" />
           </Box>
           <Box sx={{ flexGrow: 1 }}>
             <React.Fragment>

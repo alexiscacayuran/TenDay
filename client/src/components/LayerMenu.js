@@ -25,7 +25,8 @@ import Switch from "@mui/joy/Switch";
 import LayerOptionMenu from "./LayerOptionMenu";
 import Grow from "@mui/material/Grow";
 import { TransitionGroup } from "react-transition-group";
-import Popover from "@mui/material/Popover";
+
+import { TMaxIcon, TMeanIcon, TMinIcon } from "./CustomIcons";
 
 const LayerMenu = ({
   overlay,
@@ -44,6 +45,7 @@ const LayerMenu = ({
   setIsLayerClipped,
 }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
+  const [localTemp, setLocalTemp] = useState();
 
   const tooltipButtons = [
     { title: "Temperature", value: temp, icon: faTemperatureHalf },
@@ -53,9 +55,23 @@ const LayerMenu = ({
     { title: "Clouds", value: "cloud", icon: faCloud },
   ];
 
+  const tempButtons = [
+    {
+      title: "Maximum",
+      value: "temperature_maximum",
+      icon: <TMaxIcon />,
+    },
+    { title: "Average", value: "temperature_average", icon: <TMeanIcon /> },
+    { title: "Minimum", value: "temperature_minimum", icon: <TMinIcon /> },
+  ];
+
   useEffect(() => {
     setLocalOverlay(overlay);
   }, [overlay]);
+
+  useEffect(() => {
+    setLocalTemp(temp);
+  }, [temp]);
 
   return (
     <>
@@ -109,52 +125,55 @@ const LayerMenu = ({
           </ToggleButtonGroup>
         </Sheet>
         <Box
-          style={{
+          sx={{
             position: "relative",
             minHeight: isMenuOpen ? "155px" : "auto",
             transition: "min-height 0.3s ease",
+            mt: 1,
           }}
         >
           <Grow in={isMenuOpen} timeout={300}>
-            <RadioGroup
-              size="sm"
-              overlay
+            <Sheet
               color="primary"
               variant="soft"
-              sx={{ mt: 1, position: "absolute", width: "100%" }}
+              sx={{
+                borderRadius: "md",
+                display: "inline-flex",
+                gap: 2,
+                p: 0.5,
+                position: "absolute",
+              }}
             >
-              <List component="div" variant="plain" sx={{ minWidth: 160 }}>
-                {["Maximum", "Average", "Minimum"].map((value, index) => (
-                  <React.Fragment key={value}>
-                    {index !== 0 && <ListDivider />}
-                    <ListItem>
-                      <Radio
-                        color="primary"
-                        variant="outlined"
-                        sx={{ flexGrow: 1, flexDirection: "row-reverse" }}
-                        id={value}
-                        value={"temperature_" + value.toLowerCase()}
-                        label={
-                          <Typography
-                            sx={{ color: "primary.softColor" }}
-                            level="title-sm"
-                          >
-                            {value}
-                          </Typography>
-                        }
-                        onChange={(e) => {
-                          setTemp(e.target.value);
-                          setLocalOverlay(e.target.value);
-                          setOverlay(e.target.value);
-                          setActiveTooltip("Temperature"); // Sync tooltip when switching temp
-                        }}
-                        checked={temp === "temperature_" + value.toLowerCase()}
-                      />
-                    </ListItem>
-                  </React.Fragment>
+              <ToggleButtonGroup
+                size="lg"
+                orientation="vertical"
+                color="primary"
+                variant="soft"
+                spacing={0.5}
+                value={localTemp}
+                onChange={(event, value) => {
+                  if (value) {
+                    setTemp(value);
+                    setLocalTemp(value);
+                    setLocalOverlay(value);
+                    setOverlay(value);
+                    setActiveTooltip("Temperature");
+                  }
+                }}
+                aria-label="temp-overlay"
+              >
+                {tempButtons.map(({ title, value, icon }) => (
+                  <IconButton
+                    key={title}
+                    value={value}
+                    aria-label={value}
+                    onClick={() => setActiveTooltip("Temperature")}
+                  >
+                    {icon}
+                  </IconButton>
                 ))}
-              </List>
-            </RadioGroup>
+              </ToggleButtonGroup>
+            </Sheet>
           </Grow>
         </Box>
         <LayerOptionMenu

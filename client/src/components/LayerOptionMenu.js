@@ -1,11 +1,17 @@
 import React, { useState } from "react";
-import Sheet from "@mui/joy/Sheet";
 import Box from "@mui/joy/Box";
 import Typography from "@mui/joy/Typography";
 import Switch from "@mui/joy/Switch";
-import Stack from "@mui/joy/Stack";
-import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
 import IconButton from "@mui/joy/IconButton";
+import { LayerStyleIcon, GradientIcon, ParticlesIcon } from "./CustomIcons";
+import Popover from "@mui/material/Popover";
+import List from "@mui/joy/List";
+import ListItem from "@mui/joy/ListItem";
+import ListItemDecorator from "@mui/joy/ListItemDecorator";
+import ListSubheader from "@mui/joy/ListSubheader";
+import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faScissors } from "@fortawesome/free-solid-svg-icons";
 
 const LayerOptionMenu = ({
   isDiscrete,
@@ -22,105 +28,126 @@ const LayerOptionMenu = ({
   return (
     // <Box sx={{ position: "absolute", bottom: 20, left: 10, zIndex: 999 }}>
     <Box sx={{ zIndex: 999, mt: 2 }}>
-      {/* <IconButton variant="soft">
-        <FavoriteBorder />
-      </IconButton> */}
-      <Stack
-        direction="column"
-        spacing={1}
-        sx={{
-          justifyContent: "center",
-          alignItems: "stretch",
-          width: "160px",
-        }}
-      >
-        <Sheet
-          color="primary"
-          variant="soft"
-          sx={{
-            borderRadius: "md",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 1,
-          }}
-        >
-          <Typography
-            component="label"
-            color="primary.softColor"
-            level="title-sm"
-            sx={{ flexGrow: 1 }}
-          >
-            Show edges
-          </Typography>
-          <Switch
-            sx={{ ml: "auto" }}
-            checked={checked}
-            onChange={(event) => {
-              setChecked(event.target.checked);
-              setIsDiscrete(event.target.checked);
-            }}
-          />
-        </Sheet>
+      <PopupState variant="popover" popupId="demo-popup-popover">
+        {(popupState) => (
+          <>
+            <IconButton
+              color="primary"
+              variant="soft"
+              size="lg"
+              sx={{ "--IconButton-size": "3.25rem" }}
+              {...bindTrigger(popupState)}
+            >
+              <LayerStyleIcon />
+            </IconButton>
+            <Popover
+              {...bindPopover(popupState)}
+              anchorOrigin={{
+                vertical: "top",
+                horizontal: "left",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "left",
+              }}
+              slotProps={{
+                paper: {
+                  sx: { boxShadow: "none", backgroundColor: "transparent" },
+                },
+              }}
+            >
+              <List
+                size="md"
+                variant="outlined"
+                sx={{
+                  minWidth: 250,
+                  maxWidth: 300,
+                  borderRadius: "sm",
+                  backgroundColor: "background.body",
+                }}
+              >
+                <ListItem
+                  endAction={
+                    <Switch
+                      sx={{ mr: 1 }}
+                      size="sm"
+                      checked={checked}
+                      onChange={(event) => {
+                        setChecked(event.target.checked);
+                        setIsDiscrete(event.target.checked);
+                      }}
+                    />
+                  }
+                >
+                  <ListItemDecorator>
+                    <GradientIcon />
+                  </ListItemDecorator>
+                  <Typography
+                    component="label"
+                    color="primary.softColor"
+                    level="title-sm"
+                  >
+                    Show edges
+                  </Typography>
+                </ListItem>
 
-        <Sheet
-          color="primary"
-          variant="soft"
-          sx={{
-            borderRadius: "md",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 1,
-          }}
-        >
-          <Typography
-            component="label"
-            color="primary.softColor"
-            level="title-sm"
-            sx={{ flexGrow: 1 }}
-          >
-            Wind animation
-          </Typography>
-          <Switch
-            sx={{ ml: "auto" }}
-            checked={!checkedAnim}
-            onChange={(event) => {
-              setCheckedAnim(!event.target.checked);
-              setIsAnimHidden(!event.target.checked);
-            }}
-          />
-        </Sheet>
+                <ListItem
+                  endAction={
+                    <Switch
+                      sx={{ mr: 1 }}
+                      size="sm"
+                      checked={!checkedAnim}
+                      onChange={(event) => {
+                        setCheckedAnim(!event.target.checked);
+                        setIsAnimHidden(!event.target.checked);
+                      }}
+                    />
+                  }
+                >
+                  <ListItemDecorator>
+                    <ParticlesIcon />
+                  </ListItemDecorator>
+                  <Typography
+                    component="label"
+                    color="primary.softColor"
+                    level="title-sm"
+                  >
+                    Wind animation
+                  </Typography>
+                </ListItem>
 
-        <Sheet
-          color="primary"
-          variant="soft"
-          sx={{
-            borderRadius: "md",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 1,
-          }}
-        >
-          <Typography
-            component="label"
-            color="primary.softColor"
-            level="title-sm"
-            sx={{ flexGrow: 1 }}
-          >
-            Clip weather map
-          </Typography>
-          <Switch
-            sx={{ ml: "auto" }}
-            checked={isLayerClipped}
-            onChange={(event) => {
-              setCheckedClip(event.target.checked);
-              setIsLayerClipped(event.target.checked);
-            }}
-          />
-        </Sheet>
-      </Stack>
+                <ListItem
+                  endAction={
+                    <Switch
+                      sx={{ mr: 1 }}
+                      size="sm"
+                      checked={checkedClip}
+                      onChange={(event) => {
+                        setCheckedClip(event.target.checked);
+                        setIsLayerClipped(event.target.checked);
+                      }}
+                    />
+                  }
+                >
+                  <ListItemDecorator>
+                    <FontAwesomeIcon
+                      icon={faScissors}
+                      style={{ fontSize: "1rem" }}
+                    />
+                  </ListItemDecorator>
+                  <Typography
+                    component="label"
+                    color="primary.softColor"
+                    level="title-sm"
+                  >
+                    Clip weather map
+                  </Typography>
+                </ListItem>
+              </List>
+            </Popover>
+          </>
+        )}
+      </PopupState>
     </Box>
   );
 };

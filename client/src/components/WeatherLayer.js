@@ -45,7 +45,7 @@ const overlayList = [
     ],
     domain: chroma.limits([0, 40], "e", 10).map(Math.round),
     mode: "hsl",
-    classNamees: 15,
+    classes: 15,
   },
   {
     name: "temperature_minimum",
@@ -74,7 +74,7 @@ const overlayList = [
     ],
     domain: chroma.limits([0, 40], "e", 20).map(Math.round),
     mode: "hsl",
-    classNamees: 15,
+    classes: 15,
   },
   {
     name: "temperature_maximum",
@@ -103,7 +103,7 @@ const overlayList = [
     ],
     domain: chroma.limits([0, 40], "e", 20).map(Math.round),
     mode: "hsl",
-    classNamees: 15,
+    classes: 15,
   },
   {
     name: "humidity",
@@ -111,7 +111,7 @@ const overlayList = [
     scale: ["#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8"],
     domain: [50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100],
     mode: "hsl",
-    classNamees: 15,
+    classes: 15,
   },
   {
     name: "wind",
@@ -127,7 +127,7 @@ const overlayList = [
       0.65, 2.5, 4.45, 6.75, 9.4, 12.35, 15.55, 19, 22.65, 26.5, 30.6, 42,
     ],
     mode: "hsl",
-    classNamees: 15,
+    classes: 15,
   },
   {
     name: "rainfall",
@@ -145,7 +145,7 @@ const overlayList = [
     ],
     domain: [0, 5, 15, 37.5, 75, 150, 250, 400, 500],
     mode: "rgb",
-    classNamees: 35,
+    classes: 35,
   },
   {
     name: "cloud",
@@ -158,7 +158,7 @@ const overlayList = [
     ],
     domain: [0, 20, 50, 100],
     mode: "lab",
-    classNamees: 15,
+    classes: 15,
   },
 ];
 
@@ -188,7 +188,7 @@ const getColorScale = (overlay, isDiscrete) => {
 
   if (!matchedOverlay) {
     console.error(`Invalid overlay name: "${overlay}"`);
-    return null; // Return null if the overlay is invalid
+    return (value) => "rgba(0,0,0,0)"; // Return a fallback function instead of null
   }
 
   let colorScale = chroma.scale(matchedOverlay.scale);
@@ -218,10 +218,10 @@ const WeatherLayer = ({
 }) => {
   const map = useMap();
   const colorScale = useRef(null);
+  console.log(colorScale);
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
   const [loading, setLoading] = useState(true);
-  console.log(loading);
 
   const colorScaleFn = (value) => {
     let rgb = colorScale.current(value)._rgb;
@@ -257,8 +257,6 @@ const WeatherLayer = ({
         pane: "tilePane",
         zIndex: 100,
         opacity: 0.8,
-        mask: "https://tendayforecast.s3.ap-southeast-1.amazonaws.com/geojson/country_lowres_dissolved.geojson",
-        mask_strategy: "outside",
       });
 
       // Replace scalar layer if it already exists
