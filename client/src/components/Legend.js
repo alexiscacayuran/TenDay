@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import chroma from "chroma-js";
 
 const Legend = ({ isDiscrete, overlay }) => {
-  console.log(overlay);
   const overlayList = [
     {
       name: "temperature_average",

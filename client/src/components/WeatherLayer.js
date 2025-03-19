@@ -32,7 +32,7 @@ const overlayList = [
       "#86FF79",
       "#B6FF49",
       "#E7FF18",
-      "#E7FF18",
+      "#FFF600",
       "#FFE500",
       "#FFD400",
       "#FFC300",
@@ -162,50 +162,42 @@ const overlayList = [
   },
 ];
 
-const writeURL = (startDate, overlay, date, isVector) => {
+const writeURL = (startDate, overlay, date, isVector, isLayerClipped) => {
   const formattedStartDate = format(startDate, "yyyyMMdd");
   const formattedDate = format(date, "yyyyMMdd");
+  const maskedSuffix = isLayerClipped ? "_masked" : "";
 
   if (isVector) {
     return isVector === "u"
-      ? `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/WIND/U_${formattedDate}.asc`
-      : `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/WIND/V_${formattedDate}.asc`;
+      ? `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/WIND/U_${formattedDate}${maskedSuffix}.asc`
+      : `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/WIND/V_${formattedDate}${maskedSuffix}.asc`;
   }
 
-  const matchedOverlay = overlayList.find((item) => item.name === overlay);
-  const overlayName = matchedOverlay.pathName;
-
-  if (!overlayName) {
+  const currentOverlay = overlayList.find((item) => item.name === overlay);
+  if (!currentOverlay) {
     console.error(`Invalid overlay name: "${overlay}"`);
     return null; // Return null if the overlay is invalid
   }
 
-  return `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/${overlayName}/${overlayName}_${formattedDate}.tif`;
+  const overlayName = currentOverlay.pathName;
+
+  return `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/${overlayName}/${overlayName}_${formattedDate}${maskedSuffix}.tif`;
 };
 
 const getColorScale = (overlay, isDiscrete) => {
-  const matchedOverlay = overlayList.find((o) => o.name === overlay);
+  const currentOverlay = overlayList.find((o) => o.name === overlay);
 
-  if (!matchedOverlay) {
-    console.error(`Invalid overlay name: "${overlay}"`);
-    return (value) => "rgba(0,0,0,0)"; // Return a fallback function instead of null
+  let colorScale = chroma.scale(currentOverlay.scale);
+
+  if (currentOverlay.mode) {
+    colorScale = colorScale.mode(currentOverlay.mode);
   }
 
-  let colorScale = chroma.scale(matchedOverlay.scale);
-
-  if (matchedOverlay.mode) {
-    colorScale = colorScale.mode(matchedOverlay.mode);
+  if (currentOverlay.domain) {
+    colorScale = colorScale.domain(currentOverlay.domain);
   }
 
-  if (matchedOverlay.domain) {
-    colorScale = colorScale.domain(matchedOverlay.domain);
-  }
-
-  if (matchedOverlay.gamma) {
-    colorScale = colorScale.gamma(matchedOverlay.gamma);
-  }
-
-  return isDiscrete ? colorScale.classes(matchedOverlay.classes) : colorScale;
+  return isDiscrete ? colorScale.classes(currentOverlay.classes) : colorScale;
 };
 
 const WeatherLayer = ({
@@ -215,21 +207,31 @@ const WeatherLayer = ({
   overlayLayer,
   isDiscrete,
   isAnimHidden,
+  isLayerClipped,
 }) => {
   const map = useMap();
+  const localOverlay = useRef(overlayList.find((o) => o.name === overlay));
   const colorScale = useRef(null);
-  console.log(colorScale);
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  console.log(localOverlay.current);
 
   const colorScaleFn = (value) => {
-    let rgb = colorScale.current(value)._rgb;
-    return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${rgb[3]})`;
+    if (value[0] < Number.MIN_VALUE) {
+      return colorScale.current(value).alpha(0).css();
+    }
+    return colorScale.current(value).css();
   };
 
   const loadScalar = async () => {
-    const url = writeURL(startDate.current.latest_date, overlay, date, false);
+    const url = writeURL(
+      startDate.current.latest_date,
+      overlay,
+      date,
+      false,
+      isLayerClipped
+    );
     if (!url) return;
 
     try {
@@ -273,8 +275,20 @@ const WeatherLayer = ({
 
   const loadVectorAnim = async () => {
     if (!isAnimHidden) {
-      const uUrl = writeURL(startDate.current.latest_date, overlay, date, "u");
-      const vUrl = writeURL(startDate.current.latest_date, overlay, date, "v");
+      const uUrl = writeURL(
+        startDate.current.latest_date,
+        overlay,
+        date,
+        "u",
+        isLayerClipped
+      );
+      const vUrl = writeURL(
+        startDate.current.latest_date,
+        overlay,
+        date,
+        "v",
+        isLayerClipped
+      );
       const vectorUrl = `${uUrl}-${vUrl}`; // Unique key for vector layer
 
       try {
@@ -330,6 +344,8 @@ const WeatherLayer = ({
   }, [isDiscrete]);
 
   useEffect(() => {
+    localOverlay.current = overlayList.find((o) => o.name === overlay);
+
     const loadData = async () => {
       setLoading(true);
       await loadScalar();
@@ -338,7 +354,7 @@ const WeatherLayer = ({
     };
 
     loadData();
-  }, [startDate, overlay, date, map, overlayLayer]);
+  }, [startDate, overlay, date, map, overlayLayer, isLayerClipped]);
 
   useEffect(() => {
     if (isAnimHidden) {

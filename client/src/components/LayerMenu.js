@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTemperatureHalf,
-  faTemperatureFull,
-  faTemperatureEmpty,
   faDroplet,
   faWind,
   faUmbrella,
@@ -14,17 +12,10 @@ import Sheet from "@mui/joy/Sheet";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
 import ToggleButtonGroup from "@mui/joy/ToggleButtonGroup";
-import List from "@mui/joy/List";
-import ListItem from "@mui/joy/ListItem";
-import ListDivider from "@mui/joy/ListDivider";
-import Radio from "@mui/joy/Radio";
-import RadioGroup from "@mui/joy/RadioGroup";
-import Typography from "@mui/joy/Typography";
 import Tooltip from "@mui/joy/Tooltip";
-import Switch from "@mui/joy/Switch";
 import LayerOptionMenu from "./LayerOptionMenu";
 import Grow from "@mui/material/Grow";
-import { TransitionGroup } from "react-transition-group";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { TMaxIcon, TMeanIcon, TMinIcon } from "./CustomIcons";
 
@@ -124,15 +115,34 @@ const LayerMenu = ({
             ))}
           </ToggleButtonGroup>
         </Sheet>
-        <Box
-          sx={{
+        {/* Box Container with Collapse Animation (Height Only, Smoother Transition) */}
+        <motion.div
+          initial={{ height: 0 }}
+          animate={{
+            height: isMenuOpen ? "155px" : 0,
+          }}
+          exit={{ height: 0 }}
+          transition={{
+            duration: 0.5, // Increased duration for smoother effect
+            ease: [0.25, 1, 0.5, 1], // Smooth spring-like easing
+          }}
+          style={{
+            overflow: "hidden",
             position: "relative",
-            minHeight: isMenuOpen ? "155px" : "auto",
-            transition: "min-height 0.3s ease",
-            mt: 1,
+            marginTop: isMenuOpen ? "8px" : 0,
           }}
         >
-          <Grow in={isMenuOpen} timeout={300}>
+          {/* Temp Button Group Sheet (Slide + Smoother) */}
+          <motion.div
+            initial={{ y: -15 }}
+            animate={{
+              y: isMenuOpen ? 0 : -15,
+            }}
+            transition={{
+              duration: 0.4,
+              ease: [0.33, 1, 0.68, 1], // More natural easing curve
+            }}
+          >
             <Sheet
               color="primary"
               variant="soft"
@@ -163,27 +173,49 @@ const LayerMenu = ({
                 aria-label="temp-overlay"
               >
                 {tempButtons.map(({ title, value, icon }) => (
-                  <IconButton
+                  <Tooltip
                     key={title}
-                    value={value}
-                    aria-label={value}
-                    onClick={() => setActiveTooltip("Temperature")}
+                    title={title}
+                    placement="right"
+                    size="lg"
+                    variant="soft"
+                    sx={{ fontWeight: 600, zIndex: 500 }}
                   >
-                    {icon}
-                  </IconButton>
+                    <IconButton
+                      key={title}
+                      value={value}
+                      aria-label={value}
+                      onClick={() => setActiveTooltip("Temperature")}
+                    >
+                      {icon}
+                    </IconButton>
+                  </Tooltip>
                 ))}
               </ToggleButtonGroup>
             </Sheet>
-          </Grow>
-        </Box>
-        <LayerOptionMenu
-          setIsDiscrete={setIsDiscrete}
-          isDiscrete={isDiscrete}
-          setIsAnimHidden={setIsAnimHidden}
-          isAnimHidden={isAnimHidden}
-          setIsLayerClipped={setIsLayerClipped}
-          isLayerClipped={isLayerClipped}
-        />
+          </motion.div>
+        </motion.div>
+
+        {/* LayerOptionMenu with Slide Up/Down (Super Smooth!) */}
+        <motion.div
+          initial={{ y: 20 }}
+          animate={{
+            y: isMenuOpen ? 0 : 10,
+          }}
+          transition={{
+            duration: 0.5,
+            ease: [0.33, 1, 0.68, 1], // Bezier easing for smoother feel
+          }}
+        >
+          <LayerOptionMenu
+            setIsDiscrete={setIsDiscrete}
+            isDiscrete={isDiscrete}
+            setIsAnimHidden={setIsAnimHidden}
+            isAnimHidden={isAnimHidden}
+            setIsLayerClipped={setIsLayerClipped}
+            isLayerClipped={isLayerClipped}
+          />
+        </motion.div>
       </Box>
     </>
   );

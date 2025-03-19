@@ -3,6 +3,7 @@ import chroma from "chroma-js";
 import { Typography, Button } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
+import { motion } from "framer-motion";
 
 const overlayList = [
   {
@@ -206,6 +207,7 @@ const ForecastTable = ({
 }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_average"); // Stores last selected temperature overlay
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     // If the selected overlay is a temperature type, update lastTempOverlay
@@ -253,7 +255,11 @@ const ForecastTable = ({
           };
 
           return (
-            <tr key={name}>
+            <tr
+              key={name}
+              onMouseEnter={() => name === "Temperature" && setHovered(true)}
+              onMouseLeave={() => name === "Temperature" && setHovered(false)}
+            >
               <th
                 onClick={overlays ? handleRowClick : undefined}
                 style={{ cursor: overlays ? "pointer" : "default" }}
@@ -261,14 +267,25 @@ const ForecastTable = ({
                 <Typography
                   startDecorator={
                     icon && (
-                      <FontAwesomeIcon
-                        icon={icon}
-                        style={{
-                          fontSize: "1rem",
-                          marginLeft: "12px",
-                          color: "#12467B",
+                      <motion.div
+                        animate={{
+                          y: hovered ? [-2, 2, -2] : 0, // Slide only if hovered
                         }}
-                      />
+                        transition={{
+                          duration: 0.4,
+                          ease: "easeInOut",
+                          repeat: Infinity,
+                        }}
+                      >
+                        <FontAwesomeIcon
+                          icon={icon}
+                          style={{
+                            fontSize: "1rem",
+                            marginLeft: "12px",
+                            color: "#12467B",
+                          }}
+                        />
+                      </motion.div>
                     )
                   }
                   sx={{ justifyContent: "space-between" }}

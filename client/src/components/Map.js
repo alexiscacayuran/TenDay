@@ -15,7 +15,8 @@ import WeatherLayer from "./WeatherLayer";
 import Legend from "./Legend";
 
 const Map = () => {
-  const accessToken = "<ACCESSTOKEN>";
+  const accessToken =
+    "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaW8gooZhPPaWlG6GWhaK4Lztb1bd6UA2hH_P5yQ49eq7NXXMgu35LwVXhayi3UQ1CJRBIxXc0b8foiF9VIBngSb_SJcr-xKeyq288VsyaVQflwjmt_nIdjK0hwRwV0hA1hXJeDt3JoSWY5i4qY-H-qqjgtH6KactySPDG616x1RkyJDJmLuHaCaFtaNCSn4osZcTiTg8gilry4-fOQ7eYPPAT1_4iEh8Wxe";
 
   const bounds = useMemo(
     () =>
@@ -45,7 +46,8 @@ const Map = () => {
   const [temp, setTemp] = useState("temperature_average");
   const [activeTooltip, setActiveTooltip] = useState("Temperature");
   const [isLayerClipped, setIsLayerClipped] = useState(false);
-  console.log("isDiscrete from the map component:", isDiscrete);
+
+  console.log(isLayerClipped);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -96,6 +98,7 @@ const Map = () => {
               overlayLayer={overlayLayer}
               isDiscrete={isDiscrete}
               isAnimHidden={isAnimHidden}
+              isLayerClipped={isLayerClipped}
             />
           )}
           <Base accessToken={accessToken} />
