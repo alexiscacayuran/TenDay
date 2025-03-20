@@ -32,22 +32,29 @@ const Map = () => {
     province: "",
   });
 
-  const [map, setMap] = useState(null); // External state for the map instance
-  const markerLayer = useRef(null);
-  const [open, setOpen] = useState(false); // Slide up bottom container state
   const startDate = useRef(null);
+  const markerLayer = useRef(null);
+  const overlayLayer = useRef(null);
+
+  const [map, setMap] = useState(null); // External state for the map instance
+  const [open, setOpen] = useState(false); // Slide up bottom container state
   const [date, setDate] = useState(null);
   const [dateReady, setDateReady] = useState(false);
   const [overlay, setOverlay] = useState("temperature_average");
-  const overlayLayer = useRef(null);
-  const [isDiscrete, setIsDiscrete] = useState(false);
-  const [isAnimHidden, setIsAnimHidden] = useState(false);
+
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [temp, setTemp] = useState("temperature_average");
   const [activeTooltip, setActiveTooltip] = useState("Temperature");
+  const [isDiscrete, setIsDiscrete] = useState(false);
+  const [isAnimHidden, setIsAnimHidden] = useState(false);
   const [isLayerClipped, setIsLayerClipped] = useState(false);
 
-  console.log(isLayerClipped);
+  const [units, setUnits] = useState({
+    temperature: "°C",
+    rainfall: "mm/24h",
+    windSpeed: "m/s",
+    windDirection: "arrow",
+  });
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -99,6 +106,7 @@ const Map = () => {
               isDiscrete={isDiscrete}
               isAnimHidden={isAnimHidden}
               isLayerClipped={isLayerClipped}
+              open={open}
             />
           )}
           <Base accessToken={accessToken} />
@@ -121,20 +129,20 @@ const Map = () => {
         </MapContainer>
 
         <LayerMenu
-          setOverlay={setOverlay}
           overlay={overlay}
-          setIsDiscrete={setIsDiscrete}
+          setOverlay={setOverlay}
           isDiscrete={isDiscrete}
-          setIsAnimHidden={setIsAnimHidden}
+          setIsDiscrete={setIsDiscrete}
           isAnimHidden={isAnimHidden}
+          setIsAnimHidden={setIsAnimHidden}
           isMenuOpen={isMenuOpen}
           setIsMenuOpen={setIsMenuOpen}
           temp={temp}
           setTemp={setTemp}
           activeTooltip={activeTooltip}
           setActiveTooltip={setActiveTooltip}
-          setIsLayerClipped={setIsLayerClipped}
           isLayerClipped={isLayerClipped}
+          setIsLayerClipped={setIsLayerClipped}
         />
 
         <Legend overlay={overlay} isDiscrete={isDiscrete} />
@@ -178,6 +186,7 @@ const Map = () => {
       temp,
       activeTooltip,
       isLayerClipped,
+      units,
     ]
   );
 

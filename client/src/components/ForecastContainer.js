@@ -46,11 +46,7 @@ import {
   NNWIcon,
 } from "./CustomIcons";
 
-import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ForecastTable from "./ForecastTable";
-
-const temperatureTypes = ["mean", "max", "min"];
 
 const ForecastContainer = ({
   open,
@@ -304,9 +300,9 @@ const ForecastContainer = ({
                           onClick={function () {}}
                           size="sm"
                           variant="plain"
-                          sx={{ fontSize: "0.8rem" }}
+                          sx={{ fontSize: "0.8rem", minHeight: 0 }}
                         >
-                          desc
+                          arrow
                         </Button>
                       </th>
                       {forecast.forecasts.map((data, index) => (

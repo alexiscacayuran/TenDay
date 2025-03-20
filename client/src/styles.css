@@ -110,6 +110,10 @@
   min-height: 53px !important;
 }
 
+.leaflet-popup-content {
+  width: auto !important;
+}
+
 .leaflet-popup-content-wrapper {
   background-color: transparent !important;
   box-shadow: none !important;

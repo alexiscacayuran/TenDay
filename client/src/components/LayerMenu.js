@@ -4,7 +4,7 @@ import {
   faTemperatureHalf,
   faDroplet,
   faWind,
-  faUmbrella,
+  faCloudShowersHeavy,
   faCloud,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -14,8 +14,7 @@ import IconButton from "@mui/joy/IconButton";
 import ToggleButtonGroup from "@mui/joy/ToggleButtonGroup";
 import Tooltip from "@mui/joy/Tooltip";
 import LayerOptionMenu from "./LayerOptionMenu";
-import Grow from "@mui/material/Grow";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { TMaxIcon, TMeanIcon, TMinIcon } from "./CustomIcons";
 
@@ -40,7 +39,7 @@ const LayerMenu = ({
 
   const tooltipButtons = [
     { title: "Temperature", value: temp, icon: faTemperatureHalf },
-    { title: "Rainfall", value: "rainfall", icon: faUmbrella },
+    { title: "Rainfall", value: "rainfall", icon: faCloudShowersHeavy },
     { title: "Humidity", value: "humidity", icon: faDroplet },
     { title: "Wind", value: "wind", icon: faWind },
     { title: "Clouds", value: "cloud", icon: faCloud },
@@ -120,6 +119,7 @@ const LayerMenu = ({
           initial={{ height: 0 }}
           animate={{
             height: isMenuOpen ? "155px" : 0,
+            marginTop: isMenuOpen ? "8px" : 0,
           }}
           exit={{ height: 0 }}
           transition={{
@@ -129,7 +129,6 @@ const LayerMenu = ({
           style={{
             overflow: "hidden",
             position: "relative",
-            marginTop: isMenuOpen ? "8px" : 0,
           }}
         >
           {/* Temp Button Group Sheet (Slide + Smoother) */}

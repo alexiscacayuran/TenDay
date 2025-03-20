@@ -19,42 +19,52 @@ import Skeleton from "@mui/joy/Skeleton";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faTemperatureHalf,
-  faTemperatureFull,
-  faTemperatureEmpty,
   faDroplet,
   faWind,
-  faUmbrella,
   faCloud,
+  faCloudShowersHeavy,
 } from "@fortawesome/free-solid-svg-icons";
+import { TMaxIcon, TMeanIcon, TMinIcon } from "./CustomIcons";
 
 const OVERLAY_CONFIG = {
   temperature_average: {
-    icon: faTemperatureHalf,
+    title: "Ave Temperature",
+    icon: <TMeanIcon style={{ fontSize: "1.5rem" }} />,
     getValue: (data) => `${data.temperature.mean} °C`,
   },
   temperature_minimum: {
-    icon: faTemperatureEmpty,
+    title: "Min Temperature",
+    icon: <TMinIcon style={{ fontSize: "1.5rem" }} />,
     getValue: (data) => `${data.temperature.min} °C`,
   },
   temperature_maximum: {
-    icon: faTemperatureFull,
+    title: "Max Temperature",
+    icon: <TMaxIcon style={{ fontSize: "1.5rem" }} />,
     getValue: (data) => `${data.temperature.max} °C`,
   },
   humidity: {
-    icon: faDroplet,
+    title: "Humidity",
+    icon: <FontAwesomeIcon icon={faDroplet} style={{ fontSize: "1.5rem" }} />,
     getValue: (data) => `${data.humidity} %`,
   },
   wind: {
-    icon: faWind,
+    title: "Wind",
+    icon: <FontAwesomeIcon icon={faWind} style={{ fontSize: "1.5rem" }} />,
     getValue: (data) => `${data.wind.speed} m/s`,
   },
   rainfall: {
-    icon: faUmbrella,
+    title: "Rainfall",
+    icon: (
+      <FontAwesomeIcon
+        icon={faCloudShowersHeavy}
+        style={{ fontSize: "1.5rem" }}
+      />
+    ),
     getValue: (data) => `${data.rainfall.total} mm`,
   },
   cloud: {
-    icon: faCloud,
+    title: "Clouds",
+    icon: <FontAwesomeIcon icon={faCloud} style={{ fontSize: "1.5rem" }} />,
     getValue: (data) => `${data.cloud_cover}`,
   },
 };
@@ -101,10 +111,7 @@ const PopupContent = React.memo(
             {loading ? (
               <Skeleton variant="circular" width={34} height={34} />
             ) : (
-              <FontAwesomeIcon
-                icon={OVERLAY_CONFIG[overlay].icon}
-                style={{ fontSize: "2rem" }}
-              />
+              OVERLAY_CONFIG[overlay].icon
             )}
             {loading ? (
               <Skeleton variant="rectangular" width={40} height={30} />
@@ -145,28 +152,53 @@ const PopupContent = React.memo(
           </IconButton>
         </Stack>
         <CardOverflow color="primary" variant="soft">
-          <CardContent orientation="horizontal" sx={{ alignItems: "center" }}>
+          <CardContent
+            orientation="horizontal"
+            sx={{ alignItems: "center", p: "5px 0" }}
+          >
             {loading ? (
               <Skeleton variant="circular" width={34} height={34} />
             ) : (
-              <FontAwesomeIcon
-                icon={OVERLAY_CONFIG[overlay].icon}
-                style={{ fontSize: "2rem" }}
-              />
+              OVERLAY_CONFIG[overlay].icon
             )}
             {(() => {
               const config = OVERLAY_CONFIG[overlay];
               if (!config) return null;
 
               return (
-                <Typography
-                  color="primary.softColor"
-                  level={overlay === "cloud" ? "title-md" : "h3"}
-                >
-                  <Skeleton loading={loading}>
-                    {loading ? "28°C" : config.getValue(forecast.forecast)}
-                  </Skeleton>
-                </Typography>
+                <Box>
+                  <Stack
+                    direction="column"
+                    spacing={0}
+                    sx={{
+                      justifyContent: "center",
+                      alignItems: "flex-start",
+                      position: "relative",
+                      bottom: 7,
+                    }}
+                  >
+                    <Typography
+                      level="body-xs"
+                      sx={{
+                        position: "relative",
+                        top: 7,
+                        color: "var(--joy-palette-primary-700, #12467B)",
+                      }}
+                    >
+                      <Skeleton loading={loading}>
+                        {loading ? "Ave. Temperature" : config.title}
+                      </Skeleton>
+                    </Typography>
+                    <Typography
+                      color="primary.softColor"
+                      level={overlay === "cloud" ? "title-md" : "h3"}
+                    >
+                      <Skeleton loading={loading}>
+                        {loading ? "28°C" : config.getValue(forecast.forecast)}
+                      </Skeleton>
+                    </Typography>
+                  </Stack>
+                </Box>
               );
             })()}
             {!loading && (
