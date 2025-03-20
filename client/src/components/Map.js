@@ -15,8 +15,26 @@ import WeatherLayer from "./WeatherLayer";
 import Legend from "./Legend";
 
 const Map = () => {
-  const accessToken =
-    "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaW8gooZhPPaWlG6GWhaK4Lztb1bd6UA2hH_P5yQ49eq7NXXMgu35LwVXhayi3UQ1CJRBIxXc0b8foiF9VIBngSb_SJcr-xKeyq288VsyaVQflwjmt_nIdjK0hwRwV0hA1hXJeDt3JoSWY5i4qY-H-qqjgtH6KactySPDG616x1RkyJDJmLuHaCaFtaNCSn4osZcTiTg8gilry4-fOQ7eYPPAT1_4iEh8Wxe";
+  // const accessToken =
+  // "AAPTxy8BH1VEsoebNVZXo8HurKsdWeDKRAbsiNAHNNT6jaW8gooZhPPaWlG6GWhaK4Lztb1bd6UA2hH_P5yQ49eq7NXXMgu35LwVXhayi3UQ1CJRBIxXc0b8foiF9VIBngSb_SJcr-xKeyq288VsyaVQflwjmt_nIdjK0hwRwV0hA1hXJeDt3JoSWY5i4qY-H-qqjgtH6KactySPDG616x1RkyJDJmLuHaCaFtaNCSn4osZcTiTg8gilry4-fOQ7eYPPAT1_4iEh8Wxe";
+  const [accessToken, setAccessToken] = useState(null);
+  const [isLoadingToken, setIsLoadingToken] = useState(true);
+
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        const response = await axios.get("/api/token");
+        console.log("Fetched Token:", response.data.accessToken); // Debugging log
+        setAccessToken(response.data.accessToken);
+      } catch (error) {
+        console.error("Error fetching token:", error);
+      } finally {
+        setIsLoadingToken(false);
+      }
+    };
+
+    fetchToken();
+  }, []);
 
   const bounds = useMemo(
     () =>
@@ -55,6 +73,8 @@ const Map = () => {
     windSpeed: "m/s",
     windDirection: "arrow",
   });
+
+  console.log(units);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -123,6 +143,8 @@ const Map = () => {
               openContainer={open}
               date={date}
               overlay={overlay}
+              units={units}
+              setUnits={setUnits}
             />
           )}
           <MapControl />
@@ -175,6 +197,7 @@ const Map = () => {
       map,
       bounds,
       accessToken,
+      isLoadingToken,
       open,
       location,
       dateReady,

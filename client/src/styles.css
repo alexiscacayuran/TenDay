@@ -35,13 +35,19 @@
   z-index: 999 !important;
 }
 
+.leaflet-container a {
+  color: #12467b;
+  text-decoration-color: #12467b;
+  text-decoration-style: dotted;
+}
+
 .leaflet-control-attribution {
   color: white !important;
   background: none !important;
   text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5) !important;
 }
 
-.leaflet-container a {
+.leaflet-control-attribution a {
   color: white !important;
   text-overflow: ellipsis !important;
 }
@@ -111,7 +117,7 @@
 }
 
 .leaflet-popup-content {
-  width: auto !important;
+  width: 350px !important;
 }
 
 .leaflet-popup-content-wrapper {

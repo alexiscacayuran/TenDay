@@ -10,13 +10,8 @@ import IconButton from "@mui/joy/IconButton";
 import Typography from "@mui/joy/Typography";
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ThermostatIcon from "@mui/icons-material/Thermostat";
-import Divider from "@mui/joy/Divider";
 import { Stack } from "@mui/material";
-import TableRowsIcon from "@mui/icons-material/TableRows";
-import ButtonGroup from "@mui/joy/ButtonGroup";
 import Skeleton from "@mui/joy/Skeleton";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDroplet,
@@ -25,32 +20,34 @@ import {
   faCloudShowersHeavy,
 } from "@fortawesome/free-solid-svg-icons";
 import { TMaxIcon, TMeanIcon, TMinIcon } from "./CustomIcons";
+import ForecastValue from "./ForecastValue";
+import ToggleUnits from "./ToggleUnits";
 
 const OVERLAY_CONFIG = {
   temperature_average: {
     title: "Ave Temperature",
     icon: <TMeanIcon style={{ fontSize: "1.5rem" }} />,
-    getValue: (data) => `${data.temperature.mean} °C`,
+    getValue: (data) => data.temperature.mean,
   },
   temperature_minimum: {
     title: "Min Temperature",
     icon: <TMinIcon style={{ fontSize: "1.5rem" }} />,
-    getValue: (data) => `${data.temperature.min} °C`,
+    getValue: (data) => data.temperature.min,
   },
   temperature_maximum: {
     title: "Max Temperature",
     icon: <TMaxIcon style={{ fontSize: "1.5rem" }} />,
-    getValue: (data) => `${data.temperature.max} °C`,
+    getValue: (data) => data.temperature.max,
   },
   humidity: {
     title: "Humidity",
     icon: <FontAwesomeIcon icon={faDroplet} style={{ fontSize: "1.5rem" }} />,
-    getValue: (data) => `${data.humidity} %`,
+    getValue: (data) => data.humidity,
   },
   wind: {
     title: "Wind",
     icon: <FontAwesomeIcon icon={faWind} style={{ fontSize: "1.5rem" }} />,
-    getValue: (data) => `${data.wind.speed} m/s`,
+    getValue: (data) => data.wind.speed,
   },
   rainfall: {
     title: "Rainfall",
@@ -60,12 +57,12 @@ const OVERLAY_CONFIG = {
         style={{ fontSize: "1.5rem" }}
       />
     ),
-    getValue: (data) => `${data.rainfall.total} mm`,
+    getValue: (data) => data.rainfall.total,
   },
   cloud: {
     title: "Clouds",
     icon: <FontAwesomeIcon icon={faCloud} style={{ fontSize: "1.5rem" }} />,
-    getValue: (data) => `${data.cloud_cover}`,
+    getValue: (data) => data.cloud_cover,
   },
 };
 
@@ -79,9 +76,9 @@ const PopupContent = React.memo(
     overlay,
     forecastRetrieval,
     loading,
+    units,
+    setUnits,
   }) => {
-    console.log(forecast);
-
     return !forecastRetrieval ? (
       <Card variant="plain" sx={{ minWidth: 360 }}>
         <Stack>
@@ -124,7 +121,7 @@ const PopupContent = React.memo(
         </CardOverflow>
       </Card>
     ) : (
-      <Card variant="plain" sx={{ minWidth: 360 }}>
+      <Card variant="plain" sx={{ minWidth: 360, userSelect: "none" }}>
         <Stack>
           <Typography level="title-lg">
             <Skeleton loading={loading}>
@@ -191,10 +188,30 @@ const PopupContent = React.memo(
                     </Typography>
                     <Typography
                       color="primary.softColor"
-                      level={overlay === "cloud" ? "title-md" : "h3"}
+                      level={overlay === "cloud" ? "h4" : "h3"}
                     >
                       <Skeleton loading={loading}>
-                        {loading ? "28°C" : config.getValue(forecast.forecast)}
+                        {loading ? (
+                          "28°C"
+                        ) : (
+                          <>
+                            <ForecastValue
+                              value={config.getValue(forecast.forecast)}
+                              overlay={overlay}
+                              units={units}
+                            />
+                            &nbsp;
+                            <ToggleUnits
+                              context="popup"
+                              overlay={overlay}
+                              units={units}
+                              setUnits={setUnits}
+                              color="primary"
+                              size="sm"
+                              variant="plain"
+                            />
+                          </>
+                        )}
                       </Skeleton>
                     </Typography>
                   </Stack>
@@ -226,7 +243,8 @@ const PopupContent = React.memo(
 
   (prevProps, nextProps) =>
     prevProps.forecast === nextProps.forecast &&
-    prevProps.overlay === nextProps.overlay
+    prevProps.overlay === nextProps.overlay &&
+    prevProps.units === nextProps.units
 );
 
 export default PopupContent;

@@ -12,6 +12,8 @@ const ReverseGeocode = ({
   openContainer,
   date,
   overlay,
+  units,
+  setUnits,
 }) => {
   const [isLocationReady, setIsLocationReady] = useState(false);
 
@@ -33,7 +35,7 @@ const ReverseGeocode = ({
             return;
           }
 
-          console.log(result.address);
+          //console.log(result.address);
 
           setLocation({
             latLng: result.latlng,
@@ -54,8 +56,9 @@ const ReverseGeocode = ({
         setOpenContainer={setOpenContainer}
         openContainer={openContainer}
         date={date}
-        isLocationReady={isLocationReady}
-        overlay={overlay} // Pass the updated overlay value
+        overlay={overlay}
+        units={units}
+        setUnits={setUnits}
       />
     )
   );

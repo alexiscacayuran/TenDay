@@ -8,11 +8,15 @@ const Labels = ({ accessToken }) => {
   const hillshadeEnum = "74463549688e4bb48092df8e5c789fd0";
 
   useEffect(() => {
+    if (!accessToken) return;
+
+    console.log("Using accessToken in Labels:", accessToken);
+
     const labels = vectorBasemapLayer(labelsEnum, {
       token: accessToken,
     });
-    labels.addTo(map);
 
+    labels.addTo(map);
     // const hillshade = vectorBasemapLayer(hillshadeEnum, {
     //   token: accessToken,
     // });

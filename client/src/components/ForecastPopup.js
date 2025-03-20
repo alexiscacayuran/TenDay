@@ -19,8 +19,9 @@ const ForecastPopup = ({
   setOpenContainer,
   openContainer,
   date,
-  isLocationReady,
   overlay,
+  units,
+  setUnits,
 }) => {
   const markerRef = useRef(null);
   const [forecast, setForecast] = useState({});
@@ -99,6 +100,8 @@ const ForecastPopup = ({
           overlay={overlay}
           forecastRetrieval={forecastRetrieval}
           loading={loading}
+          units={units}
+          setUnits={setUnits}
         />
       </Popup>
     </Marker>

@@ -9,8 +9,10 @@ const Base = ({ accessToken }) => {
   const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
 
   useEffect(() => {
+    if (!accessToken) return;
+
     const weatherBasemap = vectorBasemapLayer(weatherBasemapEnum, {
-      token: accessToken,
+      apiKey: accessToken,
       pane: "overlayPane",
       zIndex: 200,
     });

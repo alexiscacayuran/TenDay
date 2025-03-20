@@ -72,7 +72,6 @@ const WeatherLayer = ({
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
   const [loading, setLoading] = useState(true);
-  console.log(localOverlay.current);
 
   const colorScaleFn = (value) => {
     if (value[0] < Number.MIN_VALUE) {

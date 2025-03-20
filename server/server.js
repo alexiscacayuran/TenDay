@@ -15,7 +15,7 @@ import humidityRoutes from "./controller/humidity.js";
 import usersRouter from "./controller/users.js";
 import authenticate from "./middleware/authorization.js";
 
-//Background job
+// //Background job
 // import "./backgroundJob/cleanUpDB.js"; // Runs cleanup job on startup
 
 //API tenday (internal)
@@ -32,6 +32,7 @@ import getCurrentForecast from "./tenDayData/getCurrentForecast.js"; // Import t
 //API seasonal (internal)
 import { processSeasonalData } from "./seasonalData/uploadSeasonal.js";
 import { processSeasonalFiles } from "./seasonalData/sProcessTIF.js";
+
 import seasonalDataRegional from "./seasonalData/seasonalRegional.js"; // Import the route
 
 //API
@@ -50,20 +51,11 @@ app.use(
 );
 app.use(bodyParser.json());
 
-// Multer setup for file uploads
-const upload = multer({
-  dest: "route/",
-  limits: { fileSize: 1 * 1024 * 1024 }, // 1 MB limit per file
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === "text/csv") {
-      cb(null, true);
-    } else {
-      cb(new multer.MulterError("Unexpected file type"), false);
-    }
-  },
-});
-
 // ROUTES:
+
+app.get("/api/token", (req, res) => {
+  res.json({ accessToken: process.env.A_TOKEN });
+});
 
 app.use("/auth", jwtAuth);
 
