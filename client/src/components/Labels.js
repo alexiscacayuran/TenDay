@@ -10,8 +10,6 @@ const Labels = ({ accessToken }) => {
   useEffect(() => {
     if (!accessToken) return;
 
-    console.log("Using accessToken in Labels:", accessToken);
-
     const labels = vectorBasemapLayer(labelsEnum, {
       token: accessToken,
     });

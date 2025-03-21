@@ -35,10 +35,16 @@
   z-index: 999 !important;
 }
 
-.leaflet-container a {
+/* .leaflet-container a {
   color: #12467b;
   text-decoration-color: #12467b;
   text-decoration-style: dotted;
+} */
+
+.forecast-units {
+  color: #12467b !important;
+  text-decoration-color: #12467b !important;
+  text-decoration-style: dotted !important;
 }
 
 .leaflet-control-attribution {

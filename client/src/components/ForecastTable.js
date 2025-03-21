@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
 import overlayList from "./OverlayList";
+import ToggleUnits from "./ToggleUnits";
+import ForecastValue from "./ForecastValue";
 
 // Weather parameters configuration
 const weatherParams = [
@@ -12,6 +14,7 @@ const weatherParams = [
     name: "Temperature",
     key: "temperature",
     unit: "°C",
+    overlayRef: "temperature",
     overlays: {
       temperature_average: "mean",
       temperature_minimum: "min",
@@ -24,18 +27,21 @@ const weatherParams = [
     key: "rainfall.total",
     unit: "mm/24h",
     overlay: "rainfall",
+    overlayRef: "rainfall",
   },
   {
     name: "Humidity",
     key: "humidity",
     unit: "%",
     overlay: "humidity",
+    overlayRef: "humidity",
   },
   {
     name: "Wind speed",
     key: "wind.speed",
     unit: "m/s",
     overlay: "wind",
+    overlayRef: "wind_speed",
   },
 ];
 
@@ -60,6 +66,8 @@ const ForecastTable = ({
   temp,
   setTemp,
   setActiveTooltip,
+  units,
+  setUnits,
 }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_average"); // Stores last selected temperature overlay
@@ -82,7 +90,7 @@ const ForecastTable = ({
   return (
     <>
       {weatherParams.map(
-        ({ name, key, unit, overlay: paramOverlay, overlays, icon }) => {
+        ({ name, key, overlay: paramOverlay, overlays, icon, overlayRef }) => {
           let activeOverlay = paramOverlay || localOverlay;
           let displayName = name;
           let dataKey = key;
@@ -151,14 +159,16 @@ const ForecastTable = ({
                 </Typography>
               </th>
               <th>
-                <Button
+                <ToggleUnits
                   color="neutral"
                   size="sm"
                   variant="plain"
                   sx={{ fontSize: "0.8rem", minHeight: 0 }}
-                >
-                  {unit}
-                </Button>
+                  context="container"
+                  overlay={overlayRef}
+                  units={units}
+                  setUnits={setUnits}
+                />
               </th>
               {forecast.forecasts.map((data, index, arr) => {
                 const values = arr.map((d) => {
@@ -190,7 +200,11 @@ const ForecastTable = ({
 
                 return (
                   <td key={index} style={{ background, color }}>
-                    {current}
+                    <ForecastValue
+                      value={current}
+                      overlay={overlayRef}
+                      units={units}
+                    />
                   </td>
                 );
               })}

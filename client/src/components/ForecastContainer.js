@@ -47,6 +47,7 @@ import {
 } from "./CustomIcons";
 
 import ForecastTable from "./ForecastTable";
+import ToggleUnits from "./ToggleUnits";
 
 const ForecastContainer = ({
   open,
@@ -59,6 +60,8 @@ const ForecastContainer = ({
   temp,
   setTemp,
   setActiveTooltip,
+  units,
+  setUnits,
 }) => {
   const [forecast, setForecast] = useState(null);
 
@@ -118,6 +121,7 @@ const ForecastContainer = ({
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
+            width: "min-content",
           }}
         >
           <Stack
@@ -288,63 +292,67 @@ const ForecastContainer = ({
                       temp={temp}
                       setTemp={setTemp}
                       setActiveTooltip={setActiveTooltip}
+                      units={units}
+                      setUnits={setUnits}
                     />
                     <tr>
                       <th>
                         <Typography level="title-sm">Wind direction</Typography>
                       </th>
                       <th>
-                        {" "}
-                        <Button
+                        <ToggleUnits
                           color="neutral"
-                          onClick={function () {}}
                           size="sm"
                           variant="plain"
                           sx={{ fontSize: "0.8rem", minHeight: 0 }}
-                        >
-                          arrow
-                        </Button>
+                          context="container"
+                          overlay="wind_direction"
+                          units={units}
+                          setUnits={setUnits}
+                        />
                       </th>
                       {forecast.forecasts.map((data, index) => (
                         <td key={index}>
-                          {(() => {
-                            switch (data.wind.direction) {
-                              case "N":
-                                return <NIcon />;
-                              case "NNE":
-                                return <NNEIcon />;
-                              case "NE":
-                                return <NEIcon />; // Northeast
-                              case "ENE":
-                                return <ENEIcon />; // East-Northeast
-                              case "E":
-                                return <EIcon />; // East
-                              case "ESE":
-                                return <ESEIcon />; // East-Southeast
-                              case "SE":
-                                return <SEIcon />; // Southeast
-                              case "SSE":
-                                return <SSEIcon />; // South-Southeast
-                              case "S":
-                                return <SIcon />; // South
-                              case "SSW":
-                                return <SSWIcon />; // South-Southwest
-                              case "SW":
-                                return <SWIcon />; // Southwest
-                              case "WSW":
-                                return <WSWIcon />; // West-Southwest
-                              case "W":
-                                return <WIcon />; // West
-                              case "WNW":
-                                return <WNWIcon />; // West-Northwest
-                              case "NW":
-                                return <NWIcon />; // Northwest
-                              case "NNW":
-                                return <NNWIcon />; // North-Northwest
-                              default:
-                                return null;
-                            }
-                          })()}
+                          {units.windDirection === "arrow"
+                            ? (() => {
+                                switch (data.wind.direction) {
+                                  case "N":
+                                    return <NIcon />;
+                                  case "NNE":
+                                    return <NNEIcon />;
+                                  case "NE":
+                                    return <NEIcon />; // Northeast
+                                  case "ENE":
+                                    return <ENEIcon />; // East-Northeast
+                                  case "E":
+                                    return <EIcon />; // East
+                                  case "ESE":
+                                    return <ESEIcon />; // East-Southeast
+                                  case "SE":
+                                    return <SEIcon />; // Southeast
+                                  case "SSE":
+                                    return <SSEIcon />; // South-Southeast
+                                  case "S":
+                                    return <SIcon />; // South
+                                  case "SSW":
+                                    return <SSWIcon />; // South-Southwest
+                                  case "SW":
+                                    return <SWIcon />; // Southwest
+                                  case "WSW":
+                                    return <WSWIcon />; // West-Southwest
+                                  case "W":
+                                    return <WIcon />; // West
+                                  case "WNW":
+                                    return <WNWIcon />; // West-Northwest
+                                  case "NW":
+                                    return <NWIcon />; // Northwest
+                                  case "NNW":
+                                    return <NNWIcon />; // North-Northwest
+                                  default:
+                                    return null;
+                                }
+                              })()
+                            : data.wind.direction}
                         </td>
                       ))}
                     </tr>

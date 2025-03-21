@@ -206,9 +206,6 @@ const PopupContent = React.memo(
                               overlay={overlay}
                               units={units}
                               setUnits={setUnits}
-                              color="primary"
-                              size="sm"
-                              variant="plain"
                             />
                           </>
                         )}
