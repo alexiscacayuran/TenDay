@@ -232,7 +232,7 @@ const WeatherLayer = ({
       <Box
         sx={{
           position: "fixed",
-          bottom: open ? 300 : 70,
+          bottom: open ? 320 : 70,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 999,

@@ -5,17 +5,17 @@ export const convertValue = (overlay, units, value) => {
   switch (true) {
     case overlay.includes("temperature"):
       return units.temperature === "°F"
-        ? parseFloat(convert(value).from("C").to("F").toFixed(2))
+        ? parseFloat(convert(value).from("C").to("F").toFixed(0))
         : value;
     case overlay.includes("rainfall"):
       return units.rainfall === "in/24h"
-        ? parseFloat(convert(value).from("mm").to("in").toFixed(2))
+        ? parseFloat(convert(value).from("mm").to("in").toFixed(1))
         : value;
     case overlay.includes("wind"):
       if (units.windSpeed === "km/h") {
-        return parseFloat(convert(value).from("m/s").to("km/h").toFixed(2));
+        return parseFloat(convert(value).from("m/s").to("km/h").toFixed(0));
       } else if (units.windSpeed === "kt") {
-        return parseFloat(convert(value).from("m/s").to("knot").toFixed(2));
+        return parseFloat(convert(value).from("m/s").to("knot").toFixed(0));
       } else return value;
     default:
       return value;

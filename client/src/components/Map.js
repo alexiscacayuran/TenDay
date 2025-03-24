@@ -50,7 +50,7 @@ const Map = () => {
 
   const [map, setMap] = useState(null); // External state for the map instance
   const [open, setOpen] = useState(false); // Slide up bottom container state
-  const [date, setDate] = useState(null);
+  const [date, setDate] = useState(new Date());
   const [dateReady, setDateReady] = useState(false);
   const [overlay, setOverlay] = useState("temperature_average");
 
@@ -60,6 +60,7 @@ const Map = () => {
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
   const [isLayerClipped, setIsLayerClipped] = useState(false);
+  // console.log(date);
 
   const [units, setUnits] = useState({
     temperature: "°C",
@@ -68,15 +69,16 @@ const Map = () => {
     windDirection: "arrow",
   });
 
-  console.log(units);
-
   useEffect(() => {
     // Function to fetch data from the API
     const fetchDate = async () => {
       try {
         const response = await axios.get("/valid");
         startDate.current = response.data; // Store the fetched data
-        setDate(startDate.current.latest_date);
+        const currentDate = new Date();
+        const endDate = new Date(startDate.current.latest_date);
+        endDate.setDate(endDate.getDate() + 9);
+        setDate(currentDate > endDate ? endDate : currentDate);
         setDateReady(true); // Set readiness to true once data is fetched
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -161,7 +163,12 @@ const Map = () => {
           setIsLayerClipped={setIsLayerClipped}
         />
 
-        <Legend overlay={overlay} isDiscrete={isDiscrete} />
+        <Legend
+          overlay={overlay}
+          isDiscrete={isDiscrete}
+          units={units}
+          setUnits={setUnits}
+        />
 
         {dateReady &&
           !open && ( // Render DateNavigation only if `dateReady` is true
@@ -172,6 +179,7 @@ const Map = () => {
               date={date}
             />
           )}
+
         <ForecastContainer
           open={open}
           setOpen={setOpen}
@@ -185,6 +193,8 @@ const Map = () => {
           setActiveTooltip={setActiveTooltip}
           units={units}
           setUnits={setUnits}
+          date={date}
+          setDate={setDate}
         />
       </Box>
     ),

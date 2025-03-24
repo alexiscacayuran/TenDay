@@ -14,7 +14,7 @@ function generateDateRange(startDate, range) {
 }
 
 const DateNavigation = ({ initialDate, range, setDate, date }) => {
-  const [localDate, setlocalDate] = useState(initialDate);
+  const [localDate, setlocalDate] = useState(new Date());
   const [dateRange] = useState(generateDateRange(initialDate, range));
 
   useEffect(() => {

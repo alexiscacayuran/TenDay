@@ -23,6 +23,38 @@ import { TMaxIcon, TMeanIcon, TMinIcon } from "./CustomIcons";
 import ForecastValue from "./ForecastValue";
 import ToggleUnits from "./ToggleUnits";
 
+import {
+  SunnyIcon,
+  NoRainParCloudyIcon,
+  NoRainMosCloudyIcon,
+  NoRainCloudyIcon,
+  LightRainsParCloudyIcon,
+  LightRainsMosCloudyIcon,
+  LightRainsCloudyIcon,
+  ModRainsParCloudyIcon,
+  ModRainsMosCloudyIcon,
+  ModRainsCloudyIcon,
+  HeavyRainsParCloudyIcon,
+  HeavyRainsMosCloudyIcon,
+  HeavyRainsCloudyIcon,
+  NIcon,
+  NNEIcon,
+  NEIcon,
+  ENEIcon,
+  EIcon,
+  ESEIcon,
+  SEIcon,
+  SSEIcon,
+  SIcon,
+  SSWIcon,
+  SWIcon,
+  WSWIcon,
+  WIcon,
+  WNWIcon,
+  NWIcon,
+  NNWIcon,
+} from "./CustomIcons";
+
 const OVERLAY_CONFIG = {
   temperature_average: {
     title: "Ave Temperature",
@@ -48,6 +80,7 @@ const OVERLAY_CONFIG = {
     title: "Wind",
     icon: <FontAwesomeIcon icon={faWind} style={{ fontSize: "1.5rem" }} />,
     getValue: (data) => data.wind.speed,
+    getDirection: (data) => data.wind.direction,
   },
   rainfall: {
     title: "Rainfall",
@@ -207,6 +240,58 @@ const PopupContent = React.memo(
                               units={units}
                               setUnits={setUnits}
                             />
+                            &nbsp;
+                            {overlay === "wind" && (
+                              <>
+                                &nbsp;
+                                {(() => {
+                                  const direction = config.getDirection(
+                                    forecast.forecast
+                                  );
+                                  const iconProps = {
+                                    sx: {
+                                      color: "primary.softColor",
+                                    },
+                                  };
+                                  switch (direction) {
+                                    case "N":
+                                      return <NIcon {...iconProps} />;
+                                    case "NNE":
+                                      return <NNEIcon {...iconProps} />;
+                                    case "NE":
+                                      return <NEIcon {...iconProps} />;
+                                    case "ENE":
+                                      return <ENEIcon {...iconProps} />;
+                                    case "E":
+                                      return <EIcon {...iconProps} />;
+                                    case "ESE":
+                                      return <ESEIcon {...iconProps} />;
+                                    case "SE":
+                                      return <SEIcon {...iconProps} />;
+                                    case "SSE":
+                                      return <SSEIcon {...iconProps} />;
+                                    case "S":
+                                      return <SIcon {...iconProps} />;
+                                    case "SSW":
+                                      return <SSWIcon {...iconProps} />;
+                                    case "SW":
+                                      return <SWIcon {...iconProps} />;
+                                    case "WSW":
+                                      return <WSWIcon {...iconProps} />;
+                                    case "W":
+                                      return <WIcon {...iconProps} />;
+                                    case "WNW":
+                                      return <WNWIcon {...iconProps} />;
+                                    case "NW":
+                                      return <NWIcon {...iconProps} />;
+                                    case "NNW":
+                                      return <NNWIcon {...iconProps} />;
+                                    default:
+                                      return null;
+                                  }
+                                })()}
+                              </>
+                            )}
                           </>
                         )}
                       </Skeleton>

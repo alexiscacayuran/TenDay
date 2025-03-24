@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import chroma from "chroma-js";
-import { Typography, Button } from "@mui/joy";
+import { Table, Typography } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
@@ -13,7 +13,6 @@ const weatherParams = [
   {
     name: "Temperature",
     key: "temperature",
-    unit: "°C",
     overlayRef: "temperature",
     overlays: {
       temperature_average: "mean",
@@ -25,21 +24,18 @@ const weatherParams = [
   {
     name: "Rain",
     key: "rainfall.total",
-    unit: "mm/24h",
     overlay: "rainfall",
     overlayRef: "rainfall",
   },
   {
     name: "Humidity",
     key: "humidity",
-    unit: "%",
     overlay: "humidity",
     overlayRef: "humidity",
   },
   {
     name: "Wind speed",
     key: "wind.speed",
-    unit: "m/s",
     overlay: "wind",
     overlayRef: "wind_speed",
   },
@@ -68,6 +64,8 @@ const ForecastTable = ({
   setActiveTooltip,
   units,
   setUnits,
+  setActiveColumn,
+  setDate,
 }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_average"); // Stores last selected temperature overlay
@@ -199,7 +197,17 @@ const ForecastTable = ({
                     : "inherit";
 
                 return (
-                  <td key={index} style={{ background, color }}>
+                  <td
+                    key={index}
+                    style={{
+                      background,
+                      color,
+                    }}
+                    onClick={() => {
+                      setActiveColumn(index + 3); // Adjust for first 2 columns
+                      setDate(data.date); // ✅ Set the date using setDate
+                    }}
+                  >
                     <ForecastValue
                       value={current}
                       overlay={overlayRef}

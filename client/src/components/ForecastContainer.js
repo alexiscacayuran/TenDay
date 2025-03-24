@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { format, set } from "date-fns";
+import { format } from "date-fns";
 
 import { Slide } from "@mui/material";
-import {
-  Box,
-  Stack,
-  Sheet,
-  Typography,
-  IconButton,
-  Table,
-  Button,
-} from "@mui/joy";
+import { Box, Stack, Sheet, Typography, IconButton, Table } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import {
@@ -62,8 +54,58 @@ const ForecastContainer = ({
   setActiveTooltip,
   units,
   setUnits,
+  date,
+  setDate,
 }) => {
   const [forecast, setForecast] = useState(null);
+  const [activeColumn, setActiveColumn] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  // Get today's date
+  const today = format(new Date(), "yyyy-MM-dd");
+
+  // Set active column on initial render
+  useEffect(() => {
+    if (forecast) {
+      const currentColumnIndex = forecast.forecasts.findIndex(
+        (data) => format(new Date(data.date), "yyyy-MM-dd") === today
+      );
+
+      console.log("Current column index:", currentColumnIndex);
+
+      if (currentColumnIndex !== -1) {
+        console.log(
+          "Date from forecast",
+          forecast.forecasts[currentColumnIndex].date
+        );
+        setActiveColumn(currentColumnIndex + 3); // Offset for first 2 columns
+      }
+    }
+  }, []);
+
+  // Update active column based on the current date prop from the parent
+  useEffect(() => {
+    if (forecast && date) {
+      const currentColumnIndex = forecast.forecasts.findIndex(
+        (data) =>
+          format(new Date(data.date), "yyyy-MM-dd") ===
+          format(new Date(date), "yyyy-MM-dd")
+      );
+
+      console.log(
+        "Current column index based on parent date:",
+        currentColumnIndex
+      );
+
+      if (currentColumnIndex !== -1) {
+        console.log(
+          "Date from forecast based on parent date",
+          forecast.forecasts[currentColumnIndex].date
+        );
+        setActiveColumn(currentColumnIndex + 3); // Offset for first 2 columns
+      }
+    }
+  }, [forecast, date]);
 
   useEffect(() => {
     // When open is true, disable body scroll
@@ -140,12 +182,14 @@ const ForecastContainer = ({
                   size="sm"
                   borderAxis="none"
                   sx={{
-                    // Prevent acciodental text selection
+                    "--highlightColor": "#007FFF",
+                    "--borderStyle": "2px solid var(--highlightColor)",
+                    "--cellHeight": "38px",
+
                     userSelect: "none",
-                    // Table width
                     width: "1000px",
 
-                    // Table header
+                    // ✅ Table header styles
                     "& thead > tr *": {
                       bgcolor: "primary.softBg",
                       color: "primary.softColor",
@@ -154,30 +198,18 @@ const ForecastContainer = ({
                       borderTopRightRadius: 0,
                     },
 
-                    // Table cells (values)
-                    "& td": { height: "24px" },
-
-                    //First column (legend)
+                    // ✅ Cell height and column text alignment
+                    "& td": { height: "var(--cellHeight)" },
                     "& tr > *:first-child": {
                       width: "15%",
                       textAlign: "right",
                     },
-
-                    // Second column (units)
-                    "& thead th:nth-child(2)": {
-                      width: "7%",
-                    },
-
-                    // All columns except (legend, units)
+                    "& thead th:nth-child(2)": { width: "7%" },
                     "& tr > *:not(:first-child):not(:nth-child(2))": {
                       textAlign: "center",
                       width: "6%",
                     },
-
-                    "& tr > *:nth-child(2)": {
-                      borderLeftStyle: "none",
-                    },
-
+                    "& tr > *:nth-child(2)": { borderLeftStyle: "none" },
                     "& tr > *:last-child": {
                       borderRightStyle: "solid",
                       borderWidth: "1px",
@@ -187,21 +219,35 @@ const ForecastContainer = ({
                     "& tbody tr:last-child > th:first-child": {
                       borderBottomLeftRadius: "var(--unstable_actionRadius)",
                     },
-
-                    //tbody first column
-                    "& tbody tr > *:first-child": {
+                    "& tbody tr > *:first-child, & tbody tr > *:nth-child(2)": {
                       bgcolor: "neutral.100",
                     },
-
-                    //tbody second column
-                    "& tbody tr > *:nth-child(2)": {
-                      bgcolor: "neutral.100",
-                    },
-
-                    //tbody first row (weather)
                     "& tbody > tr:first-child": {
                       height: "64px",
                     },
+
+                    // ✅ Highlight the active column (date match or user-clicked column)
+                    ...(activeColumn !== null && {
+                      // Header (top, left, right borders)
+                      [`& thead tr > *:nth-child(${activeColumn})`]: {
+                        borderTop: "var(--borderStyle)",
+                        borderLeft: "var(--borderStyle)",
+                        borderRight: "var(--borderStyle)",
+                      },
+                      // Middle rows (left, right borders)
+                      [`& tbody tr:not(:last-child) > *:nth-child(${activeColumn})`]:
+                        {
+                          borderLeft: "var(--borderStyle)",
+                          borderRight: "var(--borderStyle)",
+                        },
+                      // Last row (left, right, bottom borders)
+                      [`& tbody tr:last-child > *:nth-child(${activeColumn})`]:
+                        {
+                          borderLeft: "var(--borderStyle)",
+                          borderRight: "var(--borderStyle)",
+                          borderBottom: "var(--borderStyle)",
+                        },
+                    }),
                   }}
                 >
                   <thead>
@@ -209,7 +255,13 @@ const ForecastContainer = ({
                       <th></th>
                       <th></th>
                       {forecast.forecasts.map((data, index) => (
-                        <th key={index}>
+                        <th
+                          key={index}
+                          onClick={() => {
+                            setActiveColumn(index + 3); // Adjust for first 2 columns
+                            setDate(data.date); // ✅ Set the date using setDate
+                          }}
+                        >
                           <Typography level="title-sm">
                             {format(data.date, "EEE d")}
                           </Typography>
@@ -222,7 +274,13 @@ const ForecastContainer = ({
                       <th></th>
                       <th></th>
                       {forecast.forecasts.map((data, index) => (
-                        <td key={index}>
+                        <td
+                          key={index}
+                          onClick={() => {
+                            setActiveColumn(index + 3); // Adjust for first 2 columns
+                            setDate(data.date); // ✅ Set the date using setDate
+                          }}
+                        >
                           {(() => {
                             switch (data.rainfall.description) {
                               case "NO RAIN":
@@ -294,6 +352,8 @@ const ForecastContainer = ({
                       setActiveTooltip={setActiveTooltip}
                       units={units}
                       setUnits={setUnits}
+                      setActiveColumn={setActiveColumn}
+                      setDate={setDate}
                     />
                     <tr>
                       <th>
@@ -312,7 +372,13 @@ const ForecastContainer = ({
                         />
                       </th>
                       {forecast.forecasts.map((data, index) => (
-                        <td key={index}>
+                        <td
+                          key={index}
+                          onClick={() => {
+                            setActiveColumn(index + 3); // Adjust for first 2 columns
+                            setDate(data.date); // ✅ Set the date using setDate
+                          }}
+                        >
                           {units.windDirection === "arrow"
                             ? (() => {
                                 switch (data.wind.direction) {

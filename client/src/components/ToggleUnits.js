@@ -1,51 +1,50 @@
-import React, { useState } from "react";
-import { Button, Link, Box } from "@mui/joy";
+import React from "react";
+import { Button, Link, Box, Typography } from "@mui/joy";
+
+// Helper function to toggle units
+export const handleToggle = (prevUnits, overlay) => {
+  const unitChoices = {
+    temperature: ["°C", "°F"],
+    rainfall: ["mm/24h", "in/24h"],
+    windSpeed: ["m/s", "km/h", "kt"],
+    windDirection: ["arrow", "desc"],
+  };
+
+  const getNextUnit = (currentUnit, choices) => {
+    const currentIndex = choices.indexOf(currentUnit);
+    return choices[(currentIndex + 1) % choices.length];
+  };
+
+  const updatedUnits = { ...prevUnits };
+
+  if (overlay.includes("temperature")) {
+    updatedUnits.temperature = getNextUnit(
+      prevUnits.temperature,
+      unitChoices.temperature
+    );
+  } else if (overlay === "wind" || overlay === "wind_speed") {
+    updatedUnits.windSpeed = getNextUnit(
+      prevUnits.windSpeed,
+      unitChoices.windSpeed
+    );
+  } else if (overlay === "rainfall") {
+    updatedUnits.rainfall = getNextUnit(
+      prevUnits.rainfall,
+      unitChoices.rainfall
+    );
+  } else if (overlay === "wind_direction") {
+    updatedUnits.windDirection = getNextUnit(
+      prevUnits.windDirection,
+      unitChoices.windDirection
+    );
+  }
+
+  return updatedUnits;
+};
 
 const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
-  const [localUnits, setLocalUnits] = useState(units);
-
-  const handleToggle = () => {
-    const unitChoices = {
-      temperature: ["°C", "°F"],
-      rainfall: ["mm/24h", "in/24h"],
-      windSpeed: ["m/s", "km/h", "kt"],
-      windDirection: ["arrow", "desc"],
-    };
-
-    const getNextUnit = (currentUnit, choices) => {
-      const currentIndex = choices.indexOf(currentUnit);
-      return choices[(currentIndex + 1) % choices.length];
-    };
-
-    setUnits((prevUnits) => {
-      const updatedUnits = { ...prevUnits };
-
-      if (overlay.includes("temperature")) {
-        updatedUnits.temperature = getNextUnit(
-          prevUnits.temperature,
-          unitChoices.temperature
-        );
-      } else if (overlay === "wind" || overlay === "wind_speed") {
-        updatedUnits.windSpeed = getNextUnit(
-          prevUnits.windSpeed,
-          unitChoices.windSpeed
-        );
-      } else if (overlay === "rainfall") {
-        updatedUnits.rainfall = getNextUnit(
-          prevUnits.rainfall,
-          unitChoices.rainfall
-        );
-      } else if (overlay === "wind_direction") {
-        updatedUnits.windDirection = getNextUnit(
-          prevUnits.windDirection,
-          unitChoices.windDirection
-        );
-      }
-
-      // Set updated state for localUnits and propagate to parent
-      setLocalUnits(updatedUnits); // ✅ Correctly update parent state
-      return updatedUnits;
-    });
+  const toggleUnits = () => {
+    setUnits((prevUnits) => handleToggle(prevUnits, overlay));
   };
 
   return (
@@ -56,20 +55,20 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
             underline="always"
             level="h4"
             sx={{ color: "primary.700" }}
-            onClick={handleToggle}
+            onClick={toggleUnits}
             className="forecast-units"
           >
-            {localUnits.temperature}
+            {units.temperature}
           </Link>
         ) : overlay === "rainfall" ? (
           <Link
             underline="always"
             level="h4"
             sx={{ color: "primary.700" }}
-            onClick={handleToggle}
+            onClick={toggleUnits}
             className="forecast-units"
           >
-            {localUnits.rainfall.slice(0, 2)}
+            {units.rainfall}
           </Link>
         ) : overlay === "humidity" ? (
           <>%</>
@@ -78,31 +77,70 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
             underline="always"
             level="h4"
             sx={{ color: "primary.700" }}
-            onClick={handleToggle}
+            onClick={toggleUnits}
             className="forecast-units"
           >
-            {localUnits.windSpeed}
+            {units.windSpeed}
           </Link>
         ) : overlay === "cloud" ? null : null
       ) : context === "container" ? (
         overlay.includes("temperature") ? (
-          <Button {...props} onClick={handleToggle}>
-            {localUnits.temperature}
+          <Button {...props} onClick={toggleUnits}>
+            {units.temperature}
           </Button>
         ) : overlay === "rainfall" ? (
-          <Button {...props} onClick={handleToggle}>
-            {localUnits.rainfall}
+          <Button {...props} onClick={toggleUnits}>
+            {units.rainfall}
           </Button>
         ) : overlay === "humidity" ? (
           <Box sx={{ marginLeft: "12px" }}>%</Box>
         ) : overlay === "wind_speed" ? (
-          <Button {...props} onClick={handleToggle}>
-            {localUnits.windSpeed}
+          <Button {...props} onClick={toggleUnits}>
+            {units.windSpeed}
           </Button>
         ) : overlay === "wind_direction" ? (
-          <Button {...props} onClick={handleToggle}>
-            {localUnits.windDirection}
+          <Button {...props} onClick={toggleUnits}>
+            {units.windDirection}
           </Button>
+        ) : null
+      ) : context === "legend" ? (
+        overlay.includes("temperature") ? (
+          <Link
+            level="body-sm"
+            sx={{ color: "primary.700" }}
+            onClick={toggleUnits}
+            className="forecast-units"
+          >
+            {units.temperature}
+          </Link>
+        ) : overlay === "rainfall" ? (
+          <Link
+            level="body-sm"
+            sx={{
+              color: "primary.700",
+            }}
+            onClick={toggleUnits}
+            className="forecast-units"
+          >
+            {units.rainfall.slice(0, 2)}
+          </Link>
+        ) : overlay === "humidity" ? (
+          <Typography level="body-sm" sx={{ color: "primary.700" }}>
+            %
+          </Typography>
+        ) : overlay === "wind" ? (
+          <Link
+            level="body-sm"
+            sx={{ color: "primary.700" }}
+            onClick={toggleUnits}
+            className="forecast-units"
+          >
+            {units.windSpeed}
+          </Link>
+        ) : overlay === "cloud" ? (
+          <Typography level="body-sm" sx={{ color: "primary.700" }}>
+            %
+          </Typography>
         ) : null
       ) : null}
     </>

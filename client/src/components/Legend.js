@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import chroma from "chroma-js";
 import overlayList from "./OverlayList";
+import ToggleUnits from "./ToggleUnits";
+import ForecastValue from "./ForecastValue";
 
-const Legend = ({ isDiscrete, overlay }) => {
+const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
   const getColorScale = () => {
     return overlayList.find((o) => o.name === overlay);
   };
@@ -29,7 +31,14 @@ const Legend = ({ isDiscrete, overlay }) => {
   return (
     <div className="legend-container">
       <div className="legend-units">
-        <span>{overlayData.units}</span>
+        <span>
+          <ToggleUnits
+            context="legend"
+            overlay={overlayData.name}
+            units={units}
+            setUnits={setUnits}
+          />
+        </span>
       </div>
 
       <div className="legend-scale">
@@ -44,7 +53,7 @@ const Legend = ({ isDiscrete, overlay }) => {
                 className="legend-item"
                 style={{ backgroundColor: colorScale(value).alpha(0.8).css() }}
               >
-                {value}
+                <ForecastValue overlay={overlay} units={units} value={value} />
               </li>
             ))}
           </ul>
@@ -58,7 +67,7 @@ const Legend = ({ isDiscrete, overlay }) => {
           >
             {overlayData.domain.map((value, index) => (
               <li key={index} className="legend-item">
-                {value}
+                <ForecastValue overlay={overlay} units={units} value={value} />
               </li>
             ))}
           </ul>
