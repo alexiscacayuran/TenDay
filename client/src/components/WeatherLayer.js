@@ -65,6 +65,7 @@ const WeatherLayer = ({
   isAnimHidden,
   isLayerClipped,
   open,
+  zoomLevel,
 }) => {
   const map = useMap();
   const localOverlay = useRef(overlayList.find((o) => o.name === overlay));

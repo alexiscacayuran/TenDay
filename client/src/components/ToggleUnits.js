@@ -54,7 +54,7 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
           <Link
             underline="always"
             level="h4"
-            sx={{ color: "primary.700" }}
+            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
             onClick={toggleUnits}
             className="forecast-units"
           >
@@ -64,7 +64,7 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
           <Link
             underline="always"
             level="h4"
-            sx={{ color: "primary.700" }}
+            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
             onClick={toggleUnits}
             className="forecast-units"
           >
@@ -76,7 +76,7 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
           <Link
             underline="always"
             level="h4"
-            sx={{ color: "primary.700" }}
+            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
             onClick={toggleUnits}
             className="forecast-units"
           >
@@ -107,7 +107,7 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
         overlay.includes("temperature") ? (
           <Link
             level="body-sm"
-            sx={{ color: "primary.700" }}
+            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
             onClick={toggleUnits}
             className="forecast-units"
           >
@@ -117,7 +117,7 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
           <Link
             level="body-sm"
             sx={{
-              color: "primary.700",
+              color: "var(--joy-palette-neutral-700, #32383E)",
             }}
             onClick={toggleUnits}
             className="forecast-units"
@@ -125,20 +125,26 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
             {units.rainfall.slice(0, 2)}
           </Link>
         ) : overlay === "humidity" ? (
-          <Typography level="body-sm" sx={{ color: "primary.700" }}>
+          <Typography
+            level="body-sm"
+            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
+          >
             %
           </Typography>
         ) : overlay === "wind" ? (
           <Link
             level="body-sm"
-            sx={{ color: "primary.700" }}
+            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
             onClick={toggleUnits}
             className="forecast-units"
           >
             {units.windSpeed}
           </Link>
         ) : overlay === "cloud" ? (
-          <Typography level="body-sm" sx={{ color: "primary.700" }}>
+          <Typography
+            level="body-sm"
+            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
+          >
             %
           </Typography>
         ) : null

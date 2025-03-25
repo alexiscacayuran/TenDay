@@ -24,19 +24,6 @@ import ForecastValue from "./ForecastValue";
 import ToggleUnits from "./ToggleUnits";
 
 import {
-  SunnyIcon,
-  NoRainParCloudyIcon,
-  NoRainMosCloudyIcon,
-  NoRainCloudyIcon,
-  LightRainsParCloudyIcon,
-  LightRainsMosCloudyIcon,
-  LightRainsCloudyIcon,
-  ModRainsParCloudyIcon,
-  ModRainsMosCloudyIcon,
-  ModRainsCloudyIcon,
-  HeavyRainsParCloudyIcon,
-  HeavyRainsMosCloudyIcon,
-  HeavyRainsCloudyIcon,
   NIcon,
   NNEIcon,
   NEIcon,
@@ -113,7 +100,7 @@ const PopupContent = React.memo(
     setUnits,
   }) => {
     return !forecastRetrieval ? (
-      <Card variant="plain" sx={{ minWidth: 360 }}>
+      <Card className="glass" variant="plain" sx={{ minWidth: 365 }}>
         <Stack>
           <Typography level="title-lg">
             <Skeleton loading={loading}>
@@ -128,7 +115,7 @@ const PopupContent = React.memo(
 
           <IconButton
             variant="plain"
-            color="neutral"
+            color="inherit"
             size="sm"
             sx={{ position: "absolute", top: "0.875rem", right: "0.5rem" }}
             onClick={handlePopupClose}
@@ -136,7 +123,7 @@ const PopupContent = React.memo(
             <CloseIcon />
           </IconButton>
         </Stack>
-        <CardOverflow color="primary" variant="soft">
+        <CardOverflow color="primary" variant="soft" sx={{ minHeight: 51 }}>
           <CardContent orientation="horizontal" sx={{ alignItems: "center" }}>
             {loading ? (
               <Skeleton variant="circular" width={34} height={34} />
@@ -154,7 +141,11 @@ const PopupContent = React.memo(
         </CardOverflow>
       </Card>
     ) : (
-      <Card variant="plain" sx={{ minWidth: 360, userSelect: "none" }}>
+      <Card
+        className="glass"
+        variant="plain"
+        sx={{ minWidth: 365, userSelect: "none" }}
+      >
         <Stack>
           <Typography level="title-lg">
             <Skeleton loading={loading}>
@@ -173,7 +164,7 @@ const PopupContent = React.memo(
 
           <IconButton
             variant="plain"
-            color="neutral"
+            color="inherit"
             size="sm"
             sx={{ position: "absolute", top: "0.875rem", right: "0.5rem" }}
             onClick={handlePopupClose}
@@ -248,44 +239,86 @@ const PopupContent = React.memo(
                                   const direction = config.getDirection(
                                     forecast.forecast
                                   );
-                                  const iconProps = {
-                                    sx: {
-                                      color: "primary.softColor",
-                                    },
-                                  };
+
+                                  const renderDirection = (
+                                    IconComponent,
+                                    direction
+                                  ) => (
+                                    <>
+                                      <IconComponent
+                                        sx={{
+                                          height: "auto",
+                                          width: "15px !important",
+                                        }}
+                                      />
+                                      &nbsp;
+                                      <Typography
+                                        level="h4"
+                                        sx={{ color: "primary.softColor" }}
+                                        component="span"
+                                      >
+                                        {direction}
+                                      </Typography>
+                                    </>
+                                  );
+
                                   switch (direction) {
                                     case "N":
-                                      return <NIcon {...iconProps} />;
+                                      return renderDirection(NIcon, direction);
                                     case "NNE":
-                                      return <NNEIcon {...iconProps} />;
+                                      return renderDirection(
+                                        NNEIcon,
+                                        direction
+                                      );
                                     case "NE":
-                                      return <NEIcon {...iconProps} />;
+                                      return renderDirection(NEIcon, direction);
                                     case "ENE":
-                                      return <ENEIcon {...iconProps} />;
+                                      return renderDirection(
+                                        ENEIcon,
+                                        direction
+                                      );
                                     case "E":
-                                      return <EIcon {...iconProps} />;
+                                      return renderDirection(EIcon, direction);
                                     case "ESE":
-                                      return <ESEIcon {...iconProps} />;
+                                      return renderDirection(
+                                        ESEIcon,
+                                        direction
+                                      );
                                     case "SE":
-                                      return <SEIcon {...iconProps} />;
+                                      return renderDirection(SEIcon, direction);
                                     case "SSE":
-                                      return <SSEIcon {...iconProps} />;
+                                      return renderDirection(
+                                        SSEIcon,
+                                        direction
+                                      );
                                     case "S":
-                                      return <SIcon {...iconProps} />;
+                                      return renderDirection(SIcon, direction);
                                     case "SSW":
-                                      return <SSWIcon {...iconProps} />;
+                                      return renderDirection(
+                                        SSWIcon,
+                                        direction
+                                      );
                                     case "SW":
-                                      return <SWIcon {...iconProps} />;
+                                      return renderDirection(SWIcon, direction);
                                     case "WSW":
-                                      return <WSWIcon {...iconProps} />;
+                                      return renderDirection(
+                                        WSWIcon,
+                                        direction
+                                      );
                                     case "W":
-                                      return <WIcon {...iconProps} />;
+                                      return renderDirection(WIcon, direction);
                                     case "WNW":
-                                      return <WNWIcon {...iconProps} />;
+                                      return renderDirection(
+                                        WNWIcon,
+                                        direction
+                                      );
                                     case "NW":
-                                      return <NWIcon {...iconProps} />;
+                                      return renderDirection(NWIcon, direction);
                                     case "NNW":
-                                      return <NNWIcon {...iconProps} />;
+                                      return renderDirection(
+                                        NNWIcon,
+                                        direction
+                                      );
                                     default:
                                       return null;
                                   }

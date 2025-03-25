@@ -121,6 +121,7 @@ const GeoSearch = ({
           });
 
           marker.addTo(markerLayer.current);
+          marker.unbindPopup();
           map.flyTo(result.latlng, 12, { duration: 2 });
 
           setOpenModal(false);

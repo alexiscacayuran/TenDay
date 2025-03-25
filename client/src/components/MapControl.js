@@ -8,14 +8,14 @@ import MyLocationIcon from "@mui/icons-material/MyLocation";
 import Tooltip from "@mui/joy/Tooltip";
 import { Box, Stack } from "@mui/joy";
 
-const CustomZoomControl = () => {
-  const [zoomLevel, setZoomLevel] = useState(null);
-  const map = useMap();
+const CustomZoomControl = ({ map }) => {
+  // const [zoomLevel, setZoomLevel] = useState(null);
+  // const map = useMap();
   // console.log(zoomLevel);
 
-  useEffect(() => {
-    map.on("zoomend", () => setZoomLevel(map.getZoom()));
-  }, [map]);
+  // useEffect(() => {
+  //   map.on("zoomend", () => setZoomLevel(map.getZoom()));
+  // }, [map]);
 
   return (
     <Box sx={{ position: "absolute", top: 60, right: 10, zIndex: 999 }}>
@@ -35,25 +35,24 @@ const CustomZoomControl = () => {
           sx={{ width: 35 }}
         >
           <Button
+            className="glass"
             onClick={(e) => {
+              e.stopPropagation();
               map.zoomIn();
             }}
           >
             <AddIcon />
           </Button>
           <Button
+            className="glass"
             onClick={(e) => {
+              e.stopPropagation();
               map.zoomOut();
             }}
           >
             <RemoveIcon />
           </Button>
         </ButtonGroup>
-        <Tooltip placement="left" title="See current location" variant="solid">
-          <Button color="neutral" variant="soft" sx={{ width: 35 }}>
-            <MyLocationIcon />
-          </Button>
-        </Tooltip>
       </Stack>
     </Box>
   );

@@ -67,6 +67,7 @@ const LayerMenu = ({
     <>
       <Box sx={{ position: "absolute", top: 60, left: 10, zIndex: 999 }}>
         <Sheet
+          className="glass"
           color="primary"
           variant="soft"
           sx={{ borderRadius: "md", display: "inline-flex", gap: 2, p: 0.5 }}
@@ -74,8 +75,8 @@ const LayerMenu = ({
           <ToggleButtonGroup
             size="lg"
             orientation="vertical"
-            color="primary"
-            variant="soft"
+            color="neutral"
+            variant="plain"
             spacing={0.5}
             value={localOverlay}
             onChange={(event, value) => {
@@ -143,6 +144,7 @@ const LayerMenu = ({
             }}
           >
             <Sheet
+              className="glass"
               color="primary"
               variant="soft"
               sx={{
@@ -156,8 +158,8 @@ const LayerMenu = ({
               <ToggleButtonGroup
                 size="lg"
                 orientation="vertical"
-                color="primary"
-                variant="soft"
+                color="neutral"
+                variant="plain"
                 spacing={0.5}
                 value={localTemp}
                 onChange={(event, value) => {

@@ -13,6 +13,7 @@ import LayerMenu from "./LayerMenu";
 import Box from "@mui/joy/Box";
 import WeatherLayer from "./WeatherLayer";
 import Legend from "./Legend";
+import ZoomLevel from "./ZoomLevel";
 
 const Map = () => {
   const [accessToken, setAccessToken] = useState(null);
@@ -35,7 +36,7 @@ const Map = () => {
       L.latLngBounds([
         [4.64, 116.93],
         [20.94, 126.61],
-      ]),
+      ]).pad(0.1),
     []
   );
   const [location, setLocation] = useState({
@@ -53,6 +54,8 @@ const Map = () => {
   const [date, setDate] = useState(new Date());
   const [dateReady, setDateReady] = useState(false);
   const [overlay, setOverlay] = useState("temperature_average");
+  const [zoomLevel, setZoomLevel] = useState(8);
+  console.log(zoomLevel);
 
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [temp, setTemp] = useState("temperature_average");
@@ -60,7 +63,6 @@ const Map = () => {
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
   const [isLayerClipped, setIsLayerClipped] = useState(false);
-  // console.log(date);
 
   const [units, setUnits] = useState({
     temperature: "°C",
@@ -111,6 +113,7 @@ const Map = () => {
           zoomControl={false}
           ref={setMap} // Set map instance to external state
         >
+          <ZoomLevel setZoomLevel={setZoomLevel} />
           <LayerGroup ref={markerLayer} />
           <LayerGroup ref={overlayLayer} />
           {dateReady && (
@@ -123,6 +126,7 @@ const Map = () => {
               isAnimHidden={isAnimHidden}
               isLayerClipped={isLayerClipped}
               open={open}
+              zoomLevel={zoomLevel}
             />
           )}
           <Base accessToken={accessToken} />
@@ -143,9 +147,9 @@ const Map = () => {
               setUnits={setUnits}
             />
           )}
-          <MapControl />
         </MapContainer>
 
+        <MapControl map={map} />
         <LayerMenu
           overlay={overlay}
           setOverlay={setOverlay}
@@ -181,6 +185,7 @@ const Map = () => {
           )}
 
         <ForecastContainer
+          map={map}
           open={open}
           setOpen={setOpen}
           location={location}
@@ -215,6 +220,7 @@ const Map = () => {
       activeTooltip,
       isLayerClipped,
       units,
+      zoomLevel,
     ]
   );
 

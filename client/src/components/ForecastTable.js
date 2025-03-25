@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import chroma from "chroma-js";
-import { Table, Typography } from "@mui/joy";
+import { Typography, Link } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
@@ -22,7 +22,7 @@ const weatherParams = [
     icon: faCaretDown,
   },
   {
-    name: "Rain",
+    name: "Rainfall",
     key: "rainfall.total",
     overlay: "rainfall",
     overlayRef: "rainfall",
@@ -59,13 +59,15 @@ const ForecastTable = ({
   overlay,
   setOverlay,
   setIsMenuOpen,
-  temp,
   setTemp,
   setActiveTooltip,
   units,
   setUnits,
   setActiveColumn,
   setDate,
+  handleMouseEnter,
+  handleMouseLeave,
+  hoveredColumn,
 }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_average"); // Stores last selected temperature overlay
@@ -187,7 +189,9 @@ const ForecastTable = ({
                       ).css()}, ${colorScale(current).css()}, ${colorScale(
                         getMedian(current, right)
                       ).css()})`
-                    : "transparent";
+                    : hoveredColumn === index + 2
+                    ? "var(--joy-palette-primary-200, #C7DFF7)"
+                    : "#FFF";
 
                 const color =
                   activeOverlay === overlay
@@ -203,6 +207,8 @@ const ForecastTable = ({
                       background,
                       color,
                     }}
+                    onMouseEnter={() => handleMouseEnter(index + 2)}
+                    onMouseLeave={handleMouseLeave}
                     onClick={() => {
                       setActiveColumn(index + 3); // Adjust for first 2 columns
                       setDate(data.date); // ✅ Set the date using setDate

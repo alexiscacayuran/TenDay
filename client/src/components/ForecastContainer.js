@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 
@@ -42,6 +42,7 @@ import ForecastTable from "./ForecastTable";
 import ToggleUnits from "./ToggleUnits";
 
 const ForecastContainer = ({
+  map,
   open,
   setOpen,
   location,
@@ -59,7 +60,19 @@ const ForecastContainer = ({
 }) => {
   const [forecast, setForecast] = useState(null);
   const [activeColumn, setActiveColumn] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [hoveredColumn, setHoveredColumn] = useState(null);
+
+  // Handles column highlight
+  const handleMouseEnter = (index) => {
+    // Highlight columns only from 3rd to 12th (zero-indexed: 2 to 11)
+    if (index >= 2 && index <= 11 && index + 1 != activeColumn) {
+      setHoveredColumn(index);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredColumn(null);
+  };
 
   // Get today's date
   const today = format(new Date(), "yyyy-MM-dd");
@@ -71,13 +84,7 @@ const ForecastContainer = ({
         (data) => format(new Date(data.date), "yyyy-MM-dd") === today
       );
 
-      console.log("Current column index:", currentColumnIndex);
-
       if (currentColumnIndex !== -1) {
-        console.log(
-          "Date from forecast",
-          forecast.forecasts[currentColumnIndex].date
-        );
         setActiveColumn(currentColumnIndex + 3); // Offset for first 2 columns
       }
     }
@@ -92,16 +99,7 @@ const ForecastContainer = ({
           format(new Date(date), "yyyy-MM-dd")
       );
 
-      console.log(
-        "Current column index based on parent date:",
-        currentColumnIndex
-      );
-
       if (currentColumnIndex !== -1) {
-        console.log(
-          "Date from forecast based on parent date",
-          forecast.forecasts[currentColumnIndex].date
-        );
         setActiveColumn(currentColumnIndex + 3); // Offset for first 2 columns
       }
     }
@@ -154,9 +152,9 @@ const ForecastContainer = ({
         }}
       >
         <Sheet
+          className="glass"
           sx={{
             position: "relative",
-            // bgcolor: "background.body",
             borderRadius: "sm",
             boxShadow: "lg",
             display: "flex",
@@ -183,23 +181,39 @@ const ForecastContainer = ({
                   borderAxis="none"
                   sx={{
                     "--highlightColor": "#007FFF",
-                    "--borderStyle": "2px solid var(--highlightColor)",
+                    "--borderStyle": "3px solid var(--highlightColor)",
                     "--cellHeight": "38px",
+                    "--hoverColor": "#EDF5FD",
+                    "--hoverBorderStyle": "3px solid var(--hoverColor)",
 
                     userSelect: "none",
                     width: "1000px",
+                    tableLayout: "fixed", // Prevent resizing
 
                     // ✅ Table header styles
-                    "& thead > tr *": {
+                    "& thead > tr > th": {
                       bgcolor: "primary.softBg",
+                    },
+
+                    "& thead > tr *": {
                       color: "primary.softColor",
                     },
+
+                    // ✅ Table header styles
+                    "& tbody > tr > td": {
+                      bgcolor: "common.white",
+                    },
+
                     "& thead > tr th:last-child": {
                       borderTopRightRadius: 0,
                     },
 
                     // ✅ Cell height and column text alignment
-                    "& td": { height: "var(--cellHeight)" },
+                    "& td, & th": {
+                      height: "var(--cellHeight)",
+                      alignContent: "center",
+                      boxSizing: "border-box",
+                    },
                     "& tr > *:first-child": {
                       width: "15%",
                       textAlign: "right",
@@ -212,7 +226,7 @@ const ForecastContainer = ({
                     "& tr > *:nth-child(2)": { borderLeftStyle: "none" },
                     "& tr > *:last-child": {
                       borderRightStyle: "solid",
-                      borderWidth: "1px",
+                      borderRightWidth: "1px",
                       borderColor: "--TableCell-borderColor",
                     },
 
@@ -224,6 +238,13 @@ const ForecastContainer = ({
                     },
                     "& tbody > tr:first-child": {
                       height: "64px",
+                    },
+
+                    "& thead tr > th": {
+                      borderTop: "3px solid transparent",
+                    },
+                    "& tbody tr:last-child > td": {
+                      borderBottom: "3px solid transparent",
                     },
 
                     // ✅ Highlight the active column (date match or user-clicked column)
@@ -248,6 +269,26 @@ const ForecastContainer = ({
                           borderBottom: "var(--borderStyle)",
                         },
                     }),
+
+                    // Highlight column with borders dynamically
+                    ...(hoveredColumn !== null && {
+                      // Highlight header (top border, left, right)
+                      [`& thead tr > *:nth-child(${hoveredColumn + 1})`]: {
+                        bgcolor: "primary.300",
+                      },
+                      // Highlight middle rows (left, right)
+                      [`& tbody tr:not(:last-child) > *:nth-child(${
+                        hoveredColumn + 1
+                      })`]: {
+                        bgcolor: "primary.softHoverBg",
+                      },
+                      // Highlight last row (left, right, bottom)
+                      [`& tbody tr:last-child > *:nth-child(${
+                        hoveredColumn + 1
+                      })`]: {
+                        bgcolor: "primary.softHoverBg",
+                      },
+                    }),
                   }}
                 >
                   <thead>
@@ -257,6 +298,8 @@ const ForecastContainer = ({
                       {forecast.forecasts.map((data, index) => (
                         <th
                           key={index}
+                          onMouseEnter={() => handleMouseEnter(index + 2)}
+                          onMouseLeave={handleMouseLeave}
                           onClick={() => {
                             setActiveColumn(index + 3); // Adjust for first 2 columns
                             setDate(data.date); // ✅ Set the date using setDate
@@ -276,6 +319,8 @@ const ForecastContainer = ({
                       {forecast.forecasts.map((data, index) => (
                         <td
                           key={index}
+                          onMouseEnter={() => handleMouseEnter(index + 2)}
+                          onMouseLeave={handleMouseLeave}
                           onClick={() => {
                             setActiveColumn(index + 3); // Adjust for first 2 columns
                             setDate(data.date); // ✅ Set the date using setDate
@@ -354,6 +399,9 @@ const ForecastContainer = ({
                       setUnits={setUnits}
                       setActiveColumn={setActiveColumn}
                       setDate={setDate}
+                      handleMouseEnter={handleMouseEnter}
+                      handleMouseLeave={handleMouseLeave}
+                      hoveredColumn={hoveredColumn}
                     />
                     <tr>
                       <th>
@@ -374,6 +422,8 @@ const ForecastContainer = ({
                       {forecast.forecasts.map((data, index) => (
                         <td
                           key={index}
+                          onMouseEnter={() => handleMouseEnter(index + 2)}
+                          onMouseLeave={handleMouseLeave}
                           onClick={() => {
                             setActiveColumn(index + 3); // Adjust for first 2 columns
                             setDate(data.date); // ✅ Set the date using setDate
@@ -424,10 +474,10 @@ const ForecastContainer = ({
                     </tr>
                   </tbody>
                 </Table>
-                <Box sx={{ p: 1, width: "15%", height: "100%" }}>
+                <Box sx={{ p: 1, width: "20%", height: "100%" }}>
                   <Stack
                     direction="row"
-                    spacing={1}
+                    spacing={0.5}
                     sx={{
                       justifyContent: "flex-end",
                       alignItems: "flex-start",
@@ -436,23 +486,35 @@ const ForecastContainer = ({
                   >
                     <IconButton
                       size="sm"
-                      color="neutral"
+                      color="inherit"
                       variant="outlined"
                       aria-label="download"
                     >
-                      <DownloadIcon color="neutral" />
+                      <DownloadIcon
+                        sx={{
+                          color: "var(--joy-palette-neutral-700, #32383E)",
+                        }}
+                      />
                     </IconButton>
                     <IconButton
                       size="sm"
-                      color="neutral"
+                      color="inherit"
                       variant="outlined"
                       aria-label="close"
                       onClick={() => {
-                        markerLayer.current.clearLayers();
+                        markerLayer.current.eachLayer((layer) => {
+                          if (layer.getLatLng().equals(location.latLng)) {
+                            layer.openPopup();
+                          }
+                        });
                         setOpen(false);
                       }}
                     >
-                      <CloseIcon />
+                      <CloseIcon
+                        sx={{
+                          color: "var(--joy-palette-neutral-700, #32383E)",
+                        }}
+                      />
                     </IconButton>
                   </Stack>
                   {location && (
