@@ -12,7 +12,7 @@ import Dexie from "dexie";
 import Box from "@mui/joy/Box";
 import overlayList from "./OverlayList";
 
-const db = new Dexie("OverlayCache");
+const db = new Dexie("WeatherLayerCache");
 db.version(1).stores({
   scalars: "url, scalarData", // Stores pre-built raster layers
   vectors: "url, vectorData", // Stores pre-built vector layers
@@ -233,7 +233,7 @@ const WeatherLayer = ({
       <Box
         sx={{
           position: "fixed",
-          bottom: open ? 320 : 70,
+          bottom: open ? 340 : 70,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 999,

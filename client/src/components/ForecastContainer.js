@@ -57,6 +57,8 @@ const ForecastContainer = ({
   setUnits,
   date,
   setDate,
+  isLocateUsed,
+  setIsLocateUsed,
 }) => {
   const [forecast, setForecast] = useState(null);
   const [activeColumn, setActiveColumn] = useState(null);
@@ -65,7 +67,7 @@ const ForecastContainer = ({
   // Handles column highlight
   const handleMouseEnter = (index) => {
     // Highlight columns only from 3rd to 12th (zero-indexed: 2 to 11)
-    if (index >= 2 && index <= 11 && index + 1 != activeColumn) {
+    if (index >= 2 && index <= 11 && index + 1) {
       setHoveredColumn(index);
     }
   };
@@ -182,9 +184,10 @@ const ForecastContainer = ({
                   sx={{
                     "--highlightColor": "#007FFF",
                     "--borderStyle": "3px solid var(--highlightColor)",
-                    "--cellHeight": "38px",
+                    "--cellHeight": "40px",
                     "--hoverColor": "#EDF5FD",
                     "--hoverBorderStyle": "3px solid var(--hoverColor)",
+                    "--transpBorderStyle": " 3px solid transparent",
 
                     userSelect: "none",
                     width: "1000px",
@@ -241,12 +244,11 @@ const ForecastContainer = ({
                     },
 
                     "& thead tr > th": {
-                      borderTop: "3px solid transparent",
+                      borderTop: "var(--transpBorderStyle)",
                     },
                     "& tbody tr:last-child > td": {
-                      borderBottom: "3px solid transparent",
+                      borderBottom: "var(--transpBorderStyle)",
                     },
-
                     // ✅ Highlight the active column (date match or user-clicked column)
                     ...(activeColumn !== null && {
                       // Header (top, left, right borders)
@@ -254,12 +256,20 @@ const ForecastContainer = ({
                         borderTop: "var(--borderStyle)",
                         borderLeft: "var(--borderStyle)",
                         borderRight: "var(--borderStyle)",
+                        bgcolor:
+                          hoveredColumn === activeColumn - 1
+                            ? "primary.300" // Apply hover bg if active and hovered
+                            : "primary.100", // Active background otherwise
                       },
                       // Middle rows (left, right borders)
                       [`& tbody tr:not(:last-child) > *:nth-child(${activeColumn})`]:
                         {
                           borderLeft: "var(--borderStyle)",
                           borderRight: "var(--borderStyle)",
+                          bgcolor:
+                            hoveredColumn === activeColumn - 1
+                              ? "primary.softHoverBg" // Apply hover bg
+                              : "none", // Active background otherwise
                         },
                       // Last row (left, right, bottom borders)
                       [`& tbody tr:last-child > *:nth-child(${activeColumn})`]:
@@ -267,26 +277,63 @@ const ForecastContainer = ({
                           borderLeft: "var(--borderStyle)",
                           borderRight: "var(--borderStyle)",
                           borderBottom: "var(--borderStyle)",
+                          bgcolor:
+                            hoveredColumn === activeColumn - 1
+                              ? "primary.softHoverBg" // Apply hover bg
+                              : "none", // Active background otherwise
                         },
                     }),
 
-                    // Highlight column with borders dynamically
+                    // Highlight column with borders on hover
                     ...(hoveredColumn !== null && {
                       // Highlight header (top border, left, right)
                       [`& thead tr > *:nth-child(${hoveredColumn + 1})`]: {
                         bgcolor: "primary.300",
+                        borderTop:
+                          hoveredColumn === activeColumn - 1
+                            ? "var(--borderStyle)"
+                            : "var(--transpBorderStyle)", // Add border if hovered column matches active column
+                        borderLeft:
+                          hoveredColumn === activeColumn - 1
+                            ? "var(--borderStyle)"
+                            : "none",
+                        borderRight:
+                          hoveredColumn === activeColumn - 1
+                            ? "var(--borderStyle)"
+                            : "none",
                       },
                       // Highlight middle rows (left, right)
                       [`& tbody tr:not(:last-child) > *:nth-child(${
                         hoveredColumn + 1
                       })`]: {
                         bgcolor: "primary.softHoverBg",
+                        borderLeft:
+                          hoveredColumn === activeColumn - 1
+                            ? "var(--borderStyle)"
+                            : "none", // Add border if hovered column matches active column
+                        borderRight:
+                          hoveredColumn === activeColumn - 1
+                            ? "var(--borderStyle)"
+                            : "none",
                       },
                       // Highlight last row (left, right, bottom)
                       [`& tbody tr:last-child > *:nth-child(${
                         hoveredColumn + 1
                       })`]: {
                         bgcolor: "primary.softHoverBg",
+                        borderBottom:
+                          hoveredColumn === activeColumn - 1
+                            ? "var(--borderStyle)"
+                            : "var(--transpBorderStyle)", // Add border if hovered column matches active column
+
+                        borderLeft:
+                          hoveredColumn === activeColumn - 1
+                            ? "var(--borderStyle)"
+                            : "none",
+                        borderRight:
+                          hoveredColumn === activeColumn - 1
+                            ? "var(--borderStyle)"
+                            : "none",
                       },
                     }),
                   }}
@@ -502,11 +549,14 @@ const ForecastContainer = ({
                       variant="outlined"
                       aria-label="close"
                       onClick={() => {
-                        markerLayer.current.eachLayer((layer) => {
-                          if (layer.getLatLng().equals(location.latLng)) {
-                            layer.openPopup();
-                          }
-                        });
+                        isLocateUsed
+                          ? markerLayer.current.clearLayers()
+                          : markerLayer.current.eachLayer((layer) => {
+                              if (layer.getLatLng().equals(location.latLng)) {
+                                layer.openPopup();
+                              }
+                            });
+                        setIsLocateUsed(false);
                         setOpen(false);
                       }}
                     >

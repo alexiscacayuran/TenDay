@@ -14,6 +14,7 @@ import Box from "@mui/joy/Box";
 import WeatherLayer from "./WeatherLayer";
 import Legend from "./Legend";
 import ZoomLevel from "./ZoomLevel";
+import ScaleNautic from "react-leaflet-nauticsale";
 
 const Map = () => {
   const [accessToken, setAccessToken] = useState(null);
@@ -55,7 +56,7 @@ const Map = () => {
   const [dateReady, setDateReady] = useState(false);
   const [overlay, setOverlay] = useState("temperature_average");
   const [zoomLevel, setZoomLevel] = useState(8);
-  console.log(zoomLevel);
+  // console.log(zoomLevel);
 
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [temp, setTemp] = useState("temperature_average");
@@ -70,6 +71,8 @@ const Map = () => {
     windSpeed: "m/s",
     windDirection: "arrow",
   });
+
+  const [isLocateUsed, setIsLocateUsed] = useState(false);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -101,6 +104,9 @@ const Map = () => {
           setLocation={setLocation}
           setOpenContainer={setOpen}
           openContainer={open}
+          units={units}
+          setUnits={setUnits}
+          setIsLocateUsed={setIsLocateUsed}
         />
 
         <MapContainer
@@ -113,6 +119,7 @@ const Map = () => {
           zoomControl={false}
           ref={setMap} // Set map instance to external state
         >
+          <ScaleNautic metric={true} nautic={false} imperial={false} />
           <ZoomLevel setZoomLevel={setZoomLevel} />
           <LayerGroup ref={markerLayer} />
           <LayerGroup ref={overlayLayer} />
@@ -200,6 +207,8 @@ const Map = () => {
           setUnits={setUnits}
           date={date}
           setDate={setDate}
+          isLocateUsed={isLocateUsed}
+          setIsLocateUsed={setIsLocateUsed}
         />
       </Box>
     ),
@@ -221,6 +230,7 @@ const Map = () => {
       isLayerClipped,
       units,
       zoomLevel,
+      isLocateUsed,
     ]
   );
 

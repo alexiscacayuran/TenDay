@@ -109,7 +109,7 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
             level="body-sm"
             sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
             onClick={toggleUnits}
-            className="forecast-units"
+            className="legend-units"
           >
             {units.temperature}
           </Link>
@@ -120,7 +120,7 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
               color: "var(--joy-palette-neutral-700, #32383E)",
             }}
             onClick={toggleUnits}
-            className="forecast-units"
+            className="legend-units"
           >
             {units.rainfall.slice(0, 2)}
           </Link>
@@ -136,7 +136,7 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
             level="body-sm"
             sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
             onClick={toggleUnits}
-            className="forecast-units"
+            className="legend-units"
           >
             {units.windSpeed}
           </Link>

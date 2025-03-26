@@ -51,6 +51,7 @@
   color: white !important;
   background: none !important;
   text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5) !important;
+  font-size: 10px;
 }
 
 .leaflet-control-attribution a {
@@ -220,16 +221,21 @@
   z-index: 999; /* Ensures the legend stays on top */
 }
 
-.legend-units {
+.legend-units-container {
   text-align: center;
   font-weight: bold;
   font-size: 14px;
-  color: #12467b;
   margin: 5px 0;
   width: 36px; /* Set the desired width */
   word-wrap: break-word; /* For older browsers */
   overflow-wrap: break-word; /* Standard property */
   white-space: normal; /* Allow text to wrap */
+}
+
+.legend-units {
+  color: #32383e !important;
+  text-decoration-color: #32383e !important;
+  text-decoration-style: dotted !important;
 }
 
 .legend-scale {
@@ -389,4 +395,20 @@
   100% {
     bottom: 100%;
   }
+}
+
+.leaflet-control-scale {
+  position: absolute !important;
+  bottom: 20px !important;
+  left: 10px !important;
+}
+
+.leaflet-control-scale-line {
+  border: 2px solid white !important;
+  border-top: none !important;
+  line-height: 1.5 !important;
+  padding: 2px 5px 1px;
+  background: transparent !important;
+  text-shadow: initial !important;
+  color: white !important;
 }

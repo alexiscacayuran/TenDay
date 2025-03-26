@@ -35,7 +35,7 @@ const ReverseGeocode = ({
             return;
           }
 
-          //console.log(result.address);
+          // console.log(result);
 
           setLocation({
             latLng: result.latlng,

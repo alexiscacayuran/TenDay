@@ -30,7 +30,7 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
 
   return (
     <div className="glass legend-container">
-      <div className="legend-units">
+      <div className="legend-units-container">
         <span>
           <ToggleUnits
             context="legend"
