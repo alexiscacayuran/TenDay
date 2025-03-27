@@ -100,7 +100,11 @@ const PopupContent = React.memo(
     setUnits,
   }) => {
     return !forecastRetrieval ? (
-      <Card className="glass" variant="plain" sx={{ minWidth: 365 }}>
+      <Card
+        className="glass"
+        variant="plain"
+        sx={{ minWidth: 365, userSelect: "none" }}
+      >
         <Stack>
           <Typography level="title-lg">
             <Skeleton loading={loading}>

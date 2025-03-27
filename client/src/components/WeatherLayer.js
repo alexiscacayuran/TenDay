@@ -75,7 +75,7 @@ const WeatherLayer = ({
   const [loading, setLoading] = useState(true);
 
   const colorScaleFn = (value) => {
-    if (value[0] < Number.MIN_VALUE) {
+    if (value[0] <= 0) {
       return colorScale.current(value).alpha(0).css();
     }
     return colorScale.current(value).css();

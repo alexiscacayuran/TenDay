@@ -72,6 +72,9 @@ const Map = () => {
     windDirection: "arrow",
   });
 
+  const [scale, setScale] = useState({ metric: true, imperial: false });
+  console.log(scale);
+
   const [isLocateUsed, setIsLocateUsed] = useState(false);
 
   useEffect(() => {
@@ -107,6 +110,8 @@ const Map = () => {
           units={units}
           setUnits={setUnits}
           setIsLocateUsed={setIsLocateUsed}
+          scale={scale}
+          setScale={setScale}
         />
 
         <MapContainer
@@ -119,7 +124,12 @@ const Map = () => {
           zoomControl={false}
           ref={setMap} // Set map instance to external state
         >
-          <ScaleNautic metric={true} nautic={false} imperial={false} />
+          <ScaleNautic
+            metric={scale.metric}
+            imperial={scale.imperial}
+            nautic={false}
+            key={`${scale.metric}-${scale.imperial}`} // Rerender on scale change
+          />
           <ZoomLevel setZoomLevel={setZoomLevel} />
           <LayerGroup ref={markerLayer} />
           <LayerGroup ref={overlayLayer} />
@@ -231,6 +241,7 @@ const Map = () => {
       units,
       zoomLevel,
       isLocateUsed,
+      scale,
     ]
   );
 

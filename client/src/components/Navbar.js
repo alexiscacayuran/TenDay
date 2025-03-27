@@ -39,6 +39,9 @@ import { reverseGeocode } from "esri-leaflet-geocoder";
 import L from "leaflet";
 import { DivIcon } from "leaflet";
 
+import Popover from "@mui/material/Popover";
+import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
+
 // Use existing Dexie instance for OverlayCache
 const db = new Dexie("WeatherLayerCache");
 db.version(1).stores({
@@ -57,40 +60,42 @@ const Navbar = ({
   units,
   setUnits,
   setIsLocateUsed,
+  scale,
+  setScale,
 }) => {
   const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openAbout, setOpenAbout] = useState(false);
 
-  const [cacheSize, setCacheSize] = useState(0);
+  // const [cacheSize, setCacheSize] = useState(0);
+  // useEffect(() => {
 
-  const getCacheSize = async () => {
-    const [scalarRecords, vectorRecords] = await Promise.all([
-      db.scalars.toArray(),
-      db.vectors.toArray(),
-    ]);
+  // const getCacheSize = async () => {
+  //   const [scalarRecords, vectorRecords] = await Promise.all([
+  //     db.scalars.toArray(),
+  //     db.vectors.toArray(),
+  //   ]);
 
-    const totalSize = [...scalarRecords, ...vectorRecords].reduce(
-      (acc, record) => {
-        const size = JSON.stringify(record).length * 2; // Each char = 2 bytes
-        return acc + size;
-      },
-      0
-    );
+  //   const totalSize = [...scalarRecords, ...vectorRecords].reduce(
+  //     (acc, record) => {
+  //       const size = JSON.stringify(record).length * 2; // Each char = 2 bytes
+  //       return acc + size;
+  //     },
+  //     0
+  //   );
 
-    console.log("Total size:", totalSize);
+  //   console.log("Total size:", totalSize);
 
-    setCacheSize((totalSize / (1024 * 1024)).toFixed(2)); // Convert to MB
-  };
+  //   setCacheSize((totalSize / (1024 * 1024)).toFixed(2)); // Convert to MB
+  // };
+
+  //   getCacheSize(); // Fetch cache size when the settings modal opens
+  // }, []);
 
   const clearCache = async () => {
     await Promise.all([db.scalars.clear(), db.vectors.clear()]);
-    setCacheSize(0); // Reset size after clearing
+    // setCacheSize(0); // Reset size after clearing
   };
-
-  useEffect(() => {
-    getCacheSize(); // Fetch cache size when the settings modal opens
-  }, []);
 
   // Handle user location and reverse geocoding
   const handleLocate = () => {
@@ -209,28 +214,16 @@ const Navbar = ({
                   alignItems: "center",
                 }}
               >
-                <Sheet
-                  variant="outlined"
-                  sx={{
-                    minWidth: 500,
-                    minHeight: 600,
-                    maxWidth: 500,
-                    borderRadius: "md",
-                    p: 3,
-                    boxShadow: "lg",
-                  }}
-                >
-                  <Geosearch
-                    accessToken={accessToken}
-                    setLocation={setLocation}
-                    map={map}
-                    markerLayer={markerLayer}
-                    location={location}
-                    setOpenModal={setOpenSearch}
-                    setOpenContainer={setOpenContainer}
-                    openContainer={openContainer}
-                  />
-                </Sheet>
+                <Geosearch
+                  accessToken={accessToken}
+                  setLocation={setLocation}
+                  map={map}
+                  markerLayer={markerLayer}
+                  location={location}
+                  setOpenModal={setOpenSearch}
+                  setOpenContainer={setOpenContainer}
+                  openContainer={openContainer}
+                />
               </Modal>
             </React.Fragment>
           </Box>
@@ -398,6 +391,37 @@ const Navbar = ({
                   </ToggleButtonGroup>
                 </FormControl>
 
+                <FormControl orientation="horizontal" sx={{ mt: 2 }}>
+                  <Box sx={{ display: "flex", flex: 1, pr: 1 }}>
+                    <FormLabel sx={{ typography: "title-sm" }}>
+                      Map scale
+                    </FormLabel>
+                  </Box>
+                  <ToggleButtonGroup
+                    color="primary"
+                    size="sm"
+                    variant="outlined"
+                    value={
+                      scale.metric
+                        ? "metric"
+                        : scale.imperial
+                        ? "imperial"
+                        : undefined
+                    }
+                    exclusive
+                    onChange={(e, value) => {
+                      if (value === "metric") {
+                        setScale({ metric: true, imperial: false });
+                      } else if (value === "imperial") {
+                        setScale({ metric: false, imperial: true });
+                      }
+                    }}
+                  >
+                    <Button value="metric">km</Button>
+                    <Button value="imperial">mi</Button>
+                  </ToggleButtonGroup>
+                </FormControl>
+
                 <Typography level="title-md" sx={{ fontWeight: "bold", mt: 2 }}>
                   Data management
                 </Typography>
@@ -407,7 +431,8 @@ const Navbar = ({
                       Clear app cache
                     </FormLabel>
                     <FormHelperText sx={{ typography: "body-sm" }}>
-                      This will reset the weather layer data in your browser.
+                      This will delete all the temporary weather data in your
+                      browser.
                     </FormHelperText>
                   </Box>
                 </FormControl>
@@ -417,7 +442,7 @@ const Navbar = ({
                   size="sm"
                   onClick={clearCache}
                 >
-                  Clear Cache ({cacheSize} MB)
+                  Clear Cache
                 </Button>
               </DialogContent>
             </Sheet>

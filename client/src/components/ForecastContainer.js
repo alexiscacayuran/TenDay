@@ -151,6 +151,7 @@ const ForecastContainer = ({
           left: 0,
           width: "100%",
           zIndex: 800,
+          userSelect: "none",
         }}
       >
         <Sheet
@@ -189,7 +190,7 @@ const ForecastContainer = ({
                     "--hoverBorderStyle": "3px solid var(--hoverColor)",
                     "--transpBorderStyle": " 3px solid transparent",
 
-                    userSelect: "none",
+                    backgroundColor: "common.white",
                     width: "1000px",
                     tableLayout: "fixed", // Prevent resizing
 

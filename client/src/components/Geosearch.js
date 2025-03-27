@@ -16,6 +16,7 @@ import {
   ListDivider,
   IconButton,
   Stack,
+  Sheet,
 } from "@mui/joy";
 import SearchIcon from "@mui/icons-material/Search";
 import MapIcon from "@mui/icons-material/Map";
@@ -131,7 +132,17 @@ const GeoSearch = ({
   };
 
   return (
-    <div>
+    <Sheet
+      variant="outlined"
+      sx={{
+        minWidth: 500,
+        minHeight: 600,
+        maxWidth: 500,
+        borderRadius: "md",
+        p: 3,
+        boxShadow: "lg",
+      }}
+    >
       <Stack
         direction="row"
         spacing={1}
@@ -236,7 +247,7 @@ const GeoSearch = ({
       ) : (
         <Box></Box>
       )}
-    </div>
+    </Sheet>
   );
 };
 
