@@ -49,6 +49,7 @@ const Map = () => {
   const startDate = useRef(null);
   const markerLayer = useRef(null);
   const overlayLayer = useRef(null);
+  const marker = useRef(null);
 
   const [map, setMap] = useState(null); // External state for the map instance
   const [open, setOpen] = useState(false); // Slide up bottom container state
@@ -73,7 +74,7 @@ const Map = () => {
   });
 
   const [scale, setScale] = useState({ metric: true, imperial: false });
-  console.log(scale);
+  console.log(location);
 
   const [isLocateUsed, setIsLocateUsed] = useState(false);
 

@@ -25,6 +25,7 @@ import Logo from "../assets/logo-text.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleInfo, faGear } from "@fortawesome/free-solid-svg-icons";
 
+import Input from "@mui/joy/Input";
 import Drawer from "@mui/joy/Drawer";
 import DialogTitle from "@mui/joy/DialogTitle";
 import ModalClose from "@mui/joy/ModalClose";
@@ -35,12 +36,8 @@ import FormHelperText from "@mui/joy/FormHelperText";
 
 import Dexie from "dexie";
 
-import { reverseGeocode } from "esri-leaflet-geocoder";
 import L from "leaflet";
 import { DivIcon } from "leaflet";
-
-import Popover from "@mui/material/Popover";
-import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
 
 // Use existing Dexie instance for OverlayCache
 const db = new Dexie("WeatherLayerCache");
@@ -67,73 +64,9 @@ const Navbar = ({
   const [openSettings, setOpenSettings] = useState(false);
   const [openAbout, setOpenAbout] = useState(false);
 
-  // const [cacheSize, setCacheSize] = useState(0);
-  // useEffect(() => {
-
-  // const getCacheSize = async () => {
-  //   const [scalarRecords, vectorRecords] = await Promise.all([
-  //     db.scalars.toArray(),
-  //     db.vectors.toArray(),
-  //   ]);
-
-  //   const totalSize = [...scalarRecords, ...vectorRecords].reduce(
-  //     (acc, record) => {
-  //       const size = JSON.stringify(record).length * 2; // Each char = 2 bytes
-  //       return acc + size;
-  //     },
-  //     0
-  //   );
-
-  //   console.log("Total size:", totalSize);
-
-  //   setCacheSize((totalSize / (1024 * 1024)).toFixed(2)); // Convert to MB
-  // };
-
-  //   getCacheSize(); // Fetch cache size when the settings modal opens
-  // }, []);
-
   const clearCache = async () => {
     await Promise.all([db.scalars.clear(), db.vectors.clear()]);
     // setCacheSize(0); // Reset size after clearing
-  };
-
-  // Handle user location and reverse geocoding
-  const handleLocate = () => {
-    map.locate({ setView: true, maxZoom: 12 });
-
-    map.once("locationfound", (e) => {
-      const latlng = e.latlng;
-
-      // Perform reverse geocoding
-      reverseGeocode({
-        apikey: accessToken,
-      })
-        .latlng(latlng)
-        .run((error, result) => {
-          if (!error) {
-            console.log(result);
-
-            setLocation({
-              latLng: result.latlng,
-              municity: result.address.City,
-              province: result.address.Subregion,
-            });
-
-            const marker = L.marker(result.latlng, {
-              icon: new DivIcon({
-                className: "pulsating-marker",
-              }),
-            });
-
-            marker.addTo(markerLayer.current);
-            marker.unbindPopup();
-            map.flyTo(result.latlng, 12, { duration: 2 });
-
-            setOpenContainer(true);
-            setIsLocateUsed(true);
-          }
-        });
-    });
   };
 
   const toggleDrawer = (inOpen) => (event) => {
@@ -171,61 +104,17 @@ const Navbar = ({
             <img src={Logo} alt="10-Day Forecast Logo" height="40" />
           </Box>
           <Box sx={{ flexGrow: 1 }}>
-            <React.Fragment>
-              <ButtonGroup
-                sx={{
-                  "--ButtonGroup-radius": "40px",
-                }}
-              >
-                <Button
-                  startDecorator={<SearchIcon />}
-                  variant="solid"
-                  color="neutral"
-                  sx={{ width: "150px", justifyContent: "flex-start" }}
-                  onClick={() => {
-                    setOpenSearch(true);
-                  }}
-                >
-                  Search...
-                </Button>
-                <Tooltip
-                  placement="bottom"
-                  title="See current location"
-                  variant="plain"
-                >
-                  <Button
-                    color="neutral"
-                    variant="solid"
-                    onClick={handleLocate}
-                  >
-                    <MyLocationIcon />
-                  </Button>
-                </Tooltip>
-              </ButtonGroup>
-
-              <Modal
-                aria-labelledby="modal-title"
-                aria-describedby="modal-desc"
-                open={openSearch}
-                onClose={() => setOpenSearch(false)}
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Geosearch
-                  accessToken={accessToken}
-                  setLocation={setLocation}
-                  map={map}
-                  markerLayer={markerLayer}
-                  location={location}
-                  setOpenModal={setOpenSearch}
-                  setOpenContainer={setOpenContainer}
-                  openContainer={openContainer}
-                />
-              </Modal>
-            </React.Fragment>
+            <Geosearch
+              accessToken={accessToken}
+              setLocation={setLocation}
+              map={map}
+              markerLayer={markerLayer}
+              location={location}
+              setOpenModal={setOpenSearch}
+              setOpenContainer={setOpenContainer}
+              openContainer={openContainer}
+              setIsLocateUsed={setIsLocateUsed}
+            />
           </Box>
           <Stack
             direction="row"

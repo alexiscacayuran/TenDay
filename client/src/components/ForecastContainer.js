@@ -558,7 +558,7 @@ const ForecastContainer = ({
                               }
                             });
                         setIsLocateUsed(false);
-                        setOpen(false);
+                        setOpen(false); //close the forecast container
                       }}
                     >
                       <CloseIcon

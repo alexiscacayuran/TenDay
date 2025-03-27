@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { geocodeService } from "esri-leaflet-geocoder";
 import L from "leaflet";
 import { DivIcon } from "leaflet";
 import { ModalClose } from "@mui/joy";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
+import { geocodeService, reverseGeocode } from "esri-leaflet-geocoder";
 
 //styles
 import {
+  Button,
   Box,
   Input,
   Tooltip,
@@ -30,6 +32,8 @@ const GeoSearch = ({
   markerLayer,
   setOpenModal,
   setOpenContainer,
+  setIsLocateUsed,
+  location,
 }) => {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -106,8 +110,8 @@ const GeoSearch = ({
       ])
       .run((error, res) => {
         if (!error) {
+          console.log(res);
           const result = res.results[0];
-          console.log(result);
 
           setLocation({
             latLng: result.latlng,
@@ -121,133 +125,170 @@ const GeoSearch = ({
             }),
           });
 
+          markerLayer.current.clearLayers();
           marker.addTo(markerLayer.current);
           marker.unbindPopup();
           map.flyTo(result.latlng, 12, { duration: 2 });
 
           setOpenModal(false);
+          setSuggestions([]);
           setOpenContainer(true);
         }
       });
   };
 
+  // Handle user location and reverse geocoding
+  const handleLocate = () => {
+    map.locate({ setView: true, maxZoom: 12 });
+
+    map.once("locationfound", (e) => {
+      const latlng = e.latlng;
+
+      // Perform reverse geocoding
+      reverseGeocode({
+        apikey: accessToken,
+      })
+        .latlng(latlng)
+        .run((error, result) => {
+          if (!error) {
+            console.log(result);
+
+            setLocation({
+              latLng: result.latlng,
+              municity: result.address.City,
+              province: result.address.Subregion,
+            });
+
+            const marker = L.marker(result.latlng, {
+              icon: new DivIcon({
+                className: "pulsating-marker",
+              }),
+            });
+
+            marker.addTo(markerLayer.current);
+            marker.unbindPopup();
+            map.flyTo(result.latlng, 12, { duration: 2 });
+
+            setOpenContainer(true);
+            setIsLocateUsed(true);
+          }
+        });
+    });
+  };
+
   return (
-    <Sheet
-      variant="outlined"
-      sx={{
-        minWidth: 500,
-        minHeight: 600,
-        maxWidth: 500,
-        borderRadius: "md",
-        p: 3,
-        boxShadow: "lg",
-      }}
-    >
+    <>
       <Stack
         direction="row"
         spacing={1}
         sx={{
-          justifyContent: "space-between",
+          justifyContent: "flex-start",
           alignItems: "center",
         }}
       >
         <Input
-          startDecorator={<SearchIcon />}
-          placeholder="Search location"
-          value={input}
+          placeholder="Search for location..."
+          size="sm"
+          variant="solid"
+          // value={location.municity}
+          startDecorator={<SearchIcon sx={{ color: "common.white" }} />}
+          sx={{ width: "200px", "--Input-radius": "14px" }}
           onChange={handleInputChange}
-          size="lg"
-          sx={{
-            mx: "10px",
-            width: "90%",
-          }}
         />
-        <ModalClose
-          variant="plain"
-          sx={{ m: 1 }}
-          slotProps={{ position: "static" }}
-        />
+        <Button
+          size="sm"
+          color="neutral"
+          variant="solid"
+          onClick={handleLocate}
+        >
+          <MyLocationIcon />
+        </Button>
       </Stack>
 
       {suggestions.length > 0 ? (
-        <Box
+        <Sheet
           sx={{
-            mx: "10px",
-            mt: "5px",
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
+            position: "absolute",
+            top: 60,
+            borderRadius: "8px",
           }}
         >
-          <List
+          <Box
             sx={{
-              minWidth: 300,
-              maxWidth: 500,
-              borderRadius: "sm",
+              mx: "10px",
+              mt: "5px",
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
             }}
           >
-            {suggestions.map((suggestion, index) => (
-              <div key={index}>
-                <ListItem
-                  endAction={
-                    <Tooltip
-                      placement="bottom"
-                      title="See on map"
-                      variant="solid"
-                    >
-                      <IconButton
-                        aria-label="See Full Forecast"
-                        size="sm"
-                        color="primary"
-                        onClick={() => {
-                          setInput(
-                            suggestion.text.split(", ")[0] +
-                              ", " +
-                              suggestion.text.split(", ")[1]
-                          );
-                          handleFlyToLocation(suggestion.text);
-                        }}
+            <List
+              sx={{
+                minWidth: 300,
+                maxWidth: 500,
+                borderRadius: "sm",
+              }}
+            >
+              {suggestions.map((suggestion, index) => (
+                <div key={index}>
+                  <ListItem
+                    endAction={
+                      <Tooltip
+                        placement="bottom"
+                        title="See on map"
+                        variant="plain"
                       >
-                        <MapIcon />
-                      </IconButton>
-                    </Tooltip>
-                  }
-                >
-                  <ListItemButton
-                    onClick={() => handleSelectSuggestion(suggestion.text)}
+                        <IconButton
+                          aria-label="See Full Forecast"
+                          size="sm"
+                          color="primary"
+                          onClick={() => {
+                            setInput(
+                              suggestion.text.split(", ")[0] +
+                                ", " +
+                                suggestion.text.split(", ")[1]
+                            );
+                            handleFlyToLocation(suggestion.text);
+                          }}
+                        >
+                          <MapIcon />
+                        </IconButton>
+                      </Tooltip>
+                    }
                   >
-                    <Stack spacing={1} sx={{ maxWidth: "100ch" }}>
-                      <Typography level="title-lg" color="primary">
-                        {suggestion.text.split(", ")[0]}
-                      </Typography>
-                      <Typography level="title-sm">
-                        {suggestion.text.split(", ").length > 3
-                          ? "City in "
-                          : "Province in "}
+                    <ListItemButton
+                      onClick={() => handleSelectSuggestion(suggestion.text)}
+                    >
+                      <Stack spacing={1} sx={{ maxWidth: "100ch" }}>
+                        <Typography level="title-lg" color="primary">
+                          {suggestion.text.split(", ")[0]}
+                        </Typography>
+                        <Typography level="title-sm">
+                          {suggestion.text.split(", ")[1]}
+                          {suggestion.text.split(", ").length > 3
+                            ? ", " + suggestion.text.split(", ")[2]
+                            : ""}
+                        </Typography>
+                      </Stack>
+                    </ListItemButton>
+                  </ListItem>
 
-                        {suggestion.text.split(", ")[1]}
-                        {suggestion.text.split(", ").length > 3
-                          ? ", " + suggestion.text.split(", ")[2]
-                          : ""}
-                      </Typography>
-                    </Stack>
-                  </ListItemButton>
-                </ListItem>
-
-                {index < suggestions.length - 1 && (
-                  <ListDivider
-                    inset="gutter"
-                    sx={{ "--Divider-thickness": "0.5px" }}
-                  />
-                )}
-              </div>
-            ))}
-          </List>
-        </Box>
+                  {index < suggestions.length - 1 && (
+                    <ListDivider
+                      inset="gutter"
+                      sx={{ "--Divider-thickness": "0.5px" }}
+                    />
+                  )}
+                </div>
+              ))}
+            </List>
+          </Box>
+        </Sheet>
       ) : (
         <Box></Box>
       )}
-    </Sheet>
+      {/* </Sheet> */}
+    </>
   );
 };
 
