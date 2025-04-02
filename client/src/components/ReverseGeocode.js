@@ -8,14 +8,15 @@ const ReverseGeocode = ({
   location,
   setLocation,
   markerLayer,
-  setOpenContainer,
+  setOpen,
   openContainer,
   date,
   overlay,
   units,
   setUnits,
+  setIsLocationReady,
 }) => {
-  const [isLocationReady, setIsLocationReady] = useState(false);
+  // const [isLocationReady, setIsLocationReady] = useState(false);
 
   // Map event handling
   useMapEvents({
@@ -47,23 +48,7 @@ const ReverseGeocode = ({
     },
   });
 
-  return (
-    isLocationReady && (
-      <ForecastPopup
-        location={location}
-        markerLayer={markerLayer}
-        setLocation={setLocation}
-        setOpenContainer={setOpenContainer}
-        openContainer={openContainer}
-        date={date}
-        overlay={overlay}
-        units={units}
-        setUnits={setUnits}
-      />
-    )
-  );
-
-  // Render the ForecastPopup only when location is ready
+  return null;
 };
 
 export default ReverseGeocode;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import L from "leaflet";
 import { DivIcon } from "leaflet";
 import { ModalClose } from "@mui/joy";
@@ -31,12 +31,21 @@ const GeoSearch = ({
   map,
   markerLayer,
   setOpenModal,
-  setOpenContainer,
-  setIsLocateUsed,
+  setOpen,
+  setIsLocationReady,
   location,
 }) => {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [localLocation, setLocalLocation] = useState({
+    latLng: {},
+    municity: "",
+    province: "",
+  });
+
+  useEffect(() => {
+    setLocalLocation(location);
+  }, [location]);
 
   // Get suggestions based on input
   const handleInputChange = (e) => {
@@ -86,7 +95,7 @@ const GeoSearch = ({
             province: result.properties.Subregion,
           });
 
-          setOpenModal(false);
+          setInput("");
           map.flyTo(result.latlng, 12, { duration: 2 });
         }
       });
@@ -97,6 +106,8 @@ const GeoSearch = ({
 
   const handleSelectSuggestion = (text) => {
     // Perform geocode search using the selected suggestion text
+
+    setIsLocationReady(false);
     const _geocodeService = geocodeService({
       apikey: accessToken,
     });
@@ -119,26 +130,18 @@ const GeoSearch = ({
             province: result.properties.Subregion,
           });
 
-          const marker = L.marker(result.latlng, {
-            icon: new DivIcon({
-              className: "pulsating-marker",
-            }),
-          });
-
-          markerLayer.current.clearLayers();
-          marker.addTo(markerLayer.current);
-          marker.unbindPopup();
           map.flyTo(result.latlng, 12, { duration: 2 });
-
-          setOpenModal(false);
+          setInput("");
           setSuggestions([]);
-          setOpenContainer(true);
+          setOpen(true);
+          setIsLocationReady(true);
         }
       });
   };
 
   // Handle user location and reverse geocoding
   const handleLocate = () => {
+    setIsLocationReady(false);
     map.locate({ setView: true, maxZoom: 12 });
 
     map.once("locationfound", (e) => {
@@ -159,18 +162,12 @@ const GeoSearch = ({
               province: result.address.Subregion,
             });
 
-            const marker = L.marker(result.latlng, {
-              icon: new DivIcon({
-                className: "pulsating-marker",
-              }),
-            });
-
-            marker.addTo(markerLayer.current);
-            marker.unbindPopup();
+            // markerLayer.current.clearLayers();
             map.flyTo(result.latlng, 12, { duration: 2 });
 
-            setOpenContainer(true);
-            setIsLocateUsed(true);
+            setOpen(true);
+
+            setIsLocationReady(true);
           }
         });
     });
@@ -187,10 +184,14 @@ const GeoSearch = ({
         }}
       >
         <Input
-          placeholder="Search for location..."
+          placeholder={
+            localLocation.municity
+              ? localLocation.municity
+              : "Search for location..."
+          }
           size="sm"
           variant="solid"
-          // value={location.municity}
+          value={input}
           startDecorator={<SearchIcon sx={{ color: "common.white" }} />}
           sx={{ width: "200px", "--Input-radius": "14px" }}
           onChange={handleInputChange}
@@ -200,6 +201,7 @@ const GeoSearch = ({
           color="neutral"
           variant="solid"
           onClick={handleLocate}
+          sx={{ borderRadius: "20px" }}
         >
           <MyLocationIcon />
         </Button>

@@ -8,6 +8,7 @@ import Stack from "@mui/material/Stack";
 import { format, addDays, subDays } from "date-fns";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import ToggleButtonGroup from "@mui/joy/ToggleButtonGroup";
 
 function generateDateRange(startDate, range) {
   return Array.from({ length: range }, (_, i) => addDays(startDate, i));
@@ -65,11 +66,12 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
           zIndex: 999,
         }}
       >
-        <ButtonGroup
+        <ToggleButtonGroup
           size="md"
           variant="solid"
           color="neutral"
           aria-label="soft button group"
+          value={format(localDate, "yyyy-MM-dd")}
           sx={{
             width: "100%",
             justifyContent: "center",
@@ -89,12 +91,9 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
           {dateRange.map((date, index) => (
             <Button
               key={index}
+              value={format(date, "yyyy-MM-dd")}
               color="neutral"
-              variant={
-                format(date, "yyyy-MM-dd") === format(localDate, "yyyy-MM-dd")
-                  ? "soft"
-                  : "solid"
-              }
+              variant="solid"
               onClick={() => handleDateSelect(date)}
             >
               <Stack
@@ -118,7 +117,7 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
           >
             <NavigateNextIcon />
           </IconButton>
-        </ButtonGroup>
+        </ToggleButtonGroup>
       </Box>
     </div>
   );

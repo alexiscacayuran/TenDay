@@ -76,8 +76,9 @@ const LayerMenu = ({
             size="lg"
             orientation="vertical"
             color="neutral"
-            variant="plain"
+            variant="solid"
             spacing={0.5}
+            sx={{}}
             value={localOverlay}
             onChange={(event, value) => {
               if (value) {
@@ -105,6 +106,11 @@ const LayerMenu = ({
                   value={value}
                   aria-label={value}
                   onClick={() => setActiveTooltip(title)}
+                  sx={{
+                    backgroundColor: "transparent",
+                    "&[aria-pressed=false]": { color: "neutral.700" },
+                    "&[aria-pressed=false]:hover": { color: "common.white" },
+                  }}
                 >
                   <FontAwesomeIcon
                     icon={icon}
@@ -159,7 +165,7 @@ const LayerMenu = ({
                 size="lg"
                 orientation="vertical"
                 color="neutral"
-                variant="plain"
+                variant="solid"
                 spacing={0.5}
                 value={localTemp}
                 onChange={(event, value) => {
@@ -186,6 +192,13 @@ const LayerMenu = ({
                       key={title}
                       value={value}
                       aria-label={value}
+                      sx={{
+                        backgroundColor: "transparent",
+                        "&[aria-pressed=false]": { color: "neutral.700" },
+                        "&[aria-pressed=false]:hover": {
+                          color: "common.white",
+                        },
+                      }}
                       onClick={() => setActiveTooltip("Temperature")}
                     >
                       {icon}

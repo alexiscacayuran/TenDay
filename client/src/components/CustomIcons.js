@@ -2,23 +2,23 @@ import React from "react";
 import { Tooltip } from "@mui/joy";
 import { SvgIcon } from "@mui/material";
 
-import Sunny from "../assets/icons/0-sunny.svg";
+import Sunny from "../assets/icons/weather/0-sunny.svg";
 
-import NoRainParCloudy from "../assets/icons/1-no-rain_partly-cloudy.svg";
-import NoRainMosCloudy from "../assets/icons/2-no-rain_mostly-cloudy.svg";
-import NoRainCloudy from "../assets/icons/3-no-rain_cloudy.svg";
+import NoRainParCloudy from "../assets/icons/weather/1-no-rain_partly-cloudy.svg";
+import NoRainMosCloudy from "../assets/icons/weather/2-no-rain_mostly-cloudy.svg";
+import NoRainCloudy from "../assets/icons/weather/3-no-rain_cloudy.svg";
 
-import LightRainsParCloudy from "../assets/icons/4-light-rains_partly-cloudy.svg";
-import LightRainsMosCloudy from "../assets/icons/5-light-rains_mostly-cloudy.svg";
-import LightRainsCloudy from "../assets/icons/6-light-rains_cloudy.svg";
+import LightRainsParCloudy from "../assets/icons/weather/4-light-rains_partly-cloudy.svg";
+import LightRainsMosCloudy from "../assets/icons/weather/5-light-rains_mostly-cloudy.svg";
+import LightRainsCloudy from "../assets/icons/weather/6-light-rains_cloudy.svg";
 
-import ModRainsParCloudy from "../assets/icons/7-mod-rains_partly-cloudy.svg";
-import ModRainsMosCloudy from "../assets/icons/8-mod-rains_mostly-cloudy.svg";
-import ModRainsCloudy from "../assets/icons/9-mod-rains_cloudy.svg";
+import ModRainsParCloudy from "../assets/icons/weather/7-mod-rains_partly-cloudy.svg";
+import ModRainsMosCloudy from "../assets/icons/weather/8-mod-rains_mostly-cloudy.svg";
+import ModRainsCloudy from "../assets/icons/weather/9-mod-rains_cloudy.svg";
 
-import HeavyRainsParCloudy from "../assets/icons/10-heavy-rains_partly-cloudy.svg";
-import HeavyRainsMosCloudy from "../assets/icons/11-heavy-rains_mostly-cloudy.svg";
-import HeavyRainsCloudy from "../assets/icons/12-heavy-rains_cloudy.svg";
+import HeavyRainsParCloudy from "../assets/icons/weather/10-heavy-rains_partly-cloudy.svg";
+import HeavyRainsMosCloudy from "../assets/icons/weather/11-heavy-rains_mostly-cloudy.svg";
+import HeavyRainsCloudy from "../assets/icons/weather/12-heavy-rains_cloudy.svg";
 
 import { ReactComponent as N } from "../assets/icons/wind-direction/0-n.svg";
 import { ReactComponent as NNE } from "../assets/icons/wind-direction/1-nne.svg";
@@ -40,13 +40,16 @@ import { ReactComponent as WNW } from "../assets/icons/wind-direction/13-wnw.svg
 import { ReactComponent as NW } from "../assets/icons/wind-direction/14-nw.svg";
 import { ReactComponent as NNW } from "../assets/icons/wind-direction/15-nnw.svg";
 
-import { ReactComponent as TMax } from "../assets/tmax.svg";
-import { ReactComponent as TMean } from "../assets/tmean.svg";
-import { ReactComponent as TMin } from "../assets/tmin.svg";
+import { ReactComponent as TMax } from "../assets/icons/buttons/tmax.svg";
+import { ReactComponent as TMean } from "../assets/icons/buttons/tmean.svg";
+import { ReactComponent as TMin } from "../assets/icons/buttons/tmin.svg";
 
-import { ReactComponent as LayerStyle } from "../assets/layer-style.svg";
-import { ReactComponent as Gradient } from "../assets/gradient.svg";
-import { ReactComponent as Particles } from "../assets/particles.svg";
+import { ReactComponent as LayerStyle } from "../assets/icons/buttons/layer-style.svg";
+import { ReactComponent as Gradient } from "../assets/icons/buttons/gradient.svg";
+import { ReactComponent as Particles } from "../assets/icons/buttons/particles.svg";
+
+import BMUVIK from "../assets/logo/bmuv-iki-logo.png";
+import GIZ from "../assets/logo/giz-logo.png";
 
 const ImgWrapper = ({ Icon, Title, ...props }) => (
   <Tooltip title={Title} color="primary" placement="bottom" variant="soft">
@@ -58,6 +61,14 @@ const SvgWrapper = ({ Icon, ...props }) => (
   <SvgIcon {...props} style={{ width: "20px" }}>
     <Icon />
   </SvgIcon>
+);
+
+export const GIZLogo = (props) => (
+  <img src={GIZ} {...props} style={{ width: "100px", margin: "-25px 0" }}></img>
+);
+
+export const BMUVIKILogo = (props) => (
+  <img src={BMUVIK} {...props} style={{ width: "200px" }}></img>
 );
 
 export const LayerStyleIcon = (props) => (

@@ -57,12 +57,12 @@ const ForecastContainer = ({
   setUnits,
   date,
   setDate,
-  isLocateUsed,
-  setIsLocateUsed,
 }) => {
   const [forecast, setForecast] = useState(null);
   const [activeColumn, setActiveColumn] = useState(null);
   const [hoveredColumn, setHoveredColumn] = useState(null);
+
+  console.log(location);
 
   // Handles column highlight
   const handleMouseEnter = (index) => {
@@ -78,6 +78,20 @@ const ForecastContainer = ({
 
   // Get today's date
   const today = format(new Date(), "yyyy-MM-dd");
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, []);
 
   // Set active column on initial render
   useEffect(() => {
@@ -122,7 +136,7 @@ const ForecastContainer = ({
   }, [open]);
 
   useEffect(() => {
-    if (!location.municity) return;
+    if (!open && location.municity) return;
 
     axios
       .get("/full", {
@@ -550,15 +564,13 @@ const ForecastContainer = ({
                       variant="outlined"
                       aria-label="close"
                       onClick={() => {
-                        isLocateUsed
-                          ? markerLayer.current.clearLayers()
-                          : markerLayer.current.eachLayer((layer) => {
-                              if (layer.getLatLng().equals(location.latLng)) {
-                                layer.openPopup();
-                              }
-                            });
-                        setIsLocateUsed(false);
-                        setOpen(false); //close the forecast container
+                        markerLayer.current.eachLayer((layer) => {
+                          if (layer.getLatLng().equals(location.latLng)) {
+                            layer.openPopup();
+                          }
+                        });
+
+                        setOpen(false);
                       }}
                     >
                       <CloseIcon
@@ -568,15 +580,15 @@ const ForecastContainer = ({
                       />
                     </IconButton>
                   </Stack>
-                  {location && (
-                    <Typography level="body-xs" sx={{ mb: 1 }}>
-                      {"Lat: " +
-                        location.latLng.lat.toFixed(2) +
-                        " " +
-                        "Long: " +
-                        location.latLng.lng.toFixed(2)}
-                    </Typography>
-                  )}
+
+                  <Typography level="body-xs" sx={{ mb: 1 }}>
+                    {"Lat: " +
+                      location.latLng.lat.toFixed(2) +
+                      " " +
+                      "Long: " +
+                      location.latLng.lng.toFixed(2)}
+                  </Typography>
+
                   <Typography level="h3">{forecast.municity}</Typography>
                   <Typography level="title-sm">{forecast.province}</Typography>
                 </Box>

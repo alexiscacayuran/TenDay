@@ -32,11 +32,18 @@ const LayerOptionMenu = ({
         {(popupState) => (
           <>
             <IconButton
-              className="glass"
               color="neutral"
               variant="plain"
               size="lg"
-              sx={{ "--IconButton-size": "3.25rem" }}
+              sx={{
+                "--IconButton-size": "3.25rem",
+                backgroundColor: "rgba(255, 255, 255, 0.4)",
+                backdropFilter: "blur(7px)",
+                "&:hover": {
+                  backgroundColor: "neutral.600",
+                  color: "common.white",
+                },
+              }}
               {...bindTrigger(popupState)}
             >
               <LayerStyleIcon />

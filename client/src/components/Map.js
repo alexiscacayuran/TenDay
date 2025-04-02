@@ -15,6 +15,7 @@ import WeatherLayer from "./WeatherLayer";
 import Legend from "./Legend";
 import ZoomLevel from "./ZoomLevel";
 import ScaleNautic from "react-leaflet-nauticsale";
+import ForecastPopup from "./ForecastPopup";
 
 const Map = () => {
   const [accessToken, setAccessToken] = useState(null);
@@ -45,11 +46,11 @@ const Map = () => {
     municity: "",
     province: "",
   });
+  const [isLocationReady, setIsLocationReady] = useState(false);
 
   const startDate = useRef(null);
   const markerLayer = useRef(null);
   const overlayLayer = useRef(null);
-  const marker = useRef(null);
 
   const [map, setMap] = useState(null); // External state for the map instance
   const [open, setOpen] = useState(false); // Slide up bottom container state
@@ -59,6 +60,7 @@ const Map = () => {
   const [zoomLevel, setZoomLevel] = useState(8);
   // console.log(zoomLevel);
 
+  const [isPopupClose, setIsPopupClose] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [temp, setTemp] = useState("temperature_average");
   const [activeTooltip, setActiveTooltip] = useState("Temperature");
@@ -74,9 +76,6 @@ const Map = () => {
   });
 
   const [scale, setScale] = useState({ metric: true, imperial: false });
-  console.log(location);
-
-  const [isLocateUsed, setIsLocateUsed] = useState(false);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -106,15 +105,14 @@ const Map = () => {
           markerLayer={markerLayer}
           location={location}
           setLocation={setLocation}
-          setOpenContainer={setOpen}
-          openContainer={open}
+          setOpen={setOpen}
+          open={open}
           units={units}
           setUnits={setUnits}
-          setIsLocateUsed={setIsLocateUsed}
           scale={scale}
           setScale={setScale}
+          setIsLocationReady={setIsLocationReady}
         />
-
         <MapContainer
           center={[13, 122]}
           zoom={8}
@@ -125,6 +123,19 @@ const Map = () => {
           zoomControl={false}
           ref={setMap} // Set map instance to external state
         >
+          {isLocationReady && (
+            <ForecastPopup
+              location={location}
+              markerLayer={markerLayer}
+              setLocation={setLocation}
+              setOpen={setOpen}
+              open={open}
+              date={date}
+              overlay={overlay}
+              units={units}
+              setUnits={setUnits}
+            />
+          )}
           <ScaleNautic
             metric={scale.metric}
             imperial={scale.imperial}
@@ -148,21 +159,20 @@ const Map = () => {
             />
           )}
           <Base accessToken={accessToken} />
-
           <Labels accessToken={accessToken} />
-
           {map && (
             <ReverseGeocode
               accessToken={accessToken}
               markerLayer={markerLayer}
               location={location}
               setLocation={setLocation}
-              setOpenContainer={setOpen}
+              setOpen={setOpen}
               openContainer={open}
               date={date}
               overlay={overlay}
               units={units}
               setUnits={setUnits}
+              setIsLocationReady={setIsLocationReady}
             />
           )}
         </MapContainer>
@@ -218,8 +228,6 @@ const Map = () => {
           setUnits={setUnits}
           date={date}
           setDate={setDate}
-          isLocateUsed={isLocateUsed}
-          setIsLocateUsed={setIsLocateUsed}
         />
       </Box>
     ),
@@ -241,8 +249,8 @@ const Map = () => {
       isLayerClipped,
       units,
       zoomLevel,
-      isLocateUsed,
       scale,
+      isLocationReady,
     ]
   );
 

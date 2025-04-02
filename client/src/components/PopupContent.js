@@ -90,7 +90,7 @@ const OVERLAY_CONFIG = {
 const PopupContent = React.memo(
   ({
     forecast,
-    setOpenContainer,
+    setOpen,
     markerRef,
     handlePopupClose,
     overlay,
@@ -348,7 +348,7 @@ const PopupContent = React.memo(
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent map interaction when button is clicked
                   markerRef.current.closePopup();
-                  setOpenContainer(true);
+                  setOpen(true);
                 }}
               >
                 Forecast

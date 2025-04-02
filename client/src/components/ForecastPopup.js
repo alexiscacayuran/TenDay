@@ -16,17 +16,34 @@ import PopupContent from "./PopupContent";
 const ForecastPopup = ({
   location,
   markerLayer,
-  setOpenContainer,
-  openContainer,
+  setOpen,
+  open,
   date,
   overlay,
   units,
   setUnits,
+  setLocation,
 }) => {
   const markerRef = useRef(null);
   const [forecast, setForecast] = useState({});
   const [loading, setLoading] = useState(true);
   const [forecastRetrieval, setForecastRetrieval] = useState(false);
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === "Escape") {
+        if (markerLayer.current && markerRef.current) {
+          markerLayer.current.removeLayer(markerRef.current);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [markerLayer, markerRef]);
 
   useEffect(() => {
     if (markerRef.current && markerLayer.current) {
@@ -65,14 +82,14 @@ const ForecastPopup = ({
     if (markerLayer.current && markerRef.current) {
       markerLayer.current.removeLayer(markerRef.current);
     }
-  }, [markerLayer]);
+  }, [markerLayer, location]);
 
   const markerIcon = useMemo(
     () =>
-      openContainer
+      open
         ? new DivIcon({ className: "pulsating-marker" })
         : new DivIcon({ className: "regular-marker" }),
-    [openContainer]
+    [open]
   );
 
   return (
@@ -81,8 +98,8 @@ const ForecastPopup = ({
       position={location.latLng}
       icon={markerIcon}
       eventHandlers={{
-        add: !openContainer ? (e) => e.target.openPopup() : () => {},
-        click: openContainer ? (e) => e.target.closePopup() : () => {},
+        add: !open ? (e) => e.target.openPopup() : () => {},
+        click: open ? (e) => e.target.closePopup() : () => {},
       }}
     >
       <Popup
@@ -93,7 +110,7 @@ const ForecastPopup = ({
       >
         <PopupContent
           forecast={forecast}
-          setOpenContainer={setOpenContainer}
+          setOpen={setOpen}
           markerLayer={markerLayer}
           markerRef={markerRef}
           handlePopupClose={handlePopupClose}

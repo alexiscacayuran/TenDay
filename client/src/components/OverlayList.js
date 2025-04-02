@@ -170,4 +170,17 @@ const overlayList = [
   },
 ];
 
+// "#87CEFA",
+//   "#7FFFD4",
+//   "#90EE90",
+//   "#00FF7F",
+//   "#00DC00",
+//   "#7CFC00",
+//   "#E6DC32",
+//   "#DAA520",
+//   "#FF8C00",
+//   "#FF4500",
+//   "#FA3C3C",
+//   "#F00082";
+
 export default overlayList;

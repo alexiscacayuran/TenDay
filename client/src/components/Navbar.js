@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 import Geosearch from "./Geosearch";
 
@@ -8,24 +8,34 @@ import {
   Button,
   IconButton,
   Sheet,
-  Modal,
-  Tooltip,
-  ButtonGroup,
   Stack,
   Divider,
   Typography,
   ToggleButtonGroup,
+  Link,
+  Chip,
 } from "@mui/joy";
-import MenuIcon from "@mui/icons-material/Menu";
-import SearchIcon from "@mui/icons-material/Search";
-import SettingsIcon from "@mui/icons-material/Settings";
-import MyLocationIcon from "@mui/icons-material/MyLocation";
+
+import Avatar from "@mui/joy/Avatar";
+import AvatarGroup from "@mui/joy/AvatarGroup";
+
+import Card from "@mui/joy/Card";
+import CardContent from "@mui/joy/CardContent";
+import CardActions from "@mui/joy/CardActions";
+import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
+
 import Logo from "../assets/logo-text.png";
 
+import { GIZLogo, BMUVIKILogo } from "./CustomIcons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleInfo, faGear } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleInfo,
+  faGear,
+  faEnvelope,
+  faPhone,
+} from "@fortawesome/free-solid-svg-icons";
+import Ana from "../assets/images/ana-portrait.jpg";
 
-import Input from "@mui/joy/Input";
 import Drawer from "@mui/joy/Drawer";
 import DialogTitle from "@mui/joy/DialogTitle";
 import ModalClose from "@mui/joy/ModalClose";
@@ -35,9 +45,6 @@ import FormLabel from "@mui/joy/FormLabel";
 import FormHelperText from "@mui/joy/FormHelperText";
 
 import Dexie from "dexie";
-
-import L from "leaflet";
-import { DivIcon } from "leaflet";
 
 // Use existing Dexie instance for OverlayCache
 const db = new Dexie("WeatherLayerCache");
@@ -52,13 +59,14 @@ const Navbar = ({
   markerLayer,
   location,
   setLocation,
-  setOpenContainer,
-  openContainer,
+  setOpen,
+  open,
   units,
   setUnits,
-  setIsLocateUsed,
+
   scale,
   setScale,
+  setIsLocationReady,
 }) => {
   const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
@@ -69,7 +77,7 @@ const Navbar = ({
     // setCacheSize(0); // Reset size after clearing
   };
 
-  const toggleDrawer = (inOpen) => (event) => {
+  const toggleSettingsDrawer = (inOpen) => (event) => {
     if (
       event.type === "keydown" &&
       (event.key === "Tab" || event.key === "Shift")
@@ -78,6 +86,17 @@ const Navbar = ({
     }
 
     setOpenSettings(inOpen);
+  };
+
+  const toggleAboutDrawer = (inOpen) => (event) => {
+    if (
+      event.type === "keydown" &&
+      (event.key === "Tab" || event.key === "Shift")
+    ) {
+      return;
+    }
+
+    setOpenAbout(inOpen);
   };
   return (
     <Box>
@@ -111,9 +130,9 @@ const Navbar = ({
               markerLayer={markerLayer}
               location={location}
               setOpenModal={setOpenSearch}
-              setOpenContainer={setOpenContainer}
-              openContainer={openContainer}
-              setIsLocateUsed={setIsLocateUsed}
+              setOpen={setOpen}
+              open={open}
+              setIsLocationReady={setIsLocationReady}
             />
           </Box>
           <Stack
@@ -131,7 +150,7 @@ const Navbar = ({
                   fontSize: "1.25rem",
                   color: "var(--joy-palette-neutral-700, #32383E)",
                 }}
-                onClick={toggleDrawer(true)}
+                onClick={toggleSettingsDrawer(true)}
               />
             </IconButton>
 
@@ -142,11 +161,12 @@ const Navbar = ({
                   fontSize: "1.25rem",
                   color: "var(--joy-palette-neutral-700, #32383E)",
                 }}
+                onClick={toggleAboutDrawer(true)}
               />
             </IconButton>
           </Stack>
           <Drawer
-            size="sm"
+            size="md"
             anchor="right"
             open={openSettings}
             onClose={() => setOpenSettings(false)}
@@ -156,6 +176,12 @@ const Navbar = ({
                   bgcolor: "transparent",
                   p: { md: 3, sm: 0 },
                   boxShadow: "none",
+                },
+              },
+              backdrop: {
+                sx: {
+                  backdropFilter: "none",
+                  backgroundColor: "transparent",
                 },
               },
             }}
@@ -262,7 +288,7 @@ const Navbar = ({
                 <FormControl orientation="horizontal">
                   <Box sx={{ display: "flex", flex: 1, pr: 1 }}>
                     <FormLabel sx={{ typography: "title-sm" }}>
-                      Wind speed
+                      Wind direction
                     </FormLabel>
                   </Box>
                   <ToggleButtonGroup
@@ -333,6 +359,234 @@ const Navbar = ({
                 >
                   Clear Cache
                 </Button>
+              </DialogContent>
+            </Sheet>
+          </Drawer>
+          <Drawer
+            size="md"
+            anchor="right"
+            open={openAbout}
+            onClose={() => setOpenAbout(false)}
+            slotProps={{
+              content: {
+                sx: {
+                  bgcolor: "transparent",
+                  p: { md: 3, sm: 0 },
+                  boxShadow: "none",
+                },
+              },
+              backdrop: {
+                sx: {
+                  backdropFilter: "none",
+                  backgroundColor: "transparent",
+                },
+              },
+            }}
+          >
+            <Sheet
+              sx={{
+                borderRadius: "md",
+                p: 2,
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                height: "100%",
+                overflow: "auto",
+              }}
+            >
+              <DialogTitle>
+                <Typography
+                  startDecorator={
+                    <FontAwesomeIcon
+                      icon={faCircleInfo}
+                      style={{
+                        color: "var(--joy-palette-neutral-700, #32383E)",
+                      }}
+                    />
+                  }
+                >
+                  About
+                </Typography>
+              </DialogTitle>
+              <ModalClose />
+              <Divider sx={{ mt: "auto" }} />
+              <DialogContent sx={{ gap: 2 }}>
+                <Box sx={{ mt: 3 }}>
+                  <Stack
+                    direction="row"
+                    spacing={4}
+                    sx={{
+                      justifyContent: "flex-start",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <img src={Logo} alt="10-Day Forecast Logo" height="50" />
+                    {/* <img
+                      src="https://pubfiles.pagasa.dost.gov.ph/pagasaweb/images/pagasa-logo.png"
+                      alt="NOAA"
+                      height="50"
+                    /> */}
+                  </Stack>
+                </Box>
+                <Box sx={{ mt: 1, px: 2 }}>
+                  <Typography level="body-md">
+                    <Typography sx={{ fontWeight: "bold" }}>tanawPH</Typography>{" "}
+                    is a{" "}
+                    <Typography sx={{ fontWeight: "bold" }}>
+                      10-day forecast visualization app
+                    </Typography>{" "}
+                    that provides advance notice of potential hazards related to
+                    weather, climate and hydrological events for farmers and
+                    other socio-economic sectors.
+                  </Typography>
+                  <Typography level="body-md" sx={{ mt: 2 }}>
+                    It could serve as inputs/basis to formulate local climate
+                    advisory for farmers, fisherfolks and disaster preparedness.
+                  </Typography>
+
+                  <Typography level="body-sm" sx={{ mt: 2 }}>
+                    This app is being updated every Monday, Wednesday, and
+                    Friday, PST by the Climate Monitoring and Prediction Section
+                    (CLIMPS) under the Climatology and Agrometeorology Division
+                    (CAD.)
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mt: 1 }}>
+                  <Typography level="title-lg">Data Sources</Typography>
+                </Box>
+                <Box sx={{ px: 2 }}>
+                  <Stack
+                    direction="row"
+                    spacing={4}
+                    sx={{
+                      justifyContent: "center",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    {" "}
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/5/57/Noaa-logo-rgb-2022.svg"
+                      alt="NOAA"
+                      height="50"
+                    />
+                    <Typography level="body-md">
+                      This product is based from the forecast of Global Forecast
+                      System (GFS) produced by National Centers for
+                      Environmental Prediction (NCEP). The details of its
+                      prediction system are available
+                      <Link
+                        variant="plain"
+                        href="https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/global-forcast-system-gfs"
+                        target="_blank"
+                      >
+                        {" "}
+                        here.{" "}
+                      </Link>
+                    </Typography>
+                  </Stack>
+                </Box>
+
+                <Box sx={{ mt: 1 }}>
+                  <Typography level="title-lg">Contact</Typography>
+                </Box>
+                <Box sx={{ px: 2 }}>
+                  <Typography level="body-md">
+                    For inquries and any particulars about the app, you may
+                    contact:
+                  </Typography>
+                  <Box
+                    sx={{ mt: 1, display: "flex", justifyContent: "center" }}
+                  >
+                    <Card
+                      variant="outlined"
+                      sx={{
+                        width: "auto",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "flex-start",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Avatar
+                          src={Ana}
+                          size="lg"
+                          slotProps={{
+                            img: {
+                              sx: {
+                                height: "auto",
+                              },
+                            },
+                          }}
+                        />
+                        <Stack
+                          direction="column"
+                          spacing={0}
+                          sx={{
+                            ml: 2,
+                            justifyContent: "flex-start",
+                            alignItems: "flex-start",
+                          }}
+                        >
+                          <Typography level="title-lg">
+                            Ana Liza S. Solis
+                          </Typography>
+                          <Typography level="body-sm">
+                            Chief, Climate Monitoring and Prediction Section
+                          </Typography>
+                        </Stack>
+                      </Box>
+                      <CardContent>
+                        <Typography level="body-sm">
+                          Climatology and Agrometeorology Division
+                        </Typography>
+                        <Typography level="body-sm">DOST-PAGASA</Typography>
+                      </CardContent>
+                      <CardActions
+                        sx={{
+                          display: "flex",
+                          flexDirection: { md: "column", lg: "row" },
+                        }}
+                      >
+                        <Chip
+                          variant="outlined"
+                          color="primary"
+                          size="sm"
+                          startDecorator={<FontAwesomeIcon icon={faEnvelope} />}
+                        >
+                          asolis@pagasa.dost.gov.ph
+                        </Chip>
+                        <Chip
+                          variant="outlined"
+                          color="primary"
+                          size="sm"
+                          startDecorator={<FontAwesomeIcon icon={faPhone} />}
+                          sx={{ mt: { md: 1, lg: 0 } }}
+                        >
+                          (02) 8284-0800 loc. 4920/4921
+                        </Chip>
+                      </CardActions>
+                    </Card>
+                  </Box>
+
+                  <Box sx={{ px: 1, mt: 4 }}>
+                    <Typography level="body-md"></Typography>
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      sx={{
+                        justifyContent: "center",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <GIZLogo />
+                      <BMUVIKILogo />
+                    </Stack>
+                  </Box>
+                </Box>
               </DialogContent>
             </Sheet>
           </Drawer>
