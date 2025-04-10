@@ -1,9 +1,29 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Fragment } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 
 import { Slide } from "@mui/material";
-import { Box, Stack, Sheet, Typography, IconButton, Table } from "@mui/joy";
+import {
+  Box,
+  Stack,
+  Sheet,
+  Typography,
+  IconButton,
+  Table,
+  Modal,
+  ModalDialog,
+  DialogTitle,
+  DialogContent,
+  FormControl,
+  FormLabel,
+  Input,
+  Button,
+  Radio,
+  ToggleButtonGroup,
+  Select,
+  Option,
+  Chip,
+} from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
 import {
@@ -40,6 +60,7 @@ import {
 
 import ForecastTable from "./ForecastTable";
 import ToggleUnits from "./ToggleUnits";
+import ForecastDownload from "./ForecastDownload";
 
 const ForecastContainer = ({
   map,
@@ -57,12 +78,30 @@ const ForecastContainer = ({
   setUnits,
   date,
   setDate,
+  isDiscrete,
 }) => {
   const [forecast, setForecast] = useState(null);
   const [activeColumn, setActiveColumn] = useState(null);
+  const [todayColumn, setTodayColumn] = useState(null);
   const [hoveredColumn, setHoveredColumn] = useState(null);
+  const [openDownload, setOpenDownload] = useState(false);
+  const [selectedUnits, setSelectedUnits] = useState("current");
+  const [docUnits, setDocUnits] = useState(units);
+  const [docFormat, setDocFormat] = useState("pdf");
+  console.log("Active column", activeColumn);
+  console.log("Today column", todayColumn);
 
-  console.log(location);
+  useEffect(() => {
+    setDocUnits(units);
+  }, [units]);
+
+  const handleChange = (event, value) => {
+    setDocFormat(value);
+  };
+
+  const handleUnitChange = (event, value) => {
+    setSelectedUnits(event.target.value);
+  };
 
   // Handles column highlight
   const handleMouseEnter = (index) => {
@@ -95,16 +134,18 @@ const ForecastContainer = ({
 
   // Set active column on initial render
   useEffect(() => {
+    console.log("Set active column renders");
     if (forecast) {
-      const currentColumnIndex = forecast.forecasts.findIndex(
+      const currentColumnIndex = forecast?.forecasts.findIndex(
         (data) => format(new Date(data.date), "yyyy-MM-dd") === today
       );
 
       if (currentColumnIndex !== -1) {
         setActiveColumn(currentColumnIndex + 3); // Offset for first 2 columns
+        setTodayColumn(currentColumnIndex + 3);
       }
     }
-  }, []);
+  }, [activeColumn]);
 
   // Update active column based on the current date prop from the parent
   useEffect(() => {
@@ -197,72 +238,69 @@ const ForecastContainer = ({
                   size="sm"
                   borderAxis="none"
                   sx={{
-                    "--highlightColor": "#007FFF",
-                    "--borderStyle": "3px solid var(--highlightColor)",
-                    "--cellHeight": "40px",
-                    "--hoverColor": "#EDF5FD",
-                    "--hoverBorderStyle": "3px solid var(--hoverColor)",
-                    "--transpBorderStyle": " 3px solid transparent",
+                    // Custom CSS variables for styling
+                    "--highlightColor": "#007FFF", // Highlight color for active cells
+                    "--borderStyle": "3px solid var(--highlightColor)", // Border style for active cells
+                    "--cellHeight": "20px", // Height for each cell
+                    "--hoverColor": "#EDF5FD", // Hover color for cells
+                    "--hoverBorderStyle": "3px solid var(--hoverColor)", // Border style for hovered cells
+                    "--transpBorderStyle": "3px solid transparent", // Transparent border style for cells
 
-                    backgroundColor: "common.white",
-                    width: "1000px",
-                    tableLayout: "fixed", // Prevent resizing
+                    // General table styling
+                    backgroundColor: "common.white", // Background color for the table
+                    width: "1000px", // Width of the table
+                    tableLayout: "fixed", // Prevent resizing of the table
 
-                    // ✅ Table header styles
+                    // Table header styles
                     "& thead > tr > th": {
-                      bgcolor: "primary.softBg",
+                      bgcolor: "primary.softBg", // Background color for table headers
                     },
 
-                    "& thead > tr *": {
-                      color: "primary.softColor",
+                    "& thead > tr p": {
+                      color: "primary.softColor", // Text color for table headers
                     },
 
-                    // ✅ Table header styles
+                    // Table body styles
                     "& tbody > tr > td": {
-                      bgcolor: "common.white",
+                      bgcolor: "common.white", // Background color for table body cells
                     },
 
                     "& thead > tr th:last-child": {
-                      borderTopRightRadius: 0,
+                      borderTopRightRadius: 0, // Remove top-right corner radius for the last header cell
                     },
 
-                    // ✅ Cell height and column text alignment
+                    // Cell height and column text alignment
                     "& td, & th": {
-                      height: "var(--cellHeight)",
-                      alignContent: "center",
-                      boxSizing: "border-box",
+                      height: "var(--cellHeight)", // Apply custom cell height
+                      alignContent: "center", // Align content in the center
+                      boxSizing: "border-box", // Include padding and border in the element's width and height
                     },
                     "& tr > *:first-child": {
-                      width: "15%",
-                      textAlign: "right",
+                      width: "15%", // Width for the first column
+                      textAlign: "right", // Align text to the right for the first column
                     },
-                    "& thead th:nth-child(2)": { width: "7%" },
+                    "& thead th:nth-child(2)": { width: "7%" }, // Width for the second column header
                     "& tr > *:not(:first-child):not(:nth-child(2))": {
-                      textAlign: "center",
-                      width: "6%",
+                      textAlign: "center", // Align text to the center for all columns except the first and second
+                      width: "6%", // Width for all columns except the first and second
                     },
-                    "& tr > *:nth-child(2)": { borderLeftStyle: "none" },
-                    "& tr > *:last-child": {
-                      borderRightStyle: "solid",
-                      borderRightWidth: "1px",
-                      borderColor: "--TableCell-borderColor",
-                    },
+                    "& tr > *:nth-child(2)": { borderLeftStyle: "none" }, // Remove left border for the second column
 
                     "& tbody tr:last-child > th:first-child": {
-                      borderBottomLeftRadius: "var(--unstable_actionRadius)",
+                      borderBottomLeftRadius: "var(--unstable_actionRadius)", // Bottom-left corner radius for the last cell in the first column
                     },
                     "& tbody tr > *:first-child, & tbody tr > *:nth-child(2)": {
-                      bgcolor: "neutral.100",
+                      bgcolor: "neutral.100", // Background color for the first and second columns in the body
                     },
                     "& tbody > tr:first-child": {
-                      height: "64px",
+                      height: "64px", // Height for the first row in the body
                     },
 
                     "& thead tr > th": {
-                      borderTop: "var(--transpBorderStyle)",
+                      borderTop: "var(--transpBorderStyle)", // Transparent border on top for table headers
                     },
                     "& tbody tr:last-child > td": {
-                      borderBottom: "var(--transpBorderStyle)",
+                      borderBottom: "var(--transpBorderStyle)", // Transparent border on bottom for the last row in the body
                     },
                     // ✅ Highlight the active column (date match or user-clicked column)
                     ...(activeColumn !== null && {
@@ -367,6 +405,20 @@ const ForecastContainer = ({
                             setDate(data.date); // ✅ Set the date using setDate
                           }}
                         >
+                          {todayColumn === index + 2 ? (
+                            <Chip
+                              className="glass today-chip"
+                              color="plain"
+                              size="sm"
+                              sx={{
+                                position: "absolute",
+                                transform: "translate(-90px, -32px)",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              TODAY
+                            </Chip>
+                          ) : null}
                           <Typography level="title-sm">
                             {format(data.date, "EEE d")}
                           </Typography>
@@ -464,10 +516,11 @@ const ForecastContainer = ({
                       handleMouseEnter={handleMouseEnter}
                       handleMouseLeave={handleMouseLeave}
                       hoveredColumn={hoveredColumn}
+                      isDiscrete={isDiscrete}
                     />
                     <tr>
                       <th>
-                        <Typography level="title-sm">Wind direction</Typography>
+                        <Typography>Wind direction</Typography>
                       </th>
                       <th>
                         <ToggleUnits
@@ -490,47 +543,52 @@ const ForecastContainer = ({
                             setActiveColumn(index + 3); // Adjust for first 2 columns
                             setDate(data.date); // ✅ Set the date using setDate
                           }}
+                          style={{ minHeight: "28px" }}
                         >
-                          {units.windDirection === "arrow"
-                            ? (() => {
-                                switch (data.wind.direction) {
-                                  case "N":
-                                    return <NIcon />;
-                                  case "NNE":
-                                    return <NNEIcon />;
-                                  case "NE":
-                                    return <NEIcon />; // Northeast
-                                  case "ENE":
-                                    return <ENEIcon />; // East-Northeast
-                                  case "E":
-                                    return <EIcon />; // East
-                                  case "ESE":
-                                    return <ESEIcon />; // East-Southeast
-                                  case "SE":
-                                    return <SEIcon />; // Southeast
-                                  case "SSE":
-                                    return <SSEIcon />; // South-Southeast
-                                  case "S":
-                                    return <SIcon />; // South
-                                  case "SSW":
-                                    return <SSWIcon />; // South-Southwest
-                                  case "SW":
-                                    return <SWIcon />; // Southwest
-                                  case "WSW":
-                                    return <WSWIcon />; // West-Southwest
-                                  case "W":
-                                    return <WIcon />; // West
-                                  case "WNW":
-                                    return <WNWIcon />; // West-Northwest
-                                  case "NW":
-                                    return <NWIcon />; // Northwest
-                                  case "NNW":
-                                    return <NNWIcon />; // North-Northwest
-                                  default:
-                                    return null;
-                                }
-                              })()
-                            : data.wind.direction}
+                          {units.windDirection === "arrow" ? (
+                            (() => {
+                              switch (data.wind.direction) {
+                                case "N":
+                                  return <NIcon />;
+                                case "NNE":
+                                  return <NNEIcon />;
+                                case "NE":
+                                  return <NEIcon />; // Northeast
+                                case "ENE":
+                                  return <ENEIcon />; // East-Northeast
+                                case "E":
+                                  return <EIcon />; // East
+                                case "ESE":
+                                  return <ESEIcon />; // East-Southeast
+                                case "SE":
+                                  return <SEIcon />; // Southeast
+                                case "SSE":
+                                  return <SSEIcon />; // South-Southeast
+                                case "S":
+                                  return <SIcon />; // South
+                                case "SSW":
+                                  return <SSWIcon />; // South-Southwest
+                                case "SW":
+                                  return <SWIcon />; // Southwest
+                                case "WSW":
+                                  return <WSWIcon />; // West-Southwest
+                                case "W":
+                                  return <WIcon />; // West
+                                case "WNW":
+                                  return <WNWIcon />; // West-Northwest
+                                case "NW":
+                                  return <NWIcon />; // Northwest
+                                case "NNW":
+                                  return <NNWIcon />; // North-Northwest
+                                default:
+                                  return null;
+                              }
+                            })()
+                          ) : (
+                            <Typography sx={{ my: 0.65 }}>
+                              {data.wind.direction}
+                            </Typography>
+                          )}
                         </td>
                       ))}
                     </tr>
@@ -546,18 +604,251 @@ const ForecastContainer = ({
                       mb: 1,
                     }}
                   >
-                    <IconButton
-                      size="sm"
-                      color="inherit"
-                      variant="outlined"
-                      aria-label="download"
-                    >
-                      <DownloadIcon
-                        sx={{
-                          color: "var(--joy-palette-neutral-700, #32383E)",
-                        }}
-                      />
-                    </IconButton>
+                    <Fragment>
+                      <IconButton
+                        size="sm"
+                        color="inherit"
+                        variant="outlined"
+                        aria-label="download"
+                        onClick={() => setOpenDownload(true)}
+                      >
+                        <DownloadIcon
+                          sx={{
+                            color: "var(--joy-palette-neutral-700, #32383E)",
+                          }}
+                        />
+                      </IconButton>
+                      <Modal
+                        open={openDownload}
+                        onClose={() => setOpenDownload(false)}
+                      >
+                        <ModalDialog sx={{ "--ModalDialog-minWidth": "400px" }}>
+                          <DialogTitle>
+                            {"Download forecast for"}
+                            <Typography
+                              level="title-lg"
+                              sx={{
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {location.municity}
+                            </Typography>
+                          </DialogTitle>
+                          <DialogContent>
+                            Select your preferences:
+                          </DialogContent>
+
+                          <Stack spacing={3}>
+                            <FormControl size="md">
+                              <FormLabel>Units</FormLabel>
+                              <Stack
+                                direction="row"
+                                spacing={2}
+                                sx={{
+                                  justifyContent: "flex-start",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Radio
+                                  checked={selectedUnits === "current"}
+                                  onChange={handleUnitChange}
+                                  value="current"
+                                  name="radio-buttons"
+                                  slotProps={{
+                                    input: { "aria-label": "current" },
+                                  }}
+                                  label="Current"
+                                  size="sm"
+                                />
+                                <Radio
+                                  checked={selectedUnits === "custom"}
+                                  onChange={handleUnitChange}
+                                  value="custom"
+                                  name="radio-buttons"
+                                  slotProps={{
+                                    input: { "aria-label": "custom" },
+                                  }}
+                                  label="Custom"
+                                  size="sm"
+                                />
+                              </Stack>
+                              {selectedUnits === "custom" ? (
+                                <Box
+                                  sx={{
+                                    p: 1,
+                                    mt: 1,
+                                    backgroundColor: "neutral.100",
+                                  }}
+                                >
+                                  <FormControl
+                                    size="sm"
+                                    orientation="horizontal"
+                                  >
+                                    <FormLabel sx={{ flexGrow: 1 }}>
+                                      Temperature
+                                    </FormLabel>
+                                    <ToggleButtonGroup
+                                      size="sm"
+                                      variant="plain"
+                                      value={docUnits.temperature}
+                                      exclusive
+                                      onChange={(e, value) =>
+                                        value &&
+                                        setDocUnits({
+                                          ...docUnits,
+                                          temperature: value,
+                                        })
+                                      }
+                                    >
+                                      <Button value="°C">
+                                        <Typography level="body-xs">
+                                          °C
+                                        </Typography>
+                                      </Button>
+                                      <Button value="°F">
+                                        <Typography level="body-xs">
+                                          °F
+                                        </Typography>
+                                      </Button>
+                                    </ToggleButtonGroup>
+                                  </FormControl>
+
+                                  <FormControl
+                                    size="sm"
+                                    orientation="horizontal"
+                                    sx={{ mt: 2 }}
+                                  >
+                                    <Box
+                                      sx={{ display: "flex", flex: 1, pr: 1 }}
+                                    >
+                                      <FormLabel>Rainfall</FormLabel>
+                                    </Box>
+                                    <ToggleButtonGroup
+                                      size="sm"
+                                      variant="plain"
+                                      value={docUnits.rainfall}
+                                      exclusive
+                                      onChange={(e, value) =>
+                                        value &&
+                                        setDocUnits({
+                                          ...docUnits,
+                                          rainfall: value,
+                                        })
+                                      }
+                                    >
+                                      <Button value="mm/24h">
+                                        <Typography level="body-xs">
+                                          mm/24h
+                                        </Typography>
+                                      </Button>
+                                      <Button value="in/24h">
+                                        <Typography level="body-xs">
+                                          in/24h
+                                        </Typography>
+                                      </Button>
+                                    </ToggleButtonGroup>
+                                  </FormControl>
+
+                                  <FormControl
+                                    size="sm"
+                                    orientation="horizontal"
+                                    sx={{ mt: 2 }}
+                                  >
+                                    <Box
+                                      sx={{ display: "flex", flex: 1, pr: 1 }}
+                                    >
+                                      <FormLabel>Wind speed</FormLabel>
+                                    </Box>
+                                    <ToggleButtonGroup
+                                      size="sm"
+                                      variant="plain"
+                                      value={docUnits.windSpeed}
+                                      exclusive
+                                      onChange={(e, value) =>
+                                        value &&
+                                        setDocUnits({
+                                          ...docUnits,
+                                          windSpeed: value,
+                                        })
+                                      }
+                                    >
+                                      <Button value="m/s">
+                                        <Typography level="body-xs">
+                                          m/s
+                                        </Typography>
+                                      </Button>
+                                      <Button value="km/h">
+                                        <Typography level="body-xs">
+                                          km/h
+                                        </Typography>
+                                      </Button>
+                                      <Button value="kt">
+                                        <Typography level="body-xs">
+                                          knot
+                                        </Typography>
+                                      </Button>
+                                    </ToggleButtonGroup>
+                                  </FormControl>
+
+                                  <FormControl
+                                    size="sm"
+                                    orientation="horizontal"
+                                    sx={{ mt: 2 }}
+                                  >
+                                    <Box
+                                      sx={{ display: "flex", flex: 1, pr: 1 }}
+                                    >
+                                      <FormLabel>Wind direction</FormLabel>
+                                    </Box>
+                                    <ToggleButtonGroup
+                                      size="sm"
+                                      variant="plain"
+                                      value={docUnits.windDirection}
+                                      exclusive
+                                      onChange={(e, value) =>
+                                        value &&
+                                        setDocUnits({
+                                          ...docUnits,
+                                          windDirection: value,
+                                        })
+                                      }
+                                    >
+                                      <Button value="arrow">
+                                        <Typography level="body-xs">
+                                          arrow
+                                        </Typography>
+                                      </Button>
+                                      <Button value="desc">
+                                        <Typography level="body-xs">
+                                          description
+                                        </Typography>
+                                      </Button>
+                                    </ToggleButtonGroup>
+                                  </FormControl>
+                                </Box>
+                              ) : null}
+                            </FormControl>
+                            <FormControl>
+                              <FormLabel>File format</FormLabel>
+                              <Select
+                                defaultValue="pdf"
+                                onChange={handleChange}
+                              >
+                                <Option value="pdf">PDF</Option>
+                                <Option value="csv">CSV</Option>
+                                <Option value="txt">TXT</Option>
+                              </Select>
+                            </FormControl>
+                            <ForecastDownload
+                              location={location}
+                              forecast={forecast}
+                              docFormat={docFormat}
+                              docUnits={docUnits}
+                            />
+                          </Stack>
+                        </ModalDialog>
+                      </Modal>
+                    </Fragment>
                     <IconButton
                       size="sm"
                       color="inherit"

@@ -24,9 +24,14 @@ import CardContent from "@mui/joy/CardContent";
 import CardActions from "@mui/joy/CardActions";
 import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
 
-import Logo from "../assets/logo-text.png";
+import Logo from "../assets/logo/logo-rgb.png";
 
-import { GIZLogo, BMUVIKILogo } from "./CustomIcons";
+import {
+  TanawPHLogo,
+  GIZLogo,
+  BMUVIKILogo,
+  TanawPHLogoType,
+} from "./CustomIcons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleInfo,
@@ -63,7 +68,6 @@ const Navbar = ({
   open,
   units,
   setUnits,
-
   scale,
   setScale,
   setIsLocationReady,
@@ -127,9 +131,7 @@ const Navbar = ({
               accessToken={accessToken}
               setLocation={setLocation}
               map={map}
-              markerLayer={markerLayer}
               location={location}
-              setOpenModal={setOpenSearch}
               setOpen={setOpen}
               open={open}
               setIsLocationReady={setIsLocationReady}
@@ -355,7 +357,10 @@ const Navbar = ({
                   variant="solid"
                   color="danger"
                   size="sm"
-                  onClick={clearCache}
+                  onClick={() => {
+                    clearCache();
+                    window.location.reload();
+                  }}
                 >
                   Clear Cache
                 </Button>
@@ -410,7 +415,7 @@ const Navbar = ({
               </DialogTitle>
               <ModalClose />
               <Divider sx={{ mt: "auto" }} />
-              <DialogContent sx={{ gap: 2 }}>
+              <DialogContent sx={{ gap: 2, p: 1 }}>
                 <Box sx={{ mt: 3 }}>
                   <Stack
                     direction="row"
@@ -428,10 +433,9 @@ const Navbar = ({
                     /> */}
                   </Stack>
                 </Box>
-                <Box sx={{ mt: 1, px: 2 }}>
+                <Box sx={{ mt: 1 }}>
                   <Typography level="body-md">
-                    <Typography sx={{ fontWeight: "bold" }}>tanawPH</Typography>{" "}
-                    is a{" "}
+                    <TanawPHLogoType /> is a{" "}
                     <Typography sx={{ fontWeight: "bold" }}>
                       10-day forecast visualization app
                     </Typography>{" "}
@@ -455,7 +459,7 @@ const Navbar = ({
                 <Box sx={{ mt: 1 }}>
                   <Typography level="title-lg">Data Sources</Typography>
                 </Box>
-                <Box sx={{ px: 2 }}>
+                <Box>
                   <Stack
                     direction="row"
                     spacing={4}
@@ -490,13 +494,17 @@ const Navbar = ({
                 <Box sx={{ mt: 1 }}>
                   <Typography level="title-lg">Contact</Typography>
                 </Box>
-                <Box sx={{ px: 2 }}>
+                <Box>
                   <Typography level="body-md">
                     For inquries and any particulars about the app, you may
                     contact:
                   </Typography>
                   <Box
-                    sx={{ mt: 1, display: "flex", justifyContent: "center" }}
+                    sx={{
+                      mt: 1,
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
                   >
                     <Card
                       variant="outlined"
@@ -548,7 +556,8 @@ const Navbar = ({
                       <CardActions
                         sx={{
                           display: "flex",
-                          flexDirection: { md: "column", lg: "row" },
+                          flexDirection: "column",
+                          alignItems: "flex-start",
                         }}
                       >
                         <Chip
@@ -564,7 +573,7 @@ const Navbar = ({
                           color="primary"
                           size="sm"
                           startDecorator={<FontAwesomeIcon icon={faPhone} />}
-                          sx={{ mt: { md: 1, lg: 0 } }}
+                          sx={{ mt: { lg: 1, xl: 0 } }}
                         >
                           (02) 8284-0800 loc. 4920/4921
                         </Chip>

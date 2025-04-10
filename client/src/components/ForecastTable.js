@@ -68,6 +68,7 @@ const ForecastTable = ({
   handleMouseEnter,
   handleMouseLeave,
   hoveredColumn,
+  isDiscrete,
 }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_average"); // Stores last selected temperature overlay
@@ -97,7 +98,10 @@ const ForecastTable = ({
 
           if (overlays) {
             activeOverlay = lastTempOverlay;
-            displayName = `${name} (${overlays[lastTempOverlay]})`;
+            displayName =
+              ` ${overlays[lastTempOverlay]}`.replace(/\b\w/g, (str) =>
+                str.toUpperCase()
+              ) + " Temperature";
             dataKey = `${key}.${overlays[lastTempOverlay]}`;
           }
 
@@ -128,35 +132,41 @@ const ForecastTable = ({
                 onClick={overlays ? handleRowClick : undefined}
                 style={{ cursor: overlays ? "pointer" : "default" }}
               >
-                <Typography
-                  startDecorator={
-                    icon && (
-                      <motion.div
-                        animate={{
-                          y: hovered ? [-2, 2, -2] : 0, // Slide only if hovered
-                        }}
-                        transition={{
-                          duration: 0.4,
-                          ease: "easeInOut",
-                          repeat: Infinity,
-                        }}
-                      >
-                        <FontAwesomeIcon
-                          icon={icon}
-                          style={{
-                            fontSize: "1rem",
-                            marginLeft: "12px",
-                            color: "#12467B",
+                {overlays ? (
+                  <Link
+                    color="neutral"
+                    underline="always"
+                    variant="plain"
+                    startDecorator={
+                      icon && (
+                        <motion.div
+                          animate={{
+                            y: hovered ? [-2, 2, -2] : 0, // Slide only if hovered
                           }}
-                        />
-                      </motion.div>
-                    )
-                  }
-                  sx={{ justifyContent: "space-between" }}
-                  level="title-sm"
-                >
-                  {displayName}
-                </Typography>
+                          transition={{
+                            duration: 0.4,
+                            ease: "easeInOut",
+                            repeat: Infinity,
+                          }}
+                        >
+                          <FontAwesomeIcon
+                            icon={icon}
+                            style={{
+                              fontSize: "1rem",
+                              marginRight: "12px",
+                              color: "#12467B",
+                            }}
+                          />
+                        </motion.div>
+                      )
+                    }
+                    sx={{ justifyContent: "flex-end" }}
+                  >
+                    {displayName}
+                  </Link>
+                ) : (
+                  <Typography>{displayName}</Typography>
+                )}
               </th>
               <th>
                 <ToggleUnits
@@ -184,11 +194,13 @@ const ForecastTable = ({
 
                 const background =
                   activeOverlay === overlay
-                    ? `linear-gradient(to right, ${colorScale(
-                        getMedian(left, current)
-                      ).css()}, ${colorScale(current).css()}, ${colorScale(
-                        getMedian(current, right)
-                      ).css()})`
+                    ? isDiscrete
+                      ? `${colorScale(current).css()}`
+                      : `linear-gradient(to right, ${colorScale(
+                          getMedian(left, current)
+                        ).css()}, ${colorScale(current).css()}, ${colorScale(
+                          getMedian(current, right)
+                        ).css()})`
                     : hoveredColumn === index + 2
                     ? "var(--joy-palette-primary-200, #C7DFF7)"
                     : "#FFF";

@@ -13,7 +13,7 @@ const s3 = new S3Client({
 });
 
 const BUCKET_NAME = "tendayforecast";
-const TEMP_DIR = "C:\\Users\\gabri\\PAGASA\\server\\temp"; // Custom temp directory
+const TEMP_DIR = "./temp"; // Custom temp directory
 
 const monthMap = {
   "01": "01_January",
@@ -25,16 +25,16 @@ const monthMap = {
   "07": "07_July",
   "08": "08_August",
   "09": "09_September",
-  "10": "10_October",
-  "11": "11_November",
-  "12": "12_December",
+  10: "10_October",
+  11: "11_November",
+  12: "12_December",
 };
 
 // Function to generate file path
 const getFilePath = (year, month, day, type) => {
   const formattedMonth = monthMap[month];
   const formattedDay = `${formattedMonth.split("_")[1].slice(0, 3)}${day}`;
-  
+
   return `\\\\10.10.3.118\\climps\\10_Day\\Data\\${year}\\${formattedMonth}\\${formattedDay}\\${type}`;
 };
 
@@ -82,7 +82,9 @@ const uploadAllAscFiles = async (startDate) => {
 const deleteAllTempFiles = async () => {
   try {
     const files = await fs.readdir(TEMP_DIR);
-    await Promise.all(files.map((file) => fs.unlink(path.join(TEMP_DIR, file))));
+    await Promise.all(
+      files.map((file) => fs.unlink(path.join(TEMP_DIR, file)))
+    );
     console.log("Deleted all temp files.");
   } catch (error) {
     console.error(`Error deleting temp files: ${error}`);
@@ -119,8 +121,14 @@ export const processWindFiles = async (year, month, day) => {
   // Translate all TIF files first
   for (let i = 1; i <= 10; i++) {
     const dateStr = currentDate.toISOString().split("T")[0].replace(/-/g, "");
-    const uFilePath = path.join(getFilePath(year, month, day, "U10"), `U${i}_res.tif`);
-    const vFilePath = path.join(getFilePath(year, month, day, "V10"), `V${i}_res.tif`);
+    const uFilePath = path.join(
+      getFilePath(year, month, day, "U10"),
+      `U${i}_res.tif`
+    );
+    const vFilePath = path.join(
+      getFilePath(year, month, day, "V10"),
+      `V${i}_res.tif`
+    );
 
     await translateTifToAsc(uFilePath, `U_${dateStr}.asc`);
     await translateTifToAsc(vFilePath, `V_${dateStr}.asc`);

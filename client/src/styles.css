@@ -65,7 +65,7 @@
 
 .glass {
   background-color: rgba(255, 255, 255, 0.4) !important;
-  backdrop-filter: blur(7px);
+  backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(7px) !important;
 }
 
@@ -416,4 +416,8 @@
   background: transparent !important;
   text-shadow: initial !important;
   color: white !important;
+}
+
+.today-chip {
+  color: "#32383E" !important;
 }

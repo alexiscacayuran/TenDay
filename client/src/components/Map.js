@@ -16,6 +16,7 @@ import Legend from "./Legend";
 import ZoomLevel from "./ZoomLevel";
 import ScaleNautic from "react-leaflet-nauticsale";
 import ForecastPopup from "./ForecastPopup";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const Map = () => {
   const [accessToken, setAccessToken] = useState(null);
@@ -119,7 +120,7 @@ const Map = () => {
           minZoom={5} //5
           maxZoom={20}
           maxBounds={bounds}
-          maxBoundsViscosity={1.0}
+          maxBoundsViscosity={2}
           zoomControl={false}
           ref={setMap} // Set map instance to external state
         >
@@ -228,6 +229,7 @@ const Map = () => {
           setUnits={setUnits}
           date={date}
           setDate={setDate}
+          isDiscrete={isDiscrete}
         />
       </Box>
     ),

@@ -29,8 +29,6 @@ const GeoSearch = ({
   accessToken,
   setLocation,
   map,
-  markerLayer,
-  setOpenModal,
   setOpen,
   setIsLocationReady,
   location,
