@@ -51,7 +51,7 @@ const LayerMenu = ({
       value: "temperature_maximum",
       icon: <TMaxIcon />,
     },
-    { title: "Average", value: "temperature_average", icon: <TMeanIcon /> },
+    { title: "Mean", value: "temperature_mean", icon: <TMeanIcon /> },
     { title: "Minimum", value: "temperature_minimum", icon: <TMinIcon /> },
   ];
 

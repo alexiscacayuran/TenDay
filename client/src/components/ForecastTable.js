@@ -4,7 +4,7 @@ import { Typography, Link } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
-import overlayList from "./OverlayList";
+import { getColorScale } from "./OverlayList";
 import ToggleUnits from "./ToggleUnits";
 import ForecastValue from "./ForecastValue";
 
@@ -15,7 +15,7 @@ const weatherParams = [
     key: "temperature",
     overlayRef: "temperature",
     overlays: {
-      temperature_average: "mean",
+      temperature_mean: "mean",
       temperature_minimum: "min",
       temperature_maximum: "max",
     },
@@ -41,16 +41,6 @@ const weatherParams = [
   },
 ];
 
-// Function to get the correct color scale
-const getColorScale = (overlayName) => {
-  const overlay = overlayList.find((o) => o.name === overlayName);
-  if (!overlay) {
-    console.error(`Overlay not found: ${overlayName}`);
-    return chroma.scale(["#ffffff", "#000000"]).domain([0, 1]); // Fallback grayscale
-  }
-  return chroma.scale(overlay.scale).domain(overlay.domain).mode(overlay.mode);
-};
-
 // Function to compute median
 const getMedian = (a, b) => (a + b) / 2;
 
@@ -71,14 +61,14 @@ const ForecastTable = ({
   isDiscrete,
 }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
-  const [lastTempOverlay, setLastTempOverlay] = useState("temperature_average"); // Stores last selected temperature overlay
+  const [lastTempOverlay, setLastTempOverlay] = useState("temperature_mean"); // Stores last selected temperature overlay
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     // If the selected overlay is a temperature type, update lastTempOverlay
     if (
       [
-        "temperature_average",
+        "temperature_mean",
         "temperature_minimum",
         "temperature_maximum",
       ].includes(overlay)
@@ -144,23 +134,25 @@ const ForecastTable = ({
                             y: hovered ? [-2, 2, -2] : 0, // Slide only if hovered
                           }}
                           transition={{
-                            duration: 0.4,
+                            duration: hovered ? 0.6 : 0, // Only animate when hovered
                             ease: "easeInOut",
-                            repeat: Infinity,
+                            repeat: hovered ? Infinity : 0, // Only repeat when hovered
                           }}
                         >
                           <FontAwesomeIcon
                             icon={icon}
                             style={{
                               fontSize: "1rem",
-                              marginRight: "12px",
-                              color: "#12467B",
+                              marginRight: "8px",
                             }}
                           />
                         </motion.div>
                       )
                     }
-                    sx={{ justifyContent: "flex-end" }}
+                    sx={{
+                      justifyContent: "flex-end",
+                      textDecorationStyle: "dotted",
+                    }}
                   >
                     {displayName}
                   </Link>

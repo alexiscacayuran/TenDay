@@ -43,7 +43,7 @@ import {
 } from "./CustomIcons";
 
 const OVERLAY_CONFIG = {
-  temperature_average: {
+  temperature_mean: {
     title: "Ave Temperature",
     icon: <TMeanIcon style={{ fontSize: "1.5rem" }} />,
     getValue: (data) => data.temperature.mean,

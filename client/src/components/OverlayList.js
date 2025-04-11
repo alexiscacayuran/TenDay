@@ -2,7 +2,7 @@ import chroma from "chroma-js";
 
 const overlayList = [
   {
-    name: "temperature_average",
+    name: "temperature_mean",
     pathName: "MEAN",
     scale: [
       "#0031FF",
@@ -169,6 +169,16 @@ const overlayList = [
     height: "320px",
   },
 ];
+
+// Function to get the correct color scale
+export const getColorScale = (overlayName) => {
+  const overlay = overlayList.find((o) => o.name === overlayName);
+  if (!overlay) {
+    console.error(`Overlay not found: ${overlayName}`);
+    return chroma.scale(["#ffffff", "#000000"]).domain([0, 1]); // Fallback grayscale
+  }
+  return chroma.scale(overlay.scale).domain(overlay.domain).mode(overlay.mode);
+};
 
 // "#87CEFA",
 //   "#7FFFD4",

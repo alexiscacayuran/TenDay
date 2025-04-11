@@ -80,6 +80,7 @@ const LayerOptionMenu = ({
                       sx={{ mr: 1 }}
                       size="sm"
                       checked={checked}
+                      variant={checked ? "solid" : "outlined"}
                       onChange={(event) => {
                         setChecked(event.target.checked);
                         setIsDiscrete(event.target.checked);
@@ -105,6 +106,7 @@ const LayerOptionMenu = ({
                       sx={{ mr: 1 }}
                       size="sm"
                       checked={!checkedAnim}
+                      variant={!checkedAnim ? "solid" : "outlined"}
                       onChange={(event) => {
                         setCheckedAnim(!event.target.checked);
                         setIsAnimHidden(!event.target.checked);
@@ -130,6 +132,7 @@ const LayerOptionMenu = ({
                       sx={{ mr: 1 }}
                       size="sm"
                       checked={checkedClip}
+                      variant={checkedClip ? "solid" : "outlined"}
                       onChange={(event) => {
                         setCheckedClip(event.target.checked);
                         setIsLayerClipped(event.target.checked);

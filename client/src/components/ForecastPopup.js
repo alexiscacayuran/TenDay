@@ -5,10 +5,9 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
-import { Popup, Marker } from "react-leaflet";
-import { Icon, DivIcon } from "leaflet";
+import { Popup, Marker, useMap } from "react-leaflet";
+import { DivIcon } from "leaflet";
 import axios from "axios";
-import markerIconPng from "leaflet/dist/images/marker-icon.png";
 import "leaflet/dist/leaflet.css";
 import "../styles.css";
 import PopupContent from "./PopupContent";
@@ -22,8 +21,9 @@ const ForecastPopup = ({
   overlay,
   units,
   setUnits,
-  setLocation,
+  selectedMunicityRef,
 }) => {
+  const map = useMap();
   const markerRef = useRef(null);
   const [forecast, setForecast] = useState({});
   const [loading, setLoading] = useState(true);
@@ -82,13 +82,21 @@ const ForecastPopup = ({
     if (markerLayer.current && markerRef.current) {
       markerLayer.current.removeLayer(markerRef.current);
     }
-  }, [markerLayer, location]);
+    if (selectedMunicityRef.current) {
+      map.removeLayer(selectedMunicityRef.current);
+      selectedMunicityRef.current = null;
+    }
+  }, [markerLayer, selectedMunicityRef, map]);
 
   const markerIcon = useMemo(
     () =>
       open
         ? new DivIcon({ className: "pulsating-marker" })
-        : new DivIcon({ className: "regular-marker" }),
+        : new DivIcon({
+            className: "regular-marker",
+            iconAnchor: [6, 8],
+            popupAnchor: [0, -8],
+          }),
     [open]
   );
 
@@ -97,6 +105,7 @@ const ForecastPopup = ({
       ref={markerRef}
       position={location.latLng}
       icon={markerIcon}
+      interactive={false}
       eventHandlers={{
         add: !open ? (e) => e.target.openPopup() : () => {},
         click: open ? (e) => e.target.closePopup() : () => {},

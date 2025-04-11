@@ -57,8 +57,9 @@ import {
   NNWIconPDF,
 } from "./CustomIcons";
 import VerticalBarGraph from "./VerticalBarGraph";
-
+import OverlayList, { getColorScale } from "./OverlayList";
 import { convertValue } from "./ForecastValue";
+import chroma from "chroma-js";
 
 Font.register({
   family: "Rubik",
@@ -262,6 +263,11 @@ const styles = StyleSheet.create({
   },
 });
 
+const bgColor = (value, overlay) => {
+  const colorScale = getColorScale(overlay);
+  return { backgroundColor: colorScale(value).hex() };
+};
+
 export const ReportViewer = ({ forecast, docUnits, location }) => (
   <div
     style={{
@@ -284,7 +290,6 @@ export const ReportViewer = ({ forecast, docUnits, location }) => (
 );
 
 const ForecastReportPDF = ({ location, forecast, docUnits }) => {
-  console.log(location);
   const municity = forecast.municity;
 
   const heroStyle = municity.length >= 12 ? styles.heroAlt : styles.hero;
@@ -527,8 +532,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits }) => {
                   }}
                 >
                   <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
-                    {convertValue("wind", docUnits, todayForecast?.humidity) +
-                      "% "}
+                    {todayForecast?.humidity + "% "}
                   </Text>
                   <Text style={[styles.weatherParamText, { fontSize: 8 }]}>
                     humid
@@ -716,7 +720,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits }) => {
               ))}
             </View>
 
-            <View style={styles.tableRow}>
+            <View style={[styles.tableRow]}>
               <Text
                 style={[
                   styles.tableHeader,
@@ -736,7 +740,13 @@ const ForecastReportPDF = ({ location, forecast, docUnits }) => {
                 {docUnits.rainfall}
               </Text>
               {forecast.forecasts.map((data) => (
-                <Text style={[styles.tableCell, styles.tableCellMerge]}>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.tableCellMerge,
+                    bgColor(data.rainfall.total, "rainfall"),
+                  ]}
+                >
                   {convertValue("rainfall", docUnits, data.rainfall.total)}
                 </Text>
               ))}
@@ -806,7 +816,13 @@ const ForecastReportPDF = ({ location, forecast, docUnits }) => {
                 ]}
               ></Text>
               {forecast.forecasts.map((data) => (
-                <Text style={[styles.tableCell, styles.tableCellMerge]}>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.tableCellMerge,
+                    bgColor(data.temperature.max, "temperature_maximum"),
+                  ]}
+                >
                   {convertValue("temperature", docUnits, data.temperature.max)}
                 </Text>
               ))}
@@ -832,7 +848,13 @@ const ForecastReportPDF = ({ location, forecast, docUnits }) => {
                 {docUnits.temperature}
               </Text>
               {forecast.forecasts.map((data) => (
-                <Text style={[styles.tableCell, styles.tableCellMerge]}>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.tableCellMerge,
+                    bgColor(data.temperature.mean, "temperature_mean"),
+                  ]}
+                >
                   {convertValue("temperature", docUnits, data.temperature.mean)}
                 </Text>
               ))}
@@ -846,7 +868,12 @@ const ForecastReportPDF = ({ location, forecast, docUnits }) => {
                 style={[styles.tableHeader, styles.tableUnitsColumn]}
               ></Text>
               {forecast.forecasts.map((data) => (
-                <Text style={styles.tableCell}>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    bgColor(data.temperature.min, "temperature_minimum"),
+                  ]}
+                >
                   {convertValue("temperature", docUnits, data.temperature.min)}
                 </Text>
               ))}
@@ -872,7 +899,13 @@ const ForecastReportPDF = ({ location, forecast, docUnits }) => {
                 {docUnits.windSpeed}
               </Text>
               {forecast.forecasts.map((data) => (
-                <Text style={[styles.tableCell, styles.tableCellMerge]}>
+                <Text
+                  style={[
+                    styles.tableCell,
+                    styles.tableCellMerge,
+                    bgColor(data.wind.speed, "wind"),
+                  ]}
+                >
                   {convertValue("wind", docUnits, data.wind.speed)}
                 </Text>
               ))}
@@ -965,8 +998,10 @@ const ForecastReportPDF = ({ location, forecast, docUnits }) => {
                 %
               </Text>
               {forecast.forecasts.map((data) => (
-                <Text style={styles.tableCell}>
-                  {convertValue("temperature", docUnits, data.humidity)}
+                <Text
+                  style={[styles.tableCell, bgColor(data.humidity, "humidity")]}
+                >
+                  {data.humidity}
                 </Text>
               ))}
             </View>

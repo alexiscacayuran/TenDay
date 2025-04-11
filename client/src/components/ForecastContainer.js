@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, Fragment } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 
@@ -16,13 +16,13 @@ import {
   DialogContent,
   FormControl,
   FormLabel,
-  Input,
   Button,
   Radio,
   ToggleButtonGroup,
   Select,
   Option,
   Chip,
+  Switch,
 } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -88,8 +88,7 @@ const ForecastContainer = ({
   const [selectedUnits, setSelectedUnits] = useState("current");
   const [docUnits, setDocUnits] = useState(units);
   const [docFormat, setDocFormat] = useState("pdf");
-  console.log("Active column", activeColumn);
-  console.log("Today column", todayColumn);
+  const [docColored, setDocColored] = useState(true);
 
   useEffect(() => {
     setDocUnits(units);
@@ -130,11 +129,10 @@ const ForecastContainer = ({
     return () => {
       document.removeEventListener("keydown", handleKeyPress);
     };
-  }, []);
+  }, [setOpen]);
 
   // Set active column on initial render
   useEffect(() => {
-    console.log("Set active column renders");
     if (forecast) {
       const currentColumnIndex = forecast?.forecasts.findIndex(
         (data) => format(new Date(data.date), "yyyy-MM-dd") === today
@@ -640,7 +638,7 @@ const ForecastContainer = ({
 
                           <Stack spacing={3}>
                             <FormControl size="md">
-                              <FormLabel>Units</FormLabel>
+                              <FormLabel>Set units</FormLabel>
                               <Stack
                                 direction="row"
                                 spacing={2}
@@ -828,6 +826,34 @@ const ForecastContainer = ({
                                 </Box>
                               ) : null}
                             </FormControl>
+
+                            <FormControl
+                              sx={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <FormLabel>
+                                Show colors for visualization
+                              </FormLabel>
+                              <Switch
+                                size="sm"
+                                checked={docColored}
+                                onChange={(event) =>
+                                  setDocColored(event.target.checked)
+                                }
+                                variant={docColored ? "solid" : "outlined"}
+                                endDecorator={docColored ? "On" : "Off"}
+                                slotProps={{
+                                  endDecorator: {
+                                    sx: {
+                                      minWidth: 24,
+                                    },
+                                  },
+                                }}
+                              />
+                            </FormControl>
+
                             <FormControl>
                               <FormLabel>File format</FormLabel>
                               <Select
@@ -839,6 +865,7 @@ const ForecastContainer = ({
                                 <Option value="txt">TXT</Option>
                               </Select>
                             </FormControl>
+
                             <ForecastDownload
                               location={location}
                               forecast={forecast}
@@ -874,10 +901,10 @@ const ForecastContainer = ({
 
                   <Typography level="body-xs" sx={{ mb: 1 }}>
                     {"Lat: " +
-                      location.latLng.lat.toFixed(2) +
+                      location.latLng.lat.toFixed(4) +
                       " " +
                       "Long: " +
-                      location.latLng.lng.toFixed(2)}
+                      location.latLng.lng.toFixed(4)}
                   </Typography>
 
                   <Typography level="h3">{forecast.municity}</Typography>

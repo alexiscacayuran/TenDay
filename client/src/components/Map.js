@@ -16,7 +16,6 @@ import Legend from "./Legend";
 import ZoomLevel from "./ZoomLevel";
 import ScaleNautic from "react-leaflet-nauticsale";
 import ForecastPopup from "./ForecastPopup";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const Map = () => {
   const [accessToken, setAccessToken] = useState(null);
@@ -52,18 +51,18 @@ const Map = () => {
   const startDate = useRef(null);
   const markerLayer = useRef(null);
   const overlayLayer = useRef(null);
+  const selectedMunicityRef = useRef(null);
 
   const [map, setMap] = useState(null); // External state for the map instance
   const [open, setOpen] = useState(false); // Slide up bottom container state
   const [date, setDate] = useState(new Date());
   const [dateReady, setDateReady] = useState(false);
-  const [overlay, setOverlay] = useState("temperature_average");
+  const [overlay, setOverlay] = useState("temperature_mean");
   const [zoomLevel, setZoomLevel] = useState(8);
   // console.log(zoomLevel);
 
-  const [isPopupClose, setIsPopupClose] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(true);
-  const [temp, setTemp] = useState("temperature_average");
+  const [temp, setTemp] = useState("temperature_mean");
   const [activeTooltip, setActiveTooltip] = useState("Temperature");
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
@@ -135,6 +134,7 @@ const Map = () => {
               overlay={overlay}
               units={units}
               setUnits={setUnits}
+              selectedMunicityRef={selectedMunicityRef}
             />
           )}
           <ScaleNautic
@@ -159,7 +159,10 @@ const Map = () => {
               zoomLevel={zoomLevel}
             />
           )}
-          <Base accessToken={accessToken} />
+          <Base
+            accessToken={accessToken}
+            selectedMunicityRef={selectedMunicityRef}
+          />
           <Labels accessToken={accessToken} />
           {map && (
             <ReverseGeocode
