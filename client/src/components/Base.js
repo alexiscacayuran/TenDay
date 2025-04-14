@@ -63,12 +63,10 @@ const Base = ({ accessToken, selectedMunicityRef }) => {
   useEffect(() => {
     if (!provinceId) return;
 
-    const selectedMunicityID =
-      selectedMunicityRef.current?.getLayers?.()?.[0]?.feature?.properties?.ID;
+    // const selectedMunicityID =
+    //   selectedMunicityRef.current?.getLayers?.()?.[0]?.feature?.properties?.ID;
 
-    const where = selectedMunicityID
-      ? `ID LIKE '${provinceId}%' AND ID <> '${selectedMunicityID}'`
-      : `ID LIKE '${provinceId}%'`;
+    const where = `ID LIKE '${provinceId}%'`;
 
     // Remove previous layer if exists
     if (municityLayerRef.current) {
@@ -102,6 +100,7 @@ const Base = ({ accessToken, selectedMunicityRef }) => {
           },
           click: (event) => {
             const clickedFeature = event.target.feature;
+            console.log("Clicked feature", event.target);
 
             // Remove previous selected layer if it exists
             if (selectedMunicityRef.current) {

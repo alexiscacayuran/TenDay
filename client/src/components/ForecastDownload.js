@@ -11,13 +11,21 @@ import {
 import { Button } from "@mui/joy";
 import ForecastReportPDF, { ReportViewer } from "./ForecastReportPDF";
 
-const ForecastDownload = ({ forecast, docFormat, docUnits, location }) => {
+const ForecastDownload = ({
+  forecast,
+  docFormat,
+  docUnits,
+  docColored,
+  location,
+}) => {
+  console.log(forecast);
   return (
     <>
       <ReportViewer
         location={location}
         forecast={forecast}
         docUnits={docUnits}
+        docColored={docColored}
       />
       <PDFDownloadLink
         document={
@@ -25,6 +33,7 @@ const ForecastDownload = ({ forecast, docFormat, docUnits, location }) => {
             location={location}
             forecast={forecast}
             docUnits={docUnits}
+            docColored={docColored}
           />
         }
         fileName="forecast.pdf"

@@ -85,6 +85,7 @@ const GeoSearch = ({
       .city(text)
       .run((error, res) => {
         if (!error) {
+          console.log("Geocode result", res);
           const result = res.results[0];
 
           setLocation({

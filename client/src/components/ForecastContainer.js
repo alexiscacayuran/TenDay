@@ -827,32 +827,29 @@ const ForecastContainer = ({
                               ) : null}
                             </FormControl>
 
-                            <FormControl
-                              sx={{
-                                flexDirection: "row",
-                                justifyContent: "space-between",
-                              }}
-                            >
-                              <FormLabel>
-                                Show colors for visualization
-                              </FormLabel>
-                              <Switch
-                                size="sm"
-                                checked={docColored}
-                                onChange={(event) =>
-                                  setDocColored(event.target.checked)
-                                }
-                                variant={docColored ? "solid" : "outlined"}
-                                endDecorator={docColored ? "On" : "Off"}
-                                slotProps={{
-                                  endDecorator: {
-                                    sx: {
-                                      minWidth: 24,
+                            {docFormat === "pdf" && (
+                              <FormControl orientation="horizontal">
+                                <FormLabel>
+                                  Show colors for visualization
+                                </FormLabel>
+                                <Switch
+                                  size="sm"
+                                  checked={docColored}
+                                  onChange={(event) =>
+                                    setDocColored(event.target.checked)
+                                  }
+                                  variant={docColored ? "solid" : "outlined"}
+                                  endDecorator={docColored ? "On" : "Off"}
+                                  slotProps={{
+                                    endDecorator: {
+                                      sx: {
+                                        minWidth: 24,
+                                      },
                                     },
-                                  },
-                                }}
-                              />
-                            </FormControl>
+                                  }}
+                                />
+                              </FormControl>
+                            )}
 
                             <FormControl>
                               <FormLabel>File format</FormLabel>
@@ -871,6 +868,7 @@ const ForecastContainer = ({
                               forecast={forecast}
                               docFormat={docFormat}
                               docUnits={docUnits}
+                              docColored={docColored}
                             />
                           </Stack>
                         </ModalDialog>
