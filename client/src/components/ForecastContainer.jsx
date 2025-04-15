@@ -89,6 +89,7 @@ const ForecastContainer = ({
   const [docUnits, setDocUnits] = useState(units);
   const [docFormat, setDocFormat] = useState("pdf");
   const [docColored, setDocColored] = useState(true);
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
     setDocUnits(units);
@@ -175,13 +176,28 @@ const ForecastContainer = ({
   }, [open]);
 
   useEffect(() => {
+    // Fetch token from server
+    axios
+      .get("/serverToken")
+      .then((res) => {
+        setToken(res.data.token);
+      })
+      .catch((error) => {
+        console.error("Error fetching token:", error);
+      });
+  }, []);
+
+  useEffect(() => {
     if (!open && location.municity) return;
 
     axios
-      .get("/full", {
+      .get("/fullInternal", {
         params: {
           municity: location.municity,
           province: location.province,
+        },
+        headers: {
+          token: token,
         },
       })
       .then((res) => {
