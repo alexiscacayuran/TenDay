@@ -58,7 +58,7 @@ const ForecastPopup = ({
       try {
         setForecastRetrieval(false);
         setLoading(true);
-        const response = await axios.get("/date", {
+        const response = await axios.get("/dateInternal", {
           params: {
             municity: location.municity,
             province: location.province,
