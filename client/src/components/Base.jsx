@@ -4,7 +4,7 @@ import { featureLayer } from "esri-leaflet";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 
-const Base = ({ accessToken, selectedMunicityRef }) => {
+const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
   const map = useMap();
   const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
   // const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
@@ -64,7 +64,7 @@ const Base = ({ accessToken, selectedMunicityRef }) => {
     if (!provinceId) return;
 
     // const selectedMunicityID =
-    //   selectedMunicityRef.current?.getLayers?.()?.[0]?.feature?.properties?.ID;
+    //   selectedPolygon.current?.getLayers?.()?.[0]?.feature?.properties?.ID;
 
     const where = `ID LIKE '${provinceId}%'`;
 
@@ -99,12 +99,13 @@ const Base = ({ accessToken, selectedMunicityRef }) => {
             });
           },
           click: (event) => {
+            setIsPolygonHighlighted(false);
             const clickedFeature = event.target.feature;
             console.log("Clicked feature", event.target);
 
             // Remove previous selected layer if it exists
-            if (selectedMunicityRef.current) {
-              map.removeLayer(selectedMunicityRef.current);
+            if (selectedPolygon.current) {
+              map.removeLayer(selectedPolygon.current);
             }
 
             // Create new GeoJSON layer from the clicked feature
@@ -119,7 +120,8 @@ const Base = ({ accessToken, selectedMunicityRef }) => {
             });
 
             selectedMunicity.addTo(map);
-            selectedMunicityRef.current = selectedMunicity;
+            selectedPolygon.current = selectedMunicity;
+            setIsPolygonHighlighted(true);
           },
         });
       },

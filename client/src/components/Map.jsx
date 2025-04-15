@@ -51,7 +51,7 @@ const Map = () => {
   const startDate = useRef(null);
   const markerLayer = useRef(null);
   const overlayLayer = useRef(null);
-  const selectedMunicityRef = useRef(null);
+  const selectedPolygon = useRef(null);
 
   const [map, setMap] = useState(null); // External state for the map instance
   const [open, setOpen] = useState(false); // Slide up bottom container state
@@ -59,7 +59,6 @@ const Map = () => {
   const [dateReady, setDateReady] = useState(false);
   const [overlay, setOverlay] = useState("temperature_mean");
   const [zoomLevel, setZoomLevel] = useState(8);
-  // console.log(zoomLevel);
 
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [temp, setTemp] = useState("temperature_mean");
@@ -67,6 +66,7 @@ const Map = () => {
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
   const [isLayerClipped, setIsLayerClipped] = useState(false);
+  const [isPolygonHighlighted, setIsPolygonHighlighted] = useState(false);
 
   const [units, setUnits] = useState({
     temperature: "°C",
@@ -76,6 +76,9 @@ const Map = () => {
   });
 
   const [scale, setScale] = useState({ metric: true, imperial: false });
+
+  console.log(isPolygonHighlighted);
+  console.log(isLocationReady);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -123,7 +126,7 @@ const Map = () => {
           zoomControl={false}
           ref={setMap} // Set map instance to external state
         >
-          {isLocationReady && (
+          {isPolygonHighlighted && isLocationReady ? (
             <ForecastPopup
               location={location}
               markerLayer={markerLayer}
@@ -134,9 +137,10 @@ const Map = () => {
               overlay={overlay}
               units={units}
               setUnits={setUnits}
-              selectedMunicityRef={selectedMunicityRef}
+              selectedPolygon={selectedPolygon}
+              setIsPolygonHighlighted={setIsPolygonHighlighted}
             />
-          )}
+          ) : null}
           <ScaleNautic
             metric={scale.metric}
             imperial={scale.imperial}
@@ -161,24 +165,16 @@ const Map = () => {
           )}
           <Base
             accessToken={accessToken}
-            selectedMunicityRef={selectedMunicityRef}
+            selectedPolygon={selectedPolygon}
+            setIsPolygonHighlighted={setIsPolygonHighlighted}
           />
           <Labels accessToken={accessToken} />
-          {map && (
-            <ReverseGeocode
-              accessToken={accessToken}
-              markerLayer={markerLayer}
-              location={location}
-              setLocation={setLocation}
-              setOpen={setOpen}
-              openContainer={open}
-              date={date}
-              overlay={overlay}
-              units={units}
-              setUnits={setUnits}
-              setIsLocationReady={setIsLocationReady}
-            />
-          )}
+
+          <ReverseGeocode
+            accessToken={accessToken}
+            setLocation={setLocation}
+            setIsLocationReady={setIsLocationReady}
+          />
         </MapContainer>
 
         <MapControl map={map} />
@@ -256,6 +252,7 @@ const Map = () => {
       zoomLevel,
       scale,
       isLocationReady,
+      isPolygonHighlighted,
     ]
   );
 

@@ -21,7 +21,8 @@ const ForecastPopup = ({
   overlay,
   units,
   setUnits,
-  selectedMunicityRef,
+  selectedPolygon,
+  setIsPolygonHighlighted,
 }) => {
   const map = useMap();
   const markerRef = useRef(null);
@@ -79,14 +80,15 @@ const ForecastPopup = ({
   }, [location, date]);
 
   const handlePopupClose = useCallback(() => {
+    setIsPolygonHighlighted(false);
     if (markerLayer.current && markerRef.current) {
       markerLayer.current.removeLayer(markerRef.current);
     }
-    if (selectedMunicityRef.current) {
-      map.removeLayer(selectedMunicityRef.current);
-      selectedMunicityRef.current = null;
+    if (selectedPolygon.current) {
+      map.removeLayer(selectedPolygon.current);
+      selectedPolygon.current = null;
     }
-  }, [markerLayer, selectedMunicityRef, map]);
+  }, [markerLayer, selectedPolygon, map]);
 
   const markerIcon = useMemo(
     () =>

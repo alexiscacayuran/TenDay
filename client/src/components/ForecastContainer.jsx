@@ -405,13 +405,16 @@ const ForecastContainer = ({
                         >
                           {todayColumn === index + 2 ? (
                             <Chip
-                              className="glass today-chip"
-                              color="plain"
+                              color="primary"
                               size="sm"
+                              variant="plain"
+                              className="today-chip"
                               sx={{
                                 position: "absolute",
                                 transform: "translate(-90px, -32px)",
                                 fontWeight: "bold",
+                                backgroundColor: "primary.100",
+                                color: "primary.700",
                               }}
                             >
                               TODAY
@@ -788,41 +791,43 @@ const ForecastContainer = ({
                                     </ToggleButtonGroup>
                                   </FormControl>
 
-                                  <FormControl
-                                    size="sm"
-                                    orientation="horizontal"
-                                    sx={{ mt: 2 }}
-                                  >
-                                    <Box
-                                      sx={{ display: "flex", flex: 1, pr: 1 }}
-                                    >
-                                      <FormLabel>Wind direction</FormLabel>
-                                    </Box>
-                                    <ToggleButtonGroup
+                                  {docUnits === "pdf" ? (
+                                    <FormControl
                                       size="sm"
-                                      variant="plain"
-                                      value={docUnits.windDirection}
-                                      exclusive
-                                      onChange={(e, value) =>
-                                        value &&
-                                        setDocUnits({
-                                          ...docUnits,
-                                          windDirection: value,
-                                        })
-                                      }
+                                      orientation="horizontal"
+                                      sx={{ mt: 2 }}
                                     >
-                                      <Button value="arrow">
-                                        <Typography level="body-xs">
-                                          arrow
-                                        </Typography>
-                                      </Button>
-                                      <Button value="desc">
-                                        <Typography level="body-xs">
-                                          description
-                                        </Typography>
-                                      </Button>
-                                    </ToggleButtonGroup>
-                                  </FormControl>
+                                      <Box
+                                        sx={{ display: "flex", flex: 1, pr: 1 }}
+                                      >
+                                        <FormLabel>Wind direction</FormLabel>
+                                      </Box>
+                                      <ToggleButtonGroup
+                                        size="sm"
+                                        variant="plain"
+                                        value={docUnits.windDirection}
+                                        exclusive
+                                        onChange={(e, value) =>
+                                          value &&
+                                          setDocUnits({
+                                            ...docUnits,
+                                            windDirection: value,
+                                          })
+                                        }
+                                      >
+                                        <Button value="arrow">
+                                          <Typography level="body-xs">
+                                            arrow
+                                          </Typography>
+                                        </Button>
+                                        <Button value="desc">
+                                          <Typography level="body-xs">
+                                            description
+                                          </Typography>
+                                        </Button>
+                                      </ToggleButtonGroup>
+                                    </FormControl>
+                                  ) : null}
                                 </Box>
                               ) : null}
                             </FormControl>

@@ -140,9 +140,8 @@ const styles = StyleSheet.create({
 
   todayDate: {
     fontSize: 7,
-
-    fontWeight: 400,
-    color: "#7F7F7F",
+    fontWeight: 700,
+    color: "#3e7bff",
   },
 
   weatherParamsContainer: {
@@ -267,6 +266,8 @@ const bgColor = (value, overlay, docColored) => {
   const colorScale = getColorScale(overlay);
   return {
     backgroundColor: docColored ? colorScale(value).hex() : "transparent",
+    color:
+      chroma.deltaE(colorScale(value), "white") <= 40 ? "#32383E" : "white",
   };
 };
 
@@ -275,7 +276,7 @@ export const ReportViewer = ({ forecast, docUnits, location, docColored }) => (
     style={{
       width: "700px",
       height: "800px",
-      position: "absolute",
+      position: "fixed",
       zIndex: 999999,
       top: -300,
       left: -750,
@@ -555,13 +556,13 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
               <View style={styles.dateTextContainer}>
                 <Text style={styles.dateText}>Forecast date</Text>
                 <Text style={styles.dateText}>
-                  {format(forecast.forecasts[0].start_date, "MMMM d, YYY")}
+                  {format(forecast.forecasts[0].start_date, "MMMM d, yyy")}
                 </Text>
               </View>
               <View style={styles.dateTextContainer}>
                 <Text style={styles.dateText}>Valid until</Text>
                 <Text style={styles.dateText}>
-                  {format(forecast.forecasts[9].date, "MMMM d, YYY")}
+                  {format(forecast.forecasts[9].date, "MMMM d, yyy")}
                 </Text>
               </View>
             </View>
@@ -1001,7 +1002,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
                       }
                     })()
                   ) : (
-                    <Text style={styles.tableCell}>{data.wind.direction}</Text>
+                    <Text>{data.wind.direction}</Text>
                   )}
                 </View>
               ))}

@@ -3,22 +3,7 @@ import { reverseGeocode } from "esri-leaflet-geocoder";
 import { useMapEvents } from "react-leaflet";
 import ForecastPopup from "./ForecastPopup";
 
-const ReverseGeocode = ({
-  accessToken,
-  location,
-  setLocation,
-  markerLayer,
-  setOpen,
-  openContainer,
-  date,
-  overlay,
-  units,
-  setUnits,
-  setIsLocationReady,
-}) => {
-  // const [isLocationReady, setIsLocationReady] = useState(false);
-
-  // Map event handling
+const ReverseGeocode = ({ accessToken, setLocation, setIsLocationReady }) => {
   useMapEvents({
     click(e) {
       const { latlng } = e;

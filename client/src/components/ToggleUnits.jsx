@@ -93,7 +93,7 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
             {units.rainfall}
           </Button>
         ) : overlay === "humidity" ? (
-          <Box sx={{ marginLeft: "12px" }}>%</Box>
+          <Box sx={{ margin: "4px 12px" }}>%</Box>
         ) : overlay === "wind_speed" ? (
           <Button {...props} onClick={toggleUnits}>
             {units.windSpeed}

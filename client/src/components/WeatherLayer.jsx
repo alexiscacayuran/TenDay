@@ -116,7 +116,7 @@ const WeatherLayer = ({
         pane: "tilePane",
         zIndex: 100,
         opacity: 0.8,
-        updateWhenIdle: false,
+        updateWhenIdle: true,
       });
 
       // Replace scalar layer if it already exists
