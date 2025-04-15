@@ -38,7 +38,7 @@ import getCurrentForecast from "./tenDayData/getCurrentForecast.js";  // Import 
 
 import getFullForecastInternal from "./tenDayData/internal/getFullForecast.js";
 import getDateForecastInternal from "./tenDayData/internal/getDateForecast.js";
-import getProvince from "./tenDayData/internal/getProvince.js";
+import getMunicities from "./tenDayData/internal/getMunicities.js";
 
 
 //API seasonal (internal)
@@ -127,7 +127,7 @@ app.use("/dateinternal", getDateForecastInternal);
 app.use("/fullinternal", getFullForecastInternal);
 
 // Route for fetching full forecast internal
-app.use("/provinceinternal", getProvince);
+app.use("/provinceinternal", getMunicities);
 
 // Route for uploading Ten Day Data
 app.get('/uploadForecastData', authenticate, async (req, res) => {
