@@ -4,53 +4,140 @@ import moment from "moment";
 
 export const getSeasonal = async (provinceName, startMonth, startYear) => {
   try {
-    const startDate = moment(`${startYear}-${startMonth}-01`, "YYYY-MM-DD");
-    const endDate = startDate.clone().add(5, "months"); // Extend to 5 months
-    const cacheKey = `seasonal:${provinceName}:${startYear}-${startMonth}`;
+    if (isNaN(startMonth) || startMonth < 1 || startMonth > 12) {
+      throw new Error("Invalid startMonth. Must be between 1 and 12.");
+    }
 
-    // Check if data is cached
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) return JSON.parse(cachedData);
+    const startDate = moment(`${startYear}-${startMonth}-01`, "YYYY-MM-DD").add(1, "month");
+    const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const issuanceDate = `${monthOrder[startMonth - 1]} ${startYear}`;
+    const cacheKey = `seasonal:${provinceName}:${startYear}-${monthOrder[startMonth - 1]}`;
 
-    // SQL Query
+    try {
+      const cachedData = await redisClient.get(cacheKey);
+      if (cachedData) {
+        console.log("Cache hit for:", cacheKey);
+        return {
+          api: "Get Seasonal Forecast",
+          forecast: "Seasonal Forecast",
+          province: provinceName,
+          issuance_date: issuanceDate,
+          version: 1,
+          data: JSON.parse(cachedData).map((row, index) => {
+            const monthIndex = (startMonth + index) % 12;
+            return {
+              ...row,
+              date: `Month ${index + 1} (${monthOrder[monthIndex]})`,
+            };
+          }),
+          timestamp: new Date().toISOString(),
+          status_code: 200,
+          description: "Request successful. The server has responded as required.",
+          method: "GET",
+        };
+      }
+    } catch (redisError) {
+      console.error("Redis error:", redisError);
+    }
+
     const query = `
       SELECT
-        province.name AS "province",
-        TO_CHAR(TO_DATE(sf_date.month, 'Mon'), 'FMMonth') || ' ' || sf_date.year AS "date",
-        forecast_rf.min AS "min_mm",
-        forecast_rf.max AS "max_mm",
-        forecast_rf.mean AS "mean_mm",
-        percent_n.mean AS "mean_percent",
-        percent_n.description AS "description"
-      FROM province
-      INNER JOIN sf_date ON sf_date.province_id = province.id
-      INNER JOIN forecast_rf ON forecast_rf.date_id = sf_date.id
-      INNER JOIN percent_n ON percent_n.date_id = sf_date.id
-      WHERE province.name = $1
-        AND (sf_date.year > $2 
-             OR (sf_date.year = $2 AND TO_NUMBER(TO_CHAR(TO_DATE(sf_date.month, 'Mon'), 'MM'), '99') >= $3))
-        AND (sf_date.year < $4 
-             OR (sf_date.year = $4 AND TO_NUMBER(TO_CHAR(TO_DATE(sf_date.month, 'Mon'), 'MM'), '99') <= $5))
-      ORDER BY sf_date.year, TO_NUMBER(TO_CHAR(TO_DATE(sf_date.month, 'Mon'), 'MM'), '99')
+        p.name AS "province",
+        sd.year AS "year",
+        sd.month AS "month",
+        fr.min AS "min_mm",
+        fr.max AS "max_mm",
+        fr.mean AS "mean_mm",
+        pn.mean AS "percent_normal",
+        pn.description AS "description"
+      FROM province p
+      JOIN sf_date sd ON sd.province_id = p.id
+      JOIN forecast_rf fr ON fr.date_id = sd.id
+      JOIN percent_n pn ON pn.date_id = sd.id
+      WHERE p.name = $1
+        AND sd.year >= $2
+        AND sd.month IN (${monthOrder.map((_, i) => `$${i + 3}`).join(", ")})
+      ORDER BY sd.year ASC, 
+               CASE sd.month
+                 WHEN 'Jan' THEN 1
+                 WHEN 'Feb' THEN 2
+                 WHEN 'Mar' THEN 3
+                 WHEN 'Apr' THEN 4
+                 WHEN 'May' THEN 5
+                 WHEN 'Jun' THEN 6
+                 WHEN 'Jul' THEN 7
+                 WHEN 'Aug' THEN 8
+                 WHEN 'Sep' THEN 9
+                 WHEN 'Oct' THEN 10
+                 WHEN 'Nov' THEN 11
+                 WHEN 'Dec' THEN 12
+               END ASC;
     `;
 
-    // ✅ Pass all 5 required parameters
-    const result = await pool.query(query, [
-      provinceName,
-      startYear,
-      startMonth,
-      endDate.year(),
-      endDate.month() + 1
-    ]);
+    const queryParams = [provinceName, startYear, ...monthOrder];
+    const result = await pool.query(query, queryParams);
 
-    const data = result.rows;
+    if (result.rows.length === 0) {
+      return {
+        api: "Get Seasonal Forecast",
+        forecast: "Seasonal Forecast",
+        province: provinceName,
+        issuance_date: issuanceDate,
+        version: 1,
+        data: [],
+        error: "No data found",
+        timestamp: new Date().toISOString(),
+        method: "GET",
+        status_code: 404,
+        description: "No data available for the given parameters.",
+      };
+    }
 
-    // Cache the result
-    await redisClient.setEx(cacheKey, 3600, JSON.stringify(data));
+    const data = result.rows.map((row, index) => {
+      const monthIndex = (startMonth + index) % 12;
+      return {
+        date: `Month ${index + 1} (${monthOrder[monthIndex]})`,
+        min_mm: row.min_mm,
+        max_mm: row.max_mm,
+        mean_mm: row.mean_mm,
+        percent_normal: row.percent_normal,
+        description: row.description,
+      };
+    });
 
-    return data;
+    try {
+      await redisClient.setEx(cacheKey, 3600, JSON.stringify(data));
+    } catch (redisError) {
+      console.error("Failed to cache data in Redis:", redisError);
+    }
+
+    return {
+      api: "Get Seasonal Forecast",
+      forecast: "Seasonal Forecast",
+      province: provinceName,
+      issuance_date: issuanceDate,
+      version: 1,
+      data: data,
+      timestamp: new Date().toISOString(),
+      method: "GET",
+      status_code: 200,
+      description: "Request successful. The server has responded as required.",
+    };
   } catch (error) {
     console.error("Error fetching seasonal data:", error);
-    throw error;
+
+    return {
+      api: "Get Seasonal Forecast",
+      forecast: "Seasonal Forecast",
+      province: provinceName,
+      issuance_date: "Error Occurred",
+      version: 1,
+      error: error.message || "Internal Server Error",
+      data: [],
+      timestamp: new Date().toISOString(),
+      method: "GET",
+      status_code: 500,
+      description: "An error occurred while processing the request.",
+    };
   }
 };

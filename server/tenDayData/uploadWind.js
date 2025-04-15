@@ -13,134 +13,115 @@ const s3 = new S3Client({
 });
 
 const BUCKET_NAME = "tendayforecast";
-const TEMP_DIR = "./temp"; // Custom temp directory
+const TEMP_DIR = "C:\\Users\\gabri\\PAGASA\\server\\temp";
+const GEOJSON_PATH = "./country_lowres_dissolved.geojson";
 
 const monthMap = {
-  "01": "01_January",
-  "02": "02_February",
-  "03": "03_March",
-  "04": "04_April",
-  "05": "05_May",
-  "06": "06_June",
-  "07": "07_July",
-  "08": "08_August",
-  "09": "09_September",
-  10: "10_October",
-  11: "11_November",
-  12: "12_December",
+  "01": "01_January", "02": "02_February", "03": "03_March", "04": "04_April",
+  "05": "05_May", "06": "06_June", "07": "07_July", "08": "08_August",
+  "09": "09_September", "10": "10_October", "11": "11_November", "12": "12_December"
 };
 
-// Function to generate file path
 const getFilePath = (year, month, day, type) => {
   const formattedMonth = monthMap[month];
   const formattedDay = `${formattedMonth.split("_")[1].slice(0, 3)}${day}`;
-
   return `\\\\10.10.3.118\\climps\\10_Day\\Data\\${year}\\${formattedMonth}\\${formattedDay}\\${type}`;
 };
 
-// Ensure temp directory exists
 const ensureTempDir = async () => {
+  await fs.mkdir(TEMP_DIR, { recursive: true }).catch(() => {});
+};
+
+const uploadFileToS3 = async (filePath, key) => {
   try {
-    await fs.mkdir(TEMP_DIR, { recursive: true });
+    const fileContent = await fs.readFile(filePath);
+    const command = new PutObjectCommand({ Bucket: BUCKET_NAME, Key: key, Body: fileContent });
+    await s3.send(command);
+    console.log(`Uploaded: ${key}`);
   } catch (error) {
-    console.error(`Error creating temp directory: ${error}`);
+    console.error(`Failed to upload ${key}:`, error);
   }
 };
 
-// Upload all .asc files in parallel
-const uploadAllAscFiles = async (startDate) => {
+const deleteTempFiles = async () => {
   try {
     const files = await fs.readdir(TEMP_DIR);
-    const ascFiles = files.filter((file) => file.endsWith(".asc"));
-
-    const uploadPromises = ascFiles.map(async (file) => {
-      const filePath = path.join(TEMP_DIR, file);
-      const key = `${startDate}/WIND/${file}`; // Format: tendayforecast/{startDate}/WIND/{file}
-
-      try {
-        const fileContent = await fs.readFile(filePath);
-        const command = new PutObjectCommand({
-          Bucket: BUCKET_NAME,
-          Key: key,
-          Body: fileContent,
-        });
-
-        await s3.send(command);
-        console.log(`Uploaded: ${key}`);
-      } catch (uploadError) {
-        console.error(`Failed to upload ${file}:`, uploadError);
-      }
-    });
-
-    await Promise.all(uploadPromises); // Upload all files in parallel
-  } catch (error) {
-    console.error(`Error uploading ASC files: ${error}`);
-  }
-};
-
-// Delete all files inside temp folder after upload
-const deleteAllTempFiles = async () => {
-  try {
-    const files = await fs.readdir(TEMP_DIR);
-    await Promise.all(
-      files.map((file) => fs.unlink(path.join(TEMP_DIR, file)))
-    );
+    await Promise.all(files.map((file) => fs.unlink(path.join(TEMP_DIR, file))));
     console.log("Deleted all temp files.");
   } catch (error) {
-    console.error(`Error deleting temp files: ${error}`);
+    console.error("Error deleting temp files:", error);
   }
 };
 
-// Convert .tif to .asc
-const translateTifToAsc = async (targetFilePath, tempFileName) => {
+const translateTifToAsc = async (tifPath, ascFileName) => {
   try {
-    if (!(await fs.stat(targetFilePath).catch(() => false))) {
-      console.warn(`File not found: ${targetFilePath}`);
-      return;
-    }
-
-    console.log(`Processing: ${targetFilePath}`);
-    const dataset = await gdal.openAsync(targetFilePath);
-    const tempFilePath = path.join(TEMP_DIR, tempFileName);
-
-    await gdal.translate(tempFilePath, dataset, ["-of", "AAIGrid"]);
+    if (!(await fs.stat(tifPath).catch(() => false))) return;
+    const dataset = await gdal.openAsync(tifPath);
+    const ascPath = path.join(TEMP_DIR, `${ascFileName}.asc`);
+    await gdal.translate(ascPath, dataset, ["-of", "AAIGrid"]);
     dataset.close();
-    console.log(`Translated file saved to: ${tempFilePath}`);
+    console.log(`Translated: ${ascPath}`);
+    return ascPath;
   } catch (error) {
-    console.error(`Error processing ${targetFilePath}:`, error);
+    console.error(`Error translating ${tifPath}:`, error);
   }
 };
 
-// Main function to process wind files
-export const processWindFiles = async (year, month, day) => {
-  await ensureTempDir(); // Ensure temp folder exists
+const clipTifToAsc = async (tifPath, maskedFileName) => {
+  try {
+    if (!(await fs.stat(tifPath).catch(() => false))) return;
+    const dataset = await gdal.openAsync(tifPath);
+    const maskedAscPath = path.join(TEMP_DIR, `${maskedFileName}_masked.asc`);
+    await gdal.warpAsync(maskedAscPath, null, [dataset], ["-cutline", GEOJSON_PATH, "-crop_to_cutline", "-of", "AAIGrid"]);
+    dataset.close();
+    console.log(`Clipped and converted to ASC: ${maskedAscPath}`);
+    return maskedAscPath;
+  } catch (error) {
+    console.error(`Error clipping ${tifPath}:`, error);
+  }
+};
 
+export const processWindFiles = async (year, month, day) => {
+  await ensureTempDir();
+  const startTime = Date.now(); // ⏱️ Start timer
   const startDate = `${year}${month}${day}`;
   let currentDate = new Date(`${year}-${month}-${day}`);
 
-  // Translate all TIF files first
   for (let i = 1; i <= 10; i++) {
     const dateStr = currentDate.toISOString().split("T")[0].replace(/-/g, "");
-    const uFilePath = path.join(
-      getFilePath(year, month, day, "U10"),
-      `U${i}_res.tif`
-    );
-    const vFilePath = path.join(
-      getFilePath(year, month, day, "V10"),
-      `V${i}_res.tif`
-    );
+    const uFilePath = path.join(getFilePath(year, month, day, "U10"), `U${i}_res.tif`);
+    const vFilePath = path.join(getFilePath(year, month, day, "V10"), `V${i}_res.tif`);
 
-    await translateTifToAsc(uFilePath, `U_${dateStr}.asc`);
-    await translateTifToAsc(vFilePath, `V_${dateStr}.asc`);
+    const uAscPath = await translateTifToAsc(uFilePath, `U_${dateStr}`);
+    const vAscPath = await translateTifToAsc(vFilePath, `V_${dateStr}`);
+    const uMaskedAscPath = await clipTifToAsc(uFilePath, `U_${dateStr}`);
+    const vMaskedAscPath = await clipTifToAsc(vFilePath, `V_${dateStr}`);
 
-    await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay
+    if (uAscPath) await uploadFileToS3(uAscPath, `${startDate}/WIND/${path.basename(uAscPath)}`);
+    if (vAscPath) await uploadFileToS3(vAscPath, `${startDate}/WIND/${path.basename(vAscPath)}`);
+    if (uMaskedAscPath) await uploadFileToS3(uMaskedAscPath, `${startDate}/WIND/${path.basename(uMaskedAscPath)}`);
+    if (vMaskedAscPath) await uploadFileToS3(vMaskedAscPath, `${startDate}/WIND/${path.basename(vMaskedAscPath)}`);
 
+    await new Promise((resolve) => setTimeout(resolve, 100));
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
-  // Upload all ASC files in parallel after processing
-  await uploadAllAscFiles(startDate);
+  await deleteTempFiles();
 
-  // Delete all files in temp directory
-  await deleteAllTempFiles();
+  // ⏲️ End timer and log duration
+  const endTime = Date.now();
+  const duration = endTime - startTime;
+  const hours = Math.floor(duration / (1000 * 60 * 60));
+  const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((duration % (1000 * 60)) / 1000);
+  const durationFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+  const messagePlain = `Upload completed for ${year}-${month}-${day} in ${durationFormatted} (HH:MM:SS)`;
+  const messageDecorated = `
+💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙
+${messagePlain}
+💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙💙
+`;
+
+  console.log(messageDecorated);
 };

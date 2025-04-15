@@ -22,6 +22,7 @@ router.get("/current-all", async (req, res) => {
           m.id AS location_id, m.municity, m.province, 
           d.id AS date_id, d.date, d.start_date, 
           r.description as rainfall, 
+          r.total as total_rainfall,
           c.description as cloud_cover, 
           t.mean, t.min, t.max, 
           h.mean as humidity, 
@@ -44,15 +45,18 @@ router.get("/current-all", async (req, res) => {
       return res.status(404).json({ message: "No data found" });
     }
 
-    const data = result.rows.map((forecast) => ({
-      id: forecast.location_id,
-      municity: forecast.municity,
-      province: forecast.province,
-      forecast: {
+    const data = {
+      id: location_id,
+      municity: _municity,
+      province: _province,
+      forecasts: result.rows.map((forecast) => ({
         forecast_id: forecast.date_id,
         date: forecast.date.toLocaleString("en-PH").split(", ")[0],
         start_date: forecast.start_date.toLocaleString("en-PH").split(", ")[0],
-        rainfall: forecast.rainfall,
+        rainfall: {
+          description: forecast.rainfall, 
+          total: forecast.total_rainfall, 
+        },
         cloud_cover: forecast.cloud_cover,
         temperature: {
           mean: forecast.mean,
@@ -64,8 +68,8 @@ router.get("/current-all", async (req, res) => {
           speed: forecast.speed,
           direction: forecast.direction,
         },
-      },
-    }));
+      })),
+    };    
 
     // Store result in Redis cache for 10 days (864000 seconds)
     await redisClient.set(cacheKey, JSON.stringify(data), { EX: 864000 });

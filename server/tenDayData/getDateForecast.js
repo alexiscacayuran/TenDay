@@ -1,24 +1,47 @@
 import express from "express";
-import { pool, redisClient } from "../db.js"; // Import Redis connection
+import chalk from "chalk";
+import { pool, redisClient } from "../db.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
+import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", authenticateToken, async (req, res) => {
   const { municity, province, date } = req.query;
+  const token = req.headers["token"];
 
   if (!municity || !province || !date) {
-    return res
-      .status(400)
-      .json({ error: "municity, province, and date are required" });
+    return res.status(400).json({ error: "municity, province, and date are required" });
   }
 
-  const cacheKey = `dateForecast:${municity}:${province}:${date}`;
-
   try {
+    // ✅ Fetch API ID from `api_tokens` table
+    const tokenResult = await pool.query(
+      `SELECT api_ids FROM api_tokens WHERE token = $1 LIMIT 1`,
+      [token]
+    );
+
+    if (tokenResult.rows.length === 0) {
+      return res.status(401).json({ error: "Unauthorized: Invalid token" });
+    }
+
+    const { api_ids } = tokenResult.rows[0];
+
+    // ✅ Ensure API ID array contains "4"
+    if (!api_ids.includes(4)) {
+      console.log("❌ Unauthorized API ID:", api_ids);
+      return res.status(403).json({ error: "Forbidden: Unauthorized API ID" });
+    }
+
+    // ✅ Log API request
+    const requestNo = await logApiRequest(req, 4);
+
+    const cacheKey = `dateForecast:${municity}:${province}:${date}`;
+
     // Check Redis cache
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit - Returning data from Redis");
+      console.log(chalk.bgGray.black(" Cache hit ") + " " + chalk.bgGreen.black(" Returning data from Redis "));
       return res.json(JSON.parse(cachedData));
     }
 
@@ -30,12 +53,12 @@ router.get("/", async (req, res) => {
         m.province, 
         d.id AS date_id, 
         d.date,
-        d.start_date,
-        r.total as total,
-        r.description as desc, 
-        c.description as cloud_cover, 
+        d.start_date AS issuance_date,
+        r.total AS total_rainfall,
+        r.description AS rainfall, 
+        c.description AS cloud_cover, 
         t.mean, t.min, t.max, 
-        h.mean as humidity, 
+        h.mean AS humidity, 
         w.speed, w.direction 
       FROM 
         municities AS m 
@@ -52,7 +75,7 @@ router.get("/", async (req, res) => {
         AND d.date = $3 
       ORDER BY 
         d.start_date DESC 
-      LIMIT 1`;
+      LIMIT 10`;
 
     const values = [municity, province, date];
     const result = await pool.query(query, values);
@@ -61,55 +84,55 @@ router.get("/", async (req, res) => {
       return res.status(404).json({ message: "No data found" });
     }
 
-    const {
-      location_id,
-      municity: _municity,
-      province: _province,
-      date_id,
-      date: forecast_date,
-      start_date,
-      total,
-      desc,
-      cloud_cover,
-      mean,
-      min,
-      max,
-      humidity,
-      speed,
-      direction,
-    } = result.rows[0];
+    const issuanceDate = result.rows[0].issuance_date.toLocaleString("en-PH").split(", ")[0];
 
-    const data = {
-      id: location_id,
-      municity: _municity,
-      province: _province,
-      forecast: {
-        forecast_id: date_id,
-        date: forecast_date.toLocaleString("en-PH").split(", ")[0],
-        start_date: start_date.toLocaleString("en-PH").split(", ")[0],
-        rainfall: {
-          total,
-          desc,
+    const data = result.rows.map((row) => ({
+      location_id: row.location_id,
+      date_id: row.date_id,
+      date: row.date.toLocaleString("en-PH").split(", ")[0],
+      rainfall: row.rainfall,
+      total_rainfall: row.total_rainfall,
+      cloud_cover: row.cloud_cover,
+      mean: row.mean,
+      min: row.min,
+      max: row.max,
+      humidity: row.humidity,
+      speed: row.speed,
+      direction: row.direction,
+    }));
+
+    const response = {
+      metadata: {
+        request_no: requestNo, 
+        api: "Forecast by Date",
+        forecast: "10-day Forecast",
+      },
+      data: [
+        {
+          municity: result.rows[0].municity,
+          province: result.rows[0].province,
+          issuance_date: issuanceDate,
         },
-        cloud_cover,
-        temperature: {
-          mean,
-          min,
-          max,
-        },
-        humidity,
-        wind: {
-          speed,
-          direction,
-        },
+        ...data,
+      ],
+      footer: {
+        version: "1.0",
+        total_count: data.length,
+        total_pages: 1,
+        current_page: 1,
+        per_page: 10,
+        timestamp: new Date().toLocaleString("en-PH"),
+        method: "GET",
+        status_code: 200,
+        description: "OK",
       },
     };
 
-    // Store result in Redis cache for 10 days
-    await redisClient.set(cacheKey, JSON.stringify(data), "EX", 864000);
+    // Store result in Redis cache for 1 hour
+    await redisClient.set(cacheKey, JSON.stringify(response), "EX", 3600);
 
-    console.log("Cache miss - Fetching from database");
-    res.json(data);
+    console.log("❌ Cache miss - Fetching from database");
+    res.json(response);
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal Server Error" });

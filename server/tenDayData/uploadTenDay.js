@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import csvParser from 'csv-parser';
 import moment from 'moment';
+import limit from 'p-limit';
 import { Router } from 'express';
 import { uploadBatchToDB } from './tenDayToDB.js';
 
@@ -46,31 +47,47 @@ const getMonthNumber = (monthStr) => {
         JAN: 1, FEB: 2, MAR: 3, APR: 4, MAY: 5, JUN: 6,
         JUL: 7, AUG: 8, SEP: 9, OCT: 10, NOV: 11, DEC: 12,
     };
+
+    // If the month is numeric, parse it directly
+    if (!isNaN(monthStr)) {
+        return parseInt(monthStr, 10);
+    }
+
+    // Otherwise, use the month map
     return monthMap[monthStr.toUpperCase()];
 };
 
-// Refactor Data Function
-export const refactorData = async (year, month, day, userId) => {
+
+// Upload Forecast Data Function
+export const uploadForecastData = async (year, month, day, userId) => {
     if (!year || !month || !day) {
         return { message: 'Error: Please select Year, Month, and Day.' };
     }
 
+    const startTime = Date.now(); // Start the timer
+
     const monthNumber = getMonthNumber(month);
-    if (!monthNumber) {
+    if (!monthNumber || monthNumber < 1 || monthNumber > 12) {
         return { message: 'Error: Invalid month selected.' };
     }
+    
 
-    const monthName = moment().month(monthNumber - 1).format('MMMM');
+    // Ensure the month is formatted as two digits
     const formattedMonth = String(monthNumber).padStart(2, '0');
-    const shortMonthName = moment().month(monthNumber - 1).format('MMM');
-    const formattedDay = `${shortMonthName}${String(day).padStart(2, '0')}`; // Format as "Jan13"
-    const monthFolder = `${formattedMonth}_${monthName}`;
-    const dayPath = path.join(SOURCE_PATH, year, monthFolder, formattedDay, 'CSV_1D'); // Correct folder name
+    const monthName = moment().month(monthNumber - 1).format('MMMM'); // Full month name
+    const shortMonthName = moment().month(monthNumber - 1).format('MMM'); // Abbreviated month name
+    const formattedDay = String(day).padStart(2, '0'); // Ensure day is two digits
 
-    if (!fs.existsSync(dayPath)) {
+    const monthFolder = `${formattedMonth}_${monthName}`;
+    const formattedDayString = `${shortMonthName}${formattedDay}`; // Format as "Jan07"
+    const dayPath = path.join(SOURCE_PATH, year, monthFolder, formattedDayString, 'CSV_1D');
+
+    try {
+        const files = fs.readdirSync(dayPath);
+    } catch (err) {
         return { message: `Error: Destination path not found: ${dayPath}` };
     }
-
+    
     batchCounter = 0; // Reset counter for a new starting date
 
     // Process CSV files
@@ -82,16 +99,45 @@ export const refactorData = async (year, month, day, userId) => {
         return numA - numB; // Numeric sorting
     });
 
+    const concurrency = 5;
+    const limiter = limit(concurrency);
     
-    for (const fileName of files) {
-        if (fileName.endsWith('.csv')) {
+    const processPromises = files
+        .filter(fileName => fileName.endsWith('.csv'))
+        .map(fileName => limiter(() => {
             const filePath = path.join(dayPath, fileName);
-            const skippedCities = await processCSV(filePath, year, month, day, fileName, userId); // Wait for one file to finish before processing the next
-            console.log("Skipped Cities due to invalid format:", skippedCities); // Debug log
-        }
-    }
+            return processCSV(filePath, year, month, day, fileName, userId)
+                .then(skippedCities => {
+                    console.log(`Skipped Cities from ${fileName}:`, skippedCities);
+                    return skippedCities;
+                });
+        }));
+    
+        const allSkippedCities = await Promise.all(processPromises);
+        const endTime = Date.now(); // End the timer
+        const durationInSeconds = (endTime - startTime) / 1000; // Duration in seconds
+        
+        // Convert the duration into hours, minutes, and seconds
+        const hours = Math.floor(durationInSeconds / 3600);
+        const minutes = Math.floor((durationInSeconds % 3600) / 60);
+        const seconds = Math.floor(durationInSeconds % 60);
+        
+        // Format the time as HH:MM:SS
+        const durationFormatted = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        console.log(`
+            ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
+             Completed upload for User ID: ${userId} in ${durationFormatted} HH:MM:SS
+            ✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅
+             `);        
+    
 
-    return { message: `Processing Data for User ID: ${userId}` }; // Include userId in the response message
+    return {
+        message: `Processing completed for User ID: ${userId}`,
+        time_taken: durationFormatted,
+        total_files: files.length,
+        skipped_cities: allSkippedCities.flat()
+    };
 };
 
 let batchCounter = 0; // Global counter for batch date increment

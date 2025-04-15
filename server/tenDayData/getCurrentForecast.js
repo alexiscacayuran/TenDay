@@ -1,33 +1,64 @@
 import express from "express";
 import { pool, redisClient } from "../db.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
+import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-router.get("/current", async (req, res) => {
-  const { municity, province } = req.query;
-  const now = new Date().toISOString().split("T")[0];
+router.get("/current", authenticateToken, async (req, res) => {
+  const { municity, province, page = 1, limit = 10 } = req.query;
+  const per_page = parseInt(limit);
+  const today = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Manila' });
+  const offset = (parseInt(page) - 1) * per_page;
+  const cacheKey = `current:${municity || "all"}:${province || "all"}:${today}:page:${page}`;
 
-  // Generate a unique cache key based on municity, province, and date
-  const cacheKey = `current:${municity || "all"}:${province || "all"}:${now}`;
+  console.log("🔍 Token from Middleware:", req.user);
+
+  const { api_ids } = req.user; // Extract api_ids array from decoded token
+  console.log("✅ API IDs from Token:", api_ids);
+
+  // ✅ Check if ANY api_id in the token is 0 or 1
+  const isAuthorized = api_ids.some(id => id === 0 || id === 1);
+  if (!isAuthorized) {
+    console.log("❌ Unauthorized API IDs:", api_ids);
+    return res.status(403).json({ error: "Forbidden: Unauthorized API ID" });
+  }
 
   try {
-    // Check Redis cache
+    const request_no = await logApiRequest(req, 1);
+    if (!request_no) {
+      return res.status(403).json({ error: "Invalid API token" });
+    }
+
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log("✅ Cache hit - Returning data from Redis");
       return res.json(JSON.parse(cachedData));
     }
 
-    const query = `
-        SELECT 
-        m.id AS location_id, 
-        m.municity, 
-        m.province, 
-        d.id AS date_id, 
-        d.date,
-        d.start_date,
-        r.total as rainfall_total,
-        r.description as rainfall_desc, 
+    let query = `
+      WITH total AS (
+        SELECT COUNT(*) AS total_count 
+        FROM municities AS m
+        INNER JOIN date AS d ON m.id = d.municity_id
+        WHERE d.date = $1
+    `;
+    let values = [today];
+
+    if (municity) {
+      values.push(`%${municity}%`);
+      query += ` AND m.municity ILIKE $${values.length}`;
+    }
+    if (province) {
+      values.push(`%${province}%`);
+      query += ` AND m.province ILIKE $${values.length}`;
+    }
+
+    query += `)
+      SELECT 
+        (SELECT total_count FROM total) AS total_count,
+        m.id AS location_id, m.municity, m.province, 
+        d.id AS date_id, d.date, d.start_date, 
+        r.description as rainfall, r.total as total_rainfall,
         c.description as cloud_cover, 
         t.mean, t.min, t.max, 
         h.mean as humidity, 
@@ -40,76 +71,74 @@ router.get("/current", async (req, res) => {
       INNER JOIN temperature AS t ON d.id = t.date_id 
       INNER JOIN humidity AS h ON d.id = h.date_id 
       INNER JOIN wind AS w ON d.id = w.date_id 
-      WHERE
-        ($1::TEXT IS NOT NULL AND $1::TEXT <> '' OR $2::TEXT IS NOT NULL AND $2::TEXT <> '')
-        AND
-        REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($1, ' CITY', '', 'gi') || '%' 
-        AND 
-        m.province ILIKE '%' || $2 || '%' 
-        AND d.date = $3 
-      ORDER BY 
-        d.start_date DESC 
-      LIMIT 1
-    `;
+      WHERE d.date = $1`;
 
-    const values = [municity, province, now];
+    if (municity) query += ` AND m.municity ILIKE $${values.indexOf(`%${municity}%`) + 1}`;
+    if (province) query += ` AND m.province ILIKE $${values.indexOf(`%${province}%`) + 1}`;
+
+    query += ` ORDER BY m.province ASC, m.municity ASC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
+    values.push(per_page, offset);
+
     const result = await pool.query(query, values);
+    const total_count = result.rows[0]?.total_count || 0;
+    const total_pages = Math.ceil(total_count / per_page);
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "No data found" });
-    }
+    const issuance_date = result.rows.length > 0
+      ? new Date(result.rows[0].start_date).toLocaleDateString('en-US', { timeZone: 'Asia/Manila' })
+      : today;
 
-    const {
-      location_id,
-      municity: _municity,
-      province: _province,
-      date_id,
-      date,
-      start_date,
-      rainfall_total,
-      rainfall_desc,
-      cloud_cover,
-      mean,
-      min,
-      max,
-      humidity,
-      speed,
-      direction,
-    } = result.rows[0];
-
-    const data = {
-      id: location_id,
-      municity: _municity,
-      province: _province,
-      forecast: {
-        forecast_id: date_id,
-        date: date.toLocaleString("en-PH").split(", ")[0],
-        start_date: start_date.toLocaleString("en-PH").split(", ")[0],
-        rainfall: {
-          total: rainfall_total,
-          description: rainfall_desc,
-        },
-        cloud_cover: cloud_cover,
-        temperature: {
-          mean: mean,
-          min: min,
-          max: max,
-        },
-        humidity: humidity,
-        wind: {
-          speed: speed,
-          direction: direction,
-        },
-      },
+    let metadata = {
+      request_no,
+      api: "Current Forecast",
+      forecast: "10-day Forecast",
     };
 
-    // Store in Redis cache for **10 days** (864000 seconds)
-    await redisClient.set(cacheKey, JSON.stringify(data), { EX: 864000 });
-    console.log("❌ Cache miss - Storing data in Redis for 10 days");
+    let misc = {
+      version: "1.0",
+      total_count,
+      total_pages,
+      current_page: parseInt(page),
+      per_page,
+      timestamp: new Date().toLocaleString('en-CA', { timeZone: 'Asia/Manila' }).replace(',', ''),
+      method: req.method,
+      status_code: 200,
+      description: "OK",
+    };
 
-    return res.json(data);
+    let headerData = {};
+    if (municity || province) {
+      headerData = { municity, province, issuance_date };
+    } else {
+      headerData = { issuance_date };
+    }
+
+    const responseData = result.rows.map(entry => ({
+      location_id: entry.location_id,
+      date_id: entry.date_id,
+      date: new Date(entry.date).toLocaleDateString('en-US', { timeZone: 'Asia/Manila' }),
+      ...(municity ? {} : { municity: entry.municity }),
+      ...(province ? {} : { province: entry.province }),
+      rainfall: entry.rainfall,
+      total_rainfall: entry.total_rainfall,
+      cloud_cover: entry.cloud_cover,
+      mean: entry.mean,
+      min: entry.min,
+      max: entry.max,
+      humidity: entry.humidity,
+      speed: entry.speed,
+      direction: entry.direction,
+    }));
+
+    const finalResponse = {
+      metadata,
+      forecast: [headerData, ...responseData],
+      misc
+    };
+
+    await redisClient.set(cacheKey, JSON.stringify(finalResponse), { EX: 864000 });
+    return res.json(finalResponse);
   } catch (error) {
-    console.error("❌ Error executing query", error.stack);
+    console.error("❌ Error executing query:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

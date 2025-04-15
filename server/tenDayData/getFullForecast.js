@@ -1,24 +1,51 @@
 import express from "express";
-import { pool, redisClient } from "../db.js"; // Import Redis connection
+import chalk from 'chalk';
+import { pool, redisClient } from "../db.js";
+import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
   const { municity, province } = req.query;
+  const token = req.headers["token"];
 
-  if (!municity || !province) {
-    return res
-      .status(400)
-      .json({ error: "municity and province are required" });
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized: Token required" });
   }
 
-  const cacheKey = `forecast:${municity}:${province}`;
-
   try {
-    // Check if data exists in Redis
+    // Validate token and API ID
+    const tokenResult = await pool.query(
+      `SELECT id, organization, api_ids 
+      FROM api_tokens 
+      WHERE token = $1 
+      AND 2 = ANY(api_ids) 
+      LIMIT 1`,
+      [token]
+    );
+
+    if (tokenResult.rows.length === 0) {
+      return res.status(401).json({ error: "Unauthorized: Invalid token or API access denied" });
+    }
+
+    const requestId = await logApiRequest(req,2);
+    if (!requestId) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    if (!municity || !province) {
+      return res.status(400).json({ error: "municity and province are required" });
+    }
+
+    const cacheKey = `forecast:${municity}:${province}`;
+
+    // Check Redis cache
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit - Returning data from Redis");
+      console.log(
+        chalk.bgGray.black(' Cache hit ') + ' ' +
+        chalk.bgGreen.black(' Returning data from Redis ')
+      );
       return res.json(JSON.parse(cachedData));
     }
 
@@ -27,8 +54,8 @@ router.get("/", async (req, res) => {
       SELECT 
         m.id AS location_id, m.municity, m.province, 
         d.id AS date_id, d.date, d.start_date, 
-        r.total as rainfall_total,
-        r.description as rainfall_desc, 
+        r.description as rainfall, 
+        r.total as total_rainfall,
         c.description as cloud_cover, 
         t.mean, t.min, t.max, 
         h.mean as humidity, 
@@ -56,42 +83,52 @@ router.get("/", async (req, res) => {
       return res.status(404).json({ error: "No forecast data found" });
     }
 
-    const {
-      location_id,
-      municity: _municity,
-      province: _province,
-    } = result.rows[0];
-
+    const { location_id, municity: _municity, province: _province, start_date } = result.rows[0];
+    
     const data = {
-      id: location_id,
-      municity: _municity,
-      province: _province,
-      forecasts: result.rows.map((forecast) => ({
-        forecast_id: forecast.date_id,
-        date: forecast.date.toLocaleString("en-PH").split(", ")[0],
-        start_date: forecast.start_date.toLocaleString("en-PH").split(", ")[0],
-        rainfall: {
-          total: forecast.rainfall_total,
-          description: forecast.rainfall_desc,
+      metadata: {
+        request_no: requestId,
+        api: "Full Forecast",
+        forecast: "10-day Forecast",
+      },
+      forecast: [
+        {
+          municity: _municity,
+          province: _province,
+          issuance_date: start_date.toLocaleString("en-PH").split(", ")[0],
         },
-        cloud_cover: forecast.cloud_cover,
-        temperature: {
+        ...result.rows.map((forecast) => ({
+          location_id: forecast.location_id,
+          date_id: forecast.date_id,
+          date: forecast.date.toLocaleString("en-PH").split(", ")[0],
+          rainfall: forecast.rainfall,
+          total_rainfall: forecast.total_rainfall,
+          cloud_cover: forecast.cloud_cover,
           mean: forecast.mean,
           min: forecast.min,
           max: forecast.max,
-        },
-        humidity: forecast.humidity,
-        wind: {
+          humidity: forecast.humidity,
           speed: forecast.speed,
           direction: forecast.direction,
-        },
-      })),
+        })),
+      ],
+      misc: {
+        version: "1.0",
+        total_count: result.rows.length,
+        total_pages: 1,
+        current_page: 1,
+        per_page: 10,
+        timestamp: new Date().toLocaleString('en-CA', { timeZone: 'Asia/Manila' }).replace(',', ''),
+        method: "GET",
+        status_code: 200,
+        description: "OK",
+      },
     };
 
-    // Store in Redis with 1 hour
+    // Store in Redis for 1 hour
     await redisClient.set(cacheKey, JSON.stringify(data), "EX", 3600);
 
-    console.log("Cache miss - Fetching from database");
+    console.log("❌ Cache miss - Fetching from database");
     res.json(data);
   } catch (error) {
     console.error("Error executing query", error.stack);
