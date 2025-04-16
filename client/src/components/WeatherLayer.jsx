@@ -67,6 +67,7 @@ const WeatherLayer = ({
   open,
   zoomLevel,
 }) => {
+  console.log(overlay);
   const map = useMap();
   const localOverlay = useRef(overlayList.find((o) => o.name === overlay));
   const colorScale = useRef(null);
@@ -78,6 +79,7 @@ const WeatherLayer = ({
     if (value[0] <= 0) {
       return colorScale.current(value).alpha(0).css();
     }
+
     return colorScale.current(value).css();
   };
 

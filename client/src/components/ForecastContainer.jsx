@@ -63,7 +63,6 @@ import ToggleUnits from "./ToggleUnits";
 import ForecastDownload from "./ForecastDownload";
 
 const ForecastContainer = ({
-  map,
   open,
   setOpen,
   location,
@@ -262,7 +261,9 @@ const ForecastContainer = ({
 
                     // General table styling
                     backgroundColor: "common.white", // Background color for the table
-                    width: "1000px", // Width of the table
+                    width: "900px",
+                    maxWidth: "900px",
+                    minWidth: "900px", // Width of the table
                     tableLayout: "fixed", // Prevent resizing of the table
 
                     // Table header styles
@@ -611,7 +612,15 @@ const ForecastContainer = ({
                     </tr>
                   </tbody>
                 </Table>
-                <Box sx={{ p: 1, width: "20%", height: "100%" }}>
+                <Box
+                  sx={{
+                    p: 1,
+                    width: "max-content",
+                    minWidth: "200px",
+                    maxWidth: "200px",
+                    height: "100%",
+                  }}
+                >
                   <Stack
                     direction="row"
                     spacing={0.5}
@@ -917,14 +926,15 @@ const ForecastContainer = ({
                       />
                     </IconButton>
                   </Stack>
-
-                  <Typography level="body-xs" sx={{ mb: 1 }}>
-                    {"Lat: " +
-                      location.latLng.lat.toFixed(4) +
-                      " " +
-                      "Long: " +
-                      location.latLng.lng.toFixed(4)}
-                  </Typography>
+                  <Box sx={{ pr: 3 }}>
+                    <Typography level="body-xs" sx={{ mb: 1 }}>
+                      {"LAT " +
+                        location.latLng.lat.toFixed(4) +
+                        "  " +
+                        "LONG " +
+                        location.latLng.lng.toFixed(4)}
+                    </Typography>
+                  </Box>
 
                   <Typography level="h3">{forecast.municity}</Typography>
                   <Typography level="title-sm">{forecast.province}</Typography>

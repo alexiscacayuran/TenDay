@@ -199,7 +199,7 @@ const ForecastTable = ({
 
                 const color =
                   activeOverlay === overlay
-                    ? chroma.deltaE(colorScale(current), "white") <= 40
+                    ? chroma.deltaE(colorScale(current), "white") <= 32
                       ? "inherit"
                       : "white"
                     : "inherit";

@@ -139,6 +139,7 @@
 .leaflet-popup-content,
 .leaflet-popup-content p {
   margin: 0 !important;
+  padding-right: 25px !important;
 }
 
 .leaflet-popup-tip-container {

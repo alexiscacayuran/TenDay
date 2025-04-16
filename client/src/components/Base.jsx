@@ -101,7 +101,6 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
           click: (event) => {
             setIsPolygonHighlighted(false);
             const clickedFeature = event.target.feature;
-            console.log("Clicked feature", event.target);
 
             // Remove previous selected layer if it exists
             if (selectedPolygon.current) {

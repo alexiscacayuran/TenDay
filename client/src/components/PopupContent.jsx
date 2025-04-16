@@ -258,8 +258,8 @@ const PopupContent = React.memo(
                                       />
                                       &nbsp;
                                       <Typography
-                                        level="h4"
-                                        sx={{ color: "primary.softColor" }}
+                                        level="body-lg"
+                                        sx={{ color: "gray" }}
                                         component="span"
                                       >
                                         {direction}

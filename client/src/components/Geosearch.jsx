@@ -102,6 +102,21 @@ const GeoSearch = ({
     // Clear suggestions after selection
     setSuggestions([]);
   };
+  // Add an event listener for the Enter key press
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === "Enter" && suggestions.length > 0) {
+        handleSelectSuggestion(suggestions[0].text);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [suggestions]);
 
   const handleSelectSuggestion = (text) => {
     // Perform geocode search using the selected suggestion text

@@ -5,7 +5,7 @@ import { Button, Link, Box, Typography } from "@mui/joy";
 export const handleToggle = (prevUnits, overlay) => {
   const unitChoices = {
     temperature: ["°C", "°F"],
-    rainfall: ["mm/24h", "in/24h"],
+    rainfall: ["mm/day", "in/day"],
     windSpeed: ["m/s", "km/h", "kt"],
     windDirection: ["arrow", "desc"],
   };

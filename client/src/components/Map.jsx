@@ -16,6 +16,7 @@ import Legend from "./Legend";
 import ZoomLevel from "./ZoomLevel";
 import ScaleNautic from "react-leaflet-nauticsale";
 import ForecastPopup from "./ForecastPopup";
+import Issuance from "./Issuance";
 
 const Map = () => {
   const [accessToken, setAccessToken] = useState(null);
@@ -70,15 +71,12 @@ const Map = () => {
 
   const [units, setUnits] = useState({
     temperature: "°C",
-    rainfall: "mm/24h",
+    rainfall: "mm/day",
     windSpeed: "m/s",
     windDirection: "arrow",
   });
 
   const [scale, setScale] = useState({ metric: true, imperial: false });
-
-  console.log(isPolygonHighlighted);
-  console.log(isLocationReady);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -96,8 +94,8 @@ const Map = () => {
       }
     };
 
-    fetchDate(); // Trigger the data fetch when the component mounts
-  }, []); // Empty dependency array to run only on component mount
+    fetchDate();
+  }, []); //
 
   const displayMap = useMemo(
     () => (
@@ -176,6 +174,8 @@ const Map = () => {
             setIsLocationReady={setIsLocationReady}
           />
         </MapContainer>
+
+        {dateReady && <Issuance startDate={startDate} />}
 
         <MapControl map={map} />
         <LayerMenu

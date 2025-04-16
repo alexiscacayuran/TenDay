@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   },
 
   tableContainer: {
-    marginTop: 20,
+    marginTop: 10,
     borderTop: "1px solid #bfbfbf",
     borderLeft: "1px solid #bfbfbf",
   },
@@ -266,8 +266,11 @@ const bgColor = (value, overlay, docColored) => {
   const colorScale = getColorScale(overlay);
   return {
     backgroundColor: docColored ? colorScale(value).hex() : "transparent",
-    color:
-      chroma.deltaE(colorScale(value), "white") <= 40 ? "#32383E" : "white",
+    color: !docColored
+      ? "inherit"
+      : chroma.deltaE(colorScale(value), "white") <= 32
+      ? "#32383E"
+      : "white",
   };
 };
 
@@ -463,8 +466,8 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
         <View style={heroStyle}>
           <View style={styles.heroTitleContainer}>
             <Text style={styles.dateText}>
-              {"LAT " + location?.latLng.lat.toFixed(2) + "  "}
-              {"LONG " + location?.latLng.lng.toFixed(2)}
+              {"LAT " + location?.latLng.lat.toFixed(4) + "  "}
+              {"LONG " + location?.latLng.lng.toFixed(4)}
             </Text>
             <Text style={[styles.heroTitle, { marginTop: 10 }]}>
               {forecast.municity}
