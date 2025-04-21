@@ -117,7 +117,7 @@ const ImgPDFWrapper = ({ src, style, ...props }) => (
 
 const ImgWrapper = ({ Icon, Title, ...props }) => (
   <Tooltip title={Title} color="primary" placement="bottom" variant="soft">
-    <img src={Icon} {...props} style={{ width: "32px" }}></img>
+    <img src={Icon} {...props} style={{ width: "30px" }}></img>
   </Tooltip>
 );
 

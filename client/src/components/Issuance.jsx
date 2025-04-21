@@ -10,7 +10,7 @@ const Issuance = ({ startDate }) => {
     <Box
       sx={{
         position: "absolute",
-        bottom: 60,
+        bottom: 50,
         left: 15,
         zIndex: 1000,
         userSelect: "none",
@@ -33,7 +33,7 @@ const Issuance = ({ startDate }) => {
           }}
         >
           Forecast date:{" "}
-          {format(startDate.current.latest_date, "MMM d, yyy") +
+          {format(startDate.current.latest_date, "MMM d") +
             " " +
             startDate.current.latest_time.replace(/:\d{2}(?=\s?[AP]M)/, "")}
         </Typography>
@@ -45,7 +45,7 @@ const Issuance = ({ startDate }) => {
             textShadow: " 0px -1px 5px rgba(0,0,0,0.2)",
           }}
         >
-          Next update: {format(nextUpdate, "MMM d, yyy")}
+          Next update: {format(nextUpdate, "MMM d")}
         </Typography>
       </Stack>
     </Box>

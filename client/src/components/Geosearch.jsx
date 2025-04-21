@@ -32,6 +32,7 @@ const GeoSearch = ({
   setOpen,
   setIsLocationReady,
   location,
+  setIsPolygonHighlighted,
 }) => {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -149,6 +150,7 @@ const GeoSearch = ({
           setSuggestions([]);
           setOpen(true);
           setIsLocationReady(true);
+          setIsPolygonHighlighted(true);
         }
       });
   };
@@ -182,6 +184,7 @@ const GeoSearch = ({
             setOpen(true);
 
             setIsLocationReady(true);
+            setIsPolygonHighlighted(true);
           }
         });
     });

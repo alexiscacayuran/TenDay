@@ -56,6 +56,27 @@ const getColorScale = (overlay, isDiscrete) => {
   return isDiscrete ? colorScale.classes(currentOverlay.classes) : colorScale;
 };
 
+const baseParticleOption = {
+  velocityScale: 1 / 500,
+  fade: 0.94,
+  color: chroma("white").alpha(0.25),
+  maxAge: 70,
+  width: 2.8,
+  paths: 2500,
+};
+
+const particleOptions = [
+  { zoom: 5, width: 1.8, paths: 1200, maxAge: 85 },
+  { zoom: 6, width: 2, paths: 1600, maxAge: 80 },
+  { zoom: 7, width: 2.5, paths: 1800, maxAge: 75 },
+  { zoom: 8, width: 2.8, paths: 2500, maxAge: 70 },
+  { zoom: 9, width: 3.2, paths: 4000, maxAge: 55 },
+  { zoom: 10, width: 3.5, paths: 10000, maxAge: 35 },
+  { zoom: 11, width: 3.8, paths: 20000, maxAge: 20 },
+  { zoom: 12, width: 4.2, paths: 30000, maxAge: 15 },
+  { zoom: 13, width: 4.5, paths: 70000, maxAge: 10 },
+];
+
 const WeatherLayer = ({
   startDate,
   overlay,
@@ -73,7 +94,10 @@ const WeatherLayer = ({
   const colorScale = useRef(null);
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
+  const [loadingScalar, setLoadingScalar] = useState(false);
+  const [loadingVector, setLoadingVector] = useState(false);
   const [loading, setLoading] = useState(true);
+  console.log(zoomLevel);
 
   const colorScaleFn = (value) => {
     if (value[0] <= 0) {
@@ -178,8 +202,8 @@ const WeatherLayer = ({
         let vf = L.VectorField.fromASCIIGrids(u, v);
 
         let vectorLayer = L.canvasLayer.vectorFieldAnim(vf, {
-          width: 2.0,
-          velocityScale: 1 / 1000,
+          ...baseParticleOption,
+          ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
         });
 
         // Replace vector layer if it already exists
@@ -206,15 +230,41 @@ const WeatherLayer = ({
   useEffect(() => {
     localOverlay.current = overlayList.find((o) => o.name === overlay);
 
-    const loadData = async () => {
-      setLoading(true);
+    const loadScalarData = async () => {
+      setLoadingScalar(true);
       await loadScalar();
-      await loadVectorAnim();
-      setLoading(false);
+      setLoadingScalar(false);
     };
 
-    loadData();
-  }, [startDate, overlay, date, map, overlayLayer, isLayerClipped]);
+    loadScalarData();
+  }, [map, overlay, date, isLayerClipped]);
+
+  useEffect(() => {
+    const loadVectorData = async () => {
+      setLoadingVector(true);
+      await loadVectorAnim();
+      setLoadingVector(false);
+    };
+
+    loadVectorData();
+  }, [map, date, isLayerClipped, zoomLevel]);
+
+  useEffect(() => {
+    setLoading(loadingScalar || loadingVector);
+  }, [loadingScalar, loadingVector]);
+
+  // useEffect(() => {
+  //   localOverlay.current = overlayList.find((o) => o.name === overlay);
+
+  //   const loadData = async () => {
+  //     setLoading(true);
+  //     await loadScalar();
+  //     await loadVectorAnim();
+  //     setLoading(false);
+  //   };
+
+  //   loadData();
+  // }, [overlay, date, isLayerClipped, zoomLevel]);
 
   useEffect(() => {
     if (isAnimHidden) {

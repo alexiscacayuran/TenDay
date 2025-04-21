@@ -71,6 +71,7 @@ const Navbar = ({
   scale,
   setScale,
   setIsLocationReady,
+  setIsPolygonHighlighted,
 }) => {
   const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
@@ -135,6 +136,7 @@ const Navbar = ({
               setOpen={setOpen}
               open={open}
               setIsLocationReady={setIsLocationReady}
+              setIsPolygonHighlighted={setIsPolygonHighlighted}
             />
           </Box>
           <Stack
@@ -258,8 +260,8 @@ const Navbar = ({
                       value && setUnits({ ...units, rainfall: value })
                     }
                   >
-                    <Button value="mm/24h">mm/24h</Button>
-                    <Button value="in/24h">in/24h</Button>
+                    <Button value="mm/day">mm/day</Button>
+                    <Button value="in/day">in/day</Button>
                   </ToggleButtonGroup>
                 </FormControl>
 

@@ -113,12 +113,13 @@ const Map = () => {
           scale={scale}
           setScale={setScale}
           setIsLocationReady={setIsLocationReady}
+          setIsPolygonHighlighted={setIsPolygonHighlighted}
         />
         <MapContainer
           center={[13, 122]}
           zoom={8}
           minZoom={5} //5
-          maxZoom={20}
+          maxZoom={13}
           maxBounds={bounds}
           maxBoundsViscosity={2}
           zoomControl={false}
@@ -202,15 +203,14 @@ const Map = () => {
           setUnits={setUnits}
         />
 
-        {dateReady &&
-          !open && ( // Render DateNavigation only if `dateReady` is true
-            <DateNavigation
-              initialDate={new Date(startDate.current.latest_date)} // Pass the fetched `latest_date`
-              range={10}
-              setDate={setDate}
-              date={date}
-            />
-          )}
+        {dateReady && !open && (
+          <DateNavigation
+            initialDate={new Date(startDate.current.latest_date)}
+            range={10}
+            setDate={setDate}
+            date={date}
+          />
+        )}
 
         <ForecastContainer
           map={map}

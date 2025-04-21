@@ -308,7 +308,7 @@ const ForecastContainer = ({
                       bgcolor: "neutral.100", // Background color for the first and second columns in the body
                     },
                     "& tbody > tr:first-child": {
-                      height: "64px", // Height for the first row in the body
+                      height: "50px", // Height for the first row in the body
                     },
 
                     "& thead tr > th": {
@@ -428,10 +428,11 @@ const ForecastContainer = ({
                               className="today-chip"
                               sx={{
                                 position: "absolute",
-                                transform: "translate(-90px, -32px)",
+                                transform: "translate(-100px, -32px)",
                                 fontWeight: "bold",
                                 backgroundColor: "primary.100",
                                 color: "primary.700",
+                                padding: "0 14px",
                               }}
                             >
                               TODAY
