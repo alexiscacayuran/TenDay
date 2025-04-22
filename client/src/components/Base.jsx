@@ -4,7 +4,7 @@ import { featureLayer } from "esri-leaflet";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 
-const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
+const Base = ({ arcgisToken, selectedPolygon }) => {
   const map = useMap();
   const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
   // const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
@@ -13,17 +13,17 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
   const municityLayerRef = useRef(null);
 
   useEffect(() => {
-    if (!accessToken) return;
+    if (!arcgisToken) return;
 
     const weatherBasemap = vectorBasemapLayer(weatherBasemapEnum, {
-      apiKey: accessToken,
+      apiKey: arcgisToken,
       pane: "overlayPane",
       zIndex: 200,
     });
     weatherBasemap.addTo(map);
 
     const provinceBoundaries = featureLayer({
-      token: accessToken,
+      token: arcgisToken,
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/2",
       simplifyFactor: 0.5,
       precision: 4,
@@ -36,6 +36,7 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
       onEachFeature: (feature, layer) => {
         layer.on({
           mousemove: () => {
+            console.log(feature);
             setProvinceId(feature.properties.ID);
           },
         });
@@ -45,7 +46,7 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
     provinceBoundaries.addTo(map);
 
     // const hillshade = vectorBasemapLayer(hilshadeEnum, {
-    //   token: accessToken,
+    //   serverToken: arcgisToken,
 
     //   zIndex: 200,
     // });
@@ -58,7 +59,7 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
       map.removeLayer(weatherBasemap);
       map.removeLayer(provinceBoundaries);
     };
-  }, [map, accessToken]);
+  }, [map, arcgisToken]);
 
   useEffect(() => {
     if (!provinceId) return;
@@ -73,7 +74,7 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
       map.removeLayer(municityLayerRef.current);
     }
     const municityBoundaries = featureLayer({
-      token: accessToken,
+      token: arcgisToken,
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/3",
       simplifyFactor: 0.5,
       precision: 4,
@@ -99,7 +100,6 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
             });
           },
           click: (event) => {
-            setIsPolygonHighlighted(false);
             const clickedFeature = event.target.feature;
 
             // Remove previous selected layer if it exists
@@ -120,7 +120,6 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
 
             selectedMunicity.addTo(map);
             selectedPolygon.current = selectedMunicity;
-            setIsPolygonHighlighted(true);
           },
         });
       },
@@ -134,7 +133,7 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
         map.removeLayer(municityBoundaries);
       }
     };
-  }, [map, accessToken, provinceId]);
+  }, [map, arcgisToken, provinceId]);
 
   return null;
 };

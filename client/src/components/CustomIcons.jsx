@@ -110,6 +110,7 @@ import { ReactComponent as Logotype } from "../assets/logo/logotype-rgb.svg";
 import Logofull from "../assets/logo/logo-full-rgb.png";
 import BMUVIK from "../assets/logo/bmuv-iki-logo.png";
 import GIZ from "../assets/logo/giz-logo.png";
+import NoResult from "../assets/images/no-result.png";
 
 const ImgPDFWrapper = ({ src, style, ...props }) => (
   <Image src={src} style={{ width: "30px", ...style }} {...props} />
@@ -125,6 +126,10 @@ const SvgWrapper = ({ Icon, ...props }) => (
   <SvgIcon {...props} style={{ width: "20px" }}>
     <Icon />
   </SvgIcon>
+);
+
+export const NoResultImage = (props) => (
+  <img src={NoResult} style={{ width: "230px" }} {...props} />
 );
 
 export const TanawPHLogo = (props) => {

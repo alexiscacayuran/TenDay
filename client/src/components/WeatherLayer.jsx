@@ -88,16 +88,16 @@ const WeatherLayer = ({
   open,
   zoomLevel,
 }) => {
-  console.log(overlay);
   const map = useMap();
   const localOverlay = useRef(overlayList.find((o) => o.name === overlay));
   const colorScale = useRef(null);
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
-  const [loadingScalar, setLoadingScalar] = useState(false);
-  const [loadingVector, setLoadingVector] = useState(false);
+  const [loadingScalar, setLoadingScalar] = useState(true);
+  const [loadingVector, setLoadingVector] = useState(true);
   const [loading, setLoading] = useState(true);
-  console.log(zoomLevel);
+  // console.log("Loading scalar", loadingScalar);
+  // console.log("Loading vector", loadingVector);
 
   const colorScaleFn = (value) => {
     if (value[0] <= 0) {
@@ -136,9 +136,9 @@ const WeatherLayer = ({
 
       let scalarLayer = new GeorasterLayer({
         georaster: georaster,
-        resolution: 256,
+        resolution: 32,
         pixelValuesToColorFn: colorScaleFn,
-        keepBuffer: 128,
+        keepBuffer: 50,
         pane: "tilePane",
         zIndex: 100,
         opacity: 0.8,
@@ -154,6 +154,14 @@ const WeatherLayer = ({
       scalarLayerRef.current = scalarLayer; // Store reference
     } catch (error) {
       console.error("Error: ", error);
+    }
+  };
+
+  // Cleanup function to remove the scalar layer
+  const removeScalarLayer = () => {
+    if (scalarLayerRef.current) {
+      overlayLayer.current.removeLayer(scalarLayerRef.current);
+      scalarLayerRef.current = null; // Clear reference
     }
   };
 
@@ -213,6 +221,14 @@ const WeatherLayer = ({
 
         overlayLayer.current.addLayer(vectorLayer);
         vectorLayerRef.current = vectorLayer; // Store reference
+
+        // Cleanup function to remove the layer
+        return () => {
+          if (vectorLayerRef.current) {
+            overlayLayer.current.removeLayer(vectorLayerRef.current);
+            vectorLayerRef.current = null;
+          }
+        };
       } catch (error) {
         console.error("Error loading vector layer: ", error);
       }
@@ -291,12 +307,7 @@ const WeatherLayer = ({
           zIndex: 999,
         }}
       >
-        <div className="loader">
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+        <div className="loader"></div>
       </Box>
     )
   );

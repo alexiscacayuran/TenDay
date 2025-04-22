@@ -59,7 +59,7 @@ db.version(1).stores({
 });
 
 const Navbar = ({
-  accessToken,
+  arcgisToken,
   map,
   markerLayer,
   location,
@@ -71,7 +71,6 @@ const Navbar = ({
   scale,
   setScale,
   setIsLocationReady,
-  setIsPolygonHighlighted,
 }) => {
   const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
@@ -129,14 +128,13 @@ const Navbar = ({
           </Box>
           <Box sx={{ flexGrow: 1 }}>
             <Geosearch
-              accessToken={accessToken}
+              arcgisToken={arcgisToken}
               setLocation={setLocation}
               map={map}
               location={location}
               setOpen={setOpen}
               open={open}
               setIsLocationReady={setIsLocationReady}
-              setIsPolygonHighlighted={setIsPolygonHighlighted}
             />
           </Box>
           <Stack

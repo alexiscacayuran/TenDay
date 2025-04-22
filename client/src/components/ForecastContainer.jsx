@@ -23,6 +23,7 @@ import {
   Option,
   Chip,
   Switch,
+  AspectRatio,
 } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -56,16 +57,21 @@ import {
   WNWIcon,
   NWIcon,
   NNWIcon,
+  NoResultImage,
 } from "./CustomIcons";
+import NoResult from "../assets/images/no-result.png";
 
 import ForecastTable from "./ForecastTable";
 import ToggleUnits from "./ToggleUnits";
 import ForecastDownload from "./ForecastDownload";
+import MunicitySelector from "./MunicitySelector";
 
 const ForecastContainer = ({
+  map,
   open,
   setOpen,
   location,
+  setLocation,
   markerLayer,
   overlay,
   setOverlay,
@@ -78,6 +84,9 @@ const ForecastContainer = ({
   date,
   setDate,
   isDiscrete,
+  serverToken,
+  arcgisToken,
+  selectedPolygon,
 }) => {
   const [forecast, setForecast] = useState(null);
   const [activeColumn, setActiveColumn] = useState(null);
@@ -88,7 +97,6 @@ const ForecastContainer = ({
   const [docUnits, setDocUnits] = useState(units);
   const [docFormat, setDocFormat] = useState("pdf");
   const [docColored, setDocColored] = useState(true);
-  const [token, setToken] = useState(null);
 
   useEffect(() => {
     setDocUnits(units);
@@ -168,23 +176,10 @@ const ForecastContainer = ({
       document.body.style.overflow = ""; // Re-enable scroll when closed
     }
 
-    // Cleanup function to reset overflow on unmount
     return () => {
       document.body.style.overflow = "";
     };
   }, [open]);
-
-  useEffect(() => {
-    // Fetch token from server
-    axios
-      .get("/serverToken")
-      .then((res) => {
-        setToken(res.data.token);
-      })
-      .catch((error) => {
-        console.error("Error fetching token:", error);
-      });
-  }, []);
 
   useEffect(() => {
     if (!open && location.municity) return;
@@ -196,7 +191,7 @@ const ForecastContainer = ({
           province: location.province,
         },
         headers: {
-          token: token,
+          token: serverToken,
         },
       })
       .then((res) => {
@@ -243,7 +238,7 @@ const ForecastContainer = ({
               alignItems: "flex-start",
             }}
           >
-            {forecast && (
+            {forecast ? (
               <>
                 <Table
                   color="neutral"
@@ -617,8 +612,8 @@ const ForecastContainer = ({
                   sx={{
                     p: 1,
                     width: "max-content",
-                    minWidth: "200px",
-                    maxWidth: "200px",
+                    minWidth: "220px",
+                    maxWidth: "220px",
                     height: "100%",
                   }}
                 >
@@ -927,18 +922,124 @@ const ForecastContainer = ({
                       />
                     </IconButton>
                   </Stack>
-                  <Box sx={{ pr: 3 }}>
-                    <Typography level="body-xs" sx={{ mb: 1 }}>
+
+                  <Box sx={{ pr: 1 }}>
+                    <Typography level="body-xs" sx={{ mb: 2 }}>
                       {"LAT " +
                         location.latLng.lat.toFixed(4) +
                         "  " +
                         "LONG " +
                         location.latLng.lng.toFixed(4)}
                     </Typography>
-                  </Box>
 
-                  <Typography level="h3">{forecast.municity}</Typography>
-                  <Typography level="title-sm">{forecast.province}</Typography>
+                    {/* <Typography level="h3">{forecast.municity}</Typography> */}
+                    <MunicitySelector
+                      map={map}
+                      arcgisToken={arcgisToken}
+                      serverToken={serverToken}
+                      forecast={forecast}
+                      setLocation={setLocation}
+                      selectedPolygon={selectedPolygon}
+                    />
+                    <Typography level="title-sm">
+                      {forecast.province}
+                    </Typography>
+                  </Box>
+                </Box>
+              </>
+            ) : (
+              <>
+                <Box
+                  sx={{
+                    width: "1128px",
+                    height: "260px",
+                    bgcolor: "common.white",
+                    borderRadius: "sm",
+                    p: 1,
+                  }}
+                >
+                  <Stack
+                    direction="row"
+                    spacing={0}
+                    sx={{
+                      justifyContent: "flex-end",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <IconButton
+                      size="sm"
+                      color="inherit"
+                      variant="outlined"
+                      aria-label="close"
+                      onClick={() => {
+                        markerLayer.current.eachLayer((layer) => {
+                          if (layer.getLatLng().equals(location.latLng)) {
+                            layer.openPopup();
+                          }
+                        });
+
+                        setOpen(false);
+                      }}
+                    >
+                      <CloseIcon
+                        sx={{
+                          color: "var(--joy-palette-neutral-700, #32383E)",
+                        }}
+                      />
+                    </IconButton>
+                  </Stack>
+
+                  <Stack
+                    sx={{
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        position: "relative",
+                        bottom: 30,
+                      }}
+                    >
+                      <Stack
+                        direction="row"
+                        spacing={4}
+                        sx={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <NoResultImage />
+                        <Stack
+                          direction="column"
+                          spacing={2}
+                          sx={{
+                            justifyContent: "center",
+                            alignItems: "flex-start",
+                            width: "40%",
+                          }}
+                        >
+                          <Typography level="h3" component="div">
+                            Oops, sorry...
+                          </Typography>
+                          <Typography level="body-sm" component="div">
+                            No municipal level forecast available. If you
+                            believe this is a mistake, please submit a report.
+                          </Typography>
+                          <Button
+                            color="neutral"
+                            onClick={function () {}}
+                            variant="soft"
+                            sx={{ alignSelf: "flex-end" }}
+                          >
+                            Report
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  </Stack>
                 </Box>
               </>
             )}

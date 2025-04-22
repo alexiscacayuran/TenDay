@@ -19,19 +19,33 @@ import ForecastPopup from "./ForecastPopup";
 import Issuance from "./Issuance";
 
 const Map = () => {
-  const [accessToken, setAccessToken] = useState(null);
+  const [arcgisToken, setArcgisToken] = useState(null);
+  const [serverToken, setServerToken] = useState(null);
 
   useEffect(() => {
-    const fetchToken = async () => {
+    // Fetch token from server
+  }, []);
+
+  useEffect(() => {
+    const fetchServerToken = async () => {
       try {
-        const response = await axios.get("/api/token");
-        setAccessToken(response.data.accessToken);
+        const response = await axios.get("/serverToken");
+        setServerToken(response.data.token);
       } catch (error) {
-        console.error("Error fetching token:", error);
+        console.error("Error fetching server token:", error);
       }
     };
 
-    fetchToken();
+    const fetchArcgisToken = async () => {
+      try {
+        const response = await axios.get("/api/token");
+        setArcgisToken(response.data.accessToken);
+      } catch (error) {
+        console.error("Error fetching Arcgis token:", error);
+      }
+    };
+    fetchServerToken();
+    fetchArcgisToken();
   }, []);
 
   const bounds = useMemo(
@@ -67,7 +81,6 @@ const Map = () => {
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
   const [isLayerClipped, setIsLayerClipped] = useState(false);
-  const [isPolygonHighlighted, setIsPolygonHighlighted] = useState(false);
 
   const [units, setUnits] = useState({
     temperature: "°C",
@@ -101,7 +114,7 @@ const Map = () => {
     () => (
       <Box sx={{ maxHeight: "100vh" }}>
         <Navbar
-          accessToken={accessToken}
+          arcgisToken={arcgisToken}
           map={map}
           markerLayer={markerLayer}
           location={location}
@@ -113,7 +126,6 @@ const Map = () => {
           scale={scale}
           setScale={setScale}
           setIsLocationReady={setIsLocationReady}
-          setIsPolygonHighlighted={setIsPolygonHighlighted}
         />
         <MapContainer
           center={[13, 122]}
@@ -121,11 +133,12 @@ const Map = () => {
           minZoom={5} //5
           maxZoom={13}
           maxBounds={bounds}
-          maxBoundsViscosity={2}
+          maxBoundsViscosity={0.5}
           zoomControl={false}
           ref={setMap} // Set map instance to external state
+          paddingTopLeft={[2, 2]}
         >
-          {isPolygonHighlighted && isLocationReady ? (
+          {isLocationReady ? (
             <ForecastPopup
               location={location}
               markerLayer={markerLayer}
@@ -137,7 +150,6 @@ const Map = () => {
               units={units}
               setUnits={setUnits}
               selectedPolygon={selectedPolygon}
-              setIsPolygonHighlighted={setIsPolygonHighlighted}
             />
           ) : null}
           <ScaleNautic
@@ -162,15 +174,11 @@ const Map = () => {
               zoomLevel={zoomLevel}
             />
           )}
-          <Base
-            accessToken={accessToken}
-            selectedPolygon={selectedPolygon}
-            setIsPolygonHighlighted={setIsPolygonHighlighted}
-          />
-          <Labels accessToken={accessToken} />
+          <Base arcgisToken={arcgisToken} selectedPolygon={selectedPolygon} />
+          <Labels arcgisToken={arcgisToken} />
 
           <ReverseGeocode
-            accessToken={accessToken}
+            arcgisToken={arcgisToken}
             setLocation={setLocation}
             setIsLocationReady={setIsLocationReady}
           />
@@ -213,10 +221,12 @@ const Map = () => {
         )}
 
         <ForecastContainer
+          serverToken={serverToken}
           map={map}
           open={open}
           setOpen={setOpen}
           location={location}
+          setLocation={setLocation}
           markerLayer={markerLayer}
           overlay={overlay}
           setOverlay={setOverlay}
@@ -229,6 +239,8 @@ const Map = () => {
           date={date}
           setDate={setDate}
           isDiscrete={isDiscrete}
+          arcgisToken={arcgisToken}
+          selectedPolygon={selectedPolygon}
         />
       </Box>
     ),
@@ -236,7 +248,7 @@ const Map = () => {
     [
       map,
       bounds,
-      accessToken,
+      arcgisToken,
       open,
       location,
       dateReady,
@@ -252,7 +264,6 @@ const Map = () => {
       zoomLevel,
       scale,
       isLocationReady,
-      isPolygonHighlighted,
     ]
   );
 

@@ -22,7 +22,6 @@ const ForecastPopup = ({
   units,
   setUnits,
   selectedPolygon,
-  setIsPolygonHighlighted,
 }) => {
   const map = useMap();
   const markerRef = useRef(null);
@@ -80,7 +79,6 @@ const ForecastPopup = ({
   }, [location, date]);
 
   const handlePopupClose = useCallback(() => {
-    setIsPolygonHighlighted(false);
     if (markerLayer.current && markerRef.current) {
       markerLayer.current.removeLayer(markerRef.current);
     }

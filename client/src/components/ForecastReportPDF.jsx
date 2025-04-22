@@ -496,12 +496,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
                       " " +
                       docUnits?.temperature}
                   </Text>
-                  <Text
-                    style={[
-                      styles.weatherParamText,
-                      { fontSize: 6.5, width: "80px" },
-                    ]}
-                  >
+                  <Text style={[styles.weatherParamText, { fontSize: 6.5 }]}>
                     {todayForecast?.cloud_cover +
                       (todayForecast?.rainfall.description === "NO RAIN"
                         ? ""

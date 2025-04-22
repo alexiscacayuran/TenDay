@@ -23,16 +23,13 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import MapIcon from "@mui/icons-material/Map";
 
-// custom components
-
 const GeoSearch = ({
-  accessToken,
+  arcgisToken,
   setLocation,
   map,
   setOpen,
   setIsLocationReady,
   location,
-  setIsPolygonHighlighted,
 }) => {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -53,7 +50,7 @@ const GeoSearch = ({
     if (e.target.value) {
       // Fetch suggestions based on input using geocodeService
       const _geocodeService = geocodeService({
-        apikey: accessToken,
+        apikey: arcgisToken,
       });
       _geocodeService
         .suggest()
@@ -78,7 +75,7 @@ const GeoSearch = ({
   const handleFlyToLocation = (text) => {
     // Perform geocode search using the selected suggestion text
     const _geocodeService = geocodeService({
-      apikey: accessToken,
+      apikey: arcgisToken,
     });
 
     _geocodeService
@@ -124,7 +121,7 @@ const GeoSearch = ({
 
     setIsLocationReady(false);
     const _geocodeService = geocodeService({
-      apikey: accessToken,
+      apikey: arcgisToken,
     });
 
     _geocodeService
@@ -150,7 +147,6 @@ const GeoSearch = ({
           setSuggestions([]);
           setOpen(true);
           setIsLocationReady(true);
-          setIsPolygonHighlighted(true);
         }
       });
   };
@@ -165,7 +161,7 @@ const GeoSearch = ({
 
       // Perform reverse geocoding
       reverseGeocode({
-        apikey: accessToken,
+        apikey: arcgisToken,
       })
         .latlng(latlng)
         .run((error, result) => {
@@ -184,7 +180,6 @@ const GeoSearch = ({
             setOpen(true);
 
             setIsLocationReady(true);
-            setIsPolygonHighlighted(true);
           }
         });
     });

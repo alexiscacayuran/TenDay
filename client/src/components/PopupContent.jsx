@@ -98,7 +98,6 @@ const PopupContent = React.memo(
     loading,
     units,
     setUnits,
-    setIsPolygonHighlighted,
   }) => {
     return !forecastRetrieval ? (
       <Card
