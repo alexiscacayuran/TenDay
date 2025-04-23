@@ -130,8 +130,8 @@ const Map = () => {
         <MapContainer
           center={[13, 122]}
           zoom={8}
-          minZoom={5} //5
-          maxZoom={13}
+          minZoom={5}
+          maxZoom={20}
           maxBounds={bounds}
           maxBoundsViscosity={0.5}
           zoomControl={false}
@@ -181,6 +181,7 @@ const Map = () => {
             arcgisToken={arcgisToken}
             setLocation={setLocation}
             setIsLocationReady={setIsLocationReady}
+            selectedPolygon={selectedPolygon}
           />
         </MapContainer>
 

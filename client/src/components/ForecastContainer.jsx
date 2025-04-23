@@ -1028,14 +1028,41 @@ const ForecastContainer = ({
                             No municipal level forecast available. If you
                             believe this is a mistake, please submit a report.
                           </Typography>
-                          <Button
-                            color="neutral"
-                            onClick={function () {}}
-                            variant="soft"
-                            sx={{ alignSelf: "flex-end" }}
+
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            sx={{
+                              alignSelf: "flex-end",
+                            }}
                           >
-                            Report
-                          </Button>
+                            <Button
+                              color="neutral"
+                              onClick={() => {
+                                markerLayer.current.eachLayer((layer) => {
+                                  layer.remove();
+                                });
+
+                                markerLayer.current = null;
+
+                                if (selectedPolygon.current) {
+                                  map.removeLayer(selectedPolygon.current);
+                                  selectedPolygon.current = null;
+                                }
+                                setOpen(false);
+                              }}
+                              variant="plain"
+                            >
+                              Close
+                            </Button>
+                            <Button
+                              color="neutral"
+                              onClick={function () {}}
+                              variant="soft"
+                            >
+                              Report
+                            </Button>
+                          </Stack>
                         </Stack>
                       </Stack>
                     </Box>

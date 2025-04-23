@@ -6,11 +6,10 @@ import L from "leaflet";
 
 const Base = ({ arcgisToken, selectedPolygon }) => {
   const map = useMap();
+  const [provinceId, setProvinceId] = useState(null);
+  const municityLayerRef = useRef(null);
   const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
   // const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
-  const [provinceId, setProvinceId] = useState(null);
-
-  const municityLayerRef = useRef(null);
 
   useEffect(() => {
     if (!arcgisToken) return;
@@ -35,8 +34,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
       }),
       onEachFeature: (feature, layer) => {
         layer.on({
-          mousemove: () => {
-            console.log(feature);
+          mouseover: () => {
             setProvinceId(feature.properties.ID);
           },
         });
@@ -64,9 +62,6 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
   useEffect(() => {
     if (!provinceId) return;
 
-    // const selectedMunicityID =
-    //   selectedPolygon.current?.getLayers?.()?.[0]?.feature?.properties?.ID;
-
     const where = `ID LIKE '${provinceId}%'`;
 
     // Remove previous layer if exists
@@ -90,24 +85,26 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
       onEachFeature: (feature, layer) => {
         layer.on({
           mouseover: () => {
+            setProvinceId(feature.properties.ID.substring(0, 4));
             layer.setStyle({
               fillColor: "#3E7BFF",
             });
           },
+
           mouseout: () => {
+            setProvinceId(null);
             layer.setStyle({
               fillColor: "white",
             });
           },
+
           click: (event) => {
             const clickedFeature = event.target.feature;
 
-            // Remove previous selected layer if it exists
-            if (selectedPolygon.current) {
-              map.removeLayer(selectedPolygon.current);
-            }
+            // if (selectedPolygon.current) {
+            //   map.removeLayer(selectedPolygon.current);
+            // }
 
-            // Create new GeoJSON layer from the clicked feature
             const selectedMunicity = L.geoJSON(clickedFeature, {
               style: {
                 color: "#3E7BFF",
@@ -115,6 +112,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
                 opacity: 1,
                 fillColor: "#3E7BFF",
                 fillOpacity: 0.3,
+                interactive: false,
               },
             });
 
@@ -126,6 +124,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
     });
 
     municityBoundaries.addTo(map);
+
     municityLayerRef.current = municityBoundaries;
 
     return () => {

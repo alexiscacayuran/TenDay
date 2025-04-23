@@ -198,7 +198,7 @@ const GeoSearch = ({
         <Input
           placeholder={
             localLocation.municity
-              ? localLocation.municity
+              ? localLocation.municity + ", " + localLocation.province
               : "Search for location..."
           }
           size="sm"

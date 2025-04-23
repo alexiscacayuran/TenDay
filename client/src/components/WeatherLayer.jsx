@@ -60,9 +60,9 @@ const baseParticleOption = {
   velocityScale: 1 / 500,
   fade: 0.94,
   color: chroma("white").alpha(0.25),
-  maxAge: 70,
-  width: 2.8,
-  paths: 2500,
+  width: 4.5,
+  paths: 70000,
+  maxAge: 10,
 };
 
 const particleOptions = [
@@ -152,16 +152,16 @@ const WeatherLayer = ({
 
       overlayLayer.current.addLayer(scalarLayer);
       scalarLayerRef.current = scalarLayer; // Store reference
+
+      // Cleanup function to remove the layer
+      return () => {
+        if (scalarLayerRef.current) {
+          overlayLayer.current.removeLayer(scalarLayerRef.current);
+          scalarLayerRef.current = null; // Clear reference
+        }
+      };
     } catch (error) {
       console.error("Error: ", error);
-    }
-  };
-
-  // Cleanup function to remove the scalar layer
-  const removeScalarLayer = () => {
-    if (scalarLayerRef.current) {
-      overlayLayer.current.removeLayer(scalarLayerRef.current);
-      scalarLayerRef.current = null; // Clear reference
     }
   };
 
@@ -181,13 +181,15 @@ const WeatherLayer = ({
         "v",
         isLayerClipped
       );
-      const vectorUrl = `${uUrl}-${vUrl}`; // Unique key for vector layer
 
       try {
         if (!map) {
           console.error("Map is not available yet!");
           return;
         }
+
+        // Introduce a delay to ensure source data is available
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
 
         let cachedU = await db.vectors.get(uUrl);
         let cachedV = await db.vectors.get(vUrl);
