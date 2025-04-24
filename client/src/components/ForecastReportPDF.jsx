@@ -260,6 +260,26 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     marginTop: 3,
   },
+
+  tableTitleContainer: {
+    display: "flex",
+    flexDirection: "row",
+    marginTop: 10,
+    alignItems: "center",
+  },
+
+  tableTitle: {
+    color: "#3e7bff",
+    fontSize: 9,
+    fontWeight: "bold",
+    marginRight: 5,
+  },
+
+  tableSubtitle: {
+    color: "#32383E",
+    fontSize: 7,
+    fontWeight: 400,
+  },
 });
 
 const bgColor = (value, overlay, docColored) => {
@@ -274,14 +294,21 @@ const bgColor = (value, overlay, docColored) => {
   };
 };
 
-export const ReportViewer = ({ forecast, docUnits, location, docColored }) => (
+export const ReportViewer = ({
+  forecast,
+  docUnits,
+  location,
+  docColored,
+  docExtendForecast,
+  selectedMunicities,
+}) => (
   <div
     style={{
       width: "700px",
       height: "800px",
       position: "fixed",
       zIndex: 999999,
-      top: -300,
+      top: -250,
       left: -750,
     }}
   >
@@ -291,12 +318,22 @@ export const ReportViewer = ({ forecast, docUnits, location, docColored }) => (
         forecast={forecast}
         docUnits={docUnits}
         docColored={docColored}
+        docExtendForecast={docExtendForecast}
+        selectedMunicities={selectedMunicities}
       />
     </PDFViewer>
   </div>
 );
 
-const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
+const ForecastReportPDF = ({
+  location,
+  forecast,
+  docUnits,
+  docColored,
+  docExtendForecast,
+  selectedMunicities,
+}) => {
+  console.log(forecast);
   const municity = forecast.municity;
 
   const heroStyle = municity.length >= 12 ? styles.heroAlt : styles.hero;
@@ -462,88 +499,100 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
 
           <Image src={BagongPilipinas} style={[styles.logo, { width: 55 }]} />
         </View>
+        {!docExtendForecast && (
+          <View style={heroStyle}>
+            <View style={styles.heroTitleContainer}>
+              <Text style={styles.dateText}>
+                {"LAT " + location?.latLng.lat.toFixed(4) + "  "}
+                {"LONG " + location?.latLng.lng.toFixed(4)}
+              </Text>
+              <Text style={[styles.heroTitle, { marginTop: 10 }]}>
+                {forecast.municity}
+              </Text>
+              <Text style={[styles.heroTitle, { fontSize: 9 }]}>
+                {forecast.province}
+              </Text>
+            </View>
 
-        <View style={heroStyle}>
-          <View style={styles.heroTitleContainer}>
-            <Text style={styles.dateText}>
-              {"LAT " + location?.latLng.lat.toFixed(4) + "  "}
-              {"LONG " + location?.latLng.lng.toFixed(4)}
-            </Text>
-            <Text style={[styles.heroTitle, { marginTop: 10 }]}>
-              {forecast.municity}
-            </Text>
-            <Text style={[styles.heroTitle, { fontSize: 9 }]}>
-              {forecast.province}
-            </Text>
-          </View>
+            <View style={todayContainerStyle}>
+              <Text style={styles.todayDate}>
+                {"TODAY " + format(new Date(), "MMM d").toUpperCase()}
+              </Text>
+              <View style={weatherParamsContainerStyle}>
+                <View style={styles.weatherParamContainer}>
+                  <View style={styles.weatherParamLogo}>
+                    {renderWeatherIcon()}
+                  </View>
+                  <View>
+                    <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
+                      {convertValue(
+                        "temperature",
+                        docUnits,
+                        todayForecast?.temperature.mean
+                      ) +
+                        " " +
+                        docUnits?.temperature}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.weatherParamText,
+                        { fontSize: 6.5, maxWidth: "75px" },
+                      ]}
+                    >
+                      {todayForecast?.cloud_cover +
+                        (todayForecast?.rainfall.description === "NO RAIN"
+                          ? ""
+                          : " WITH " + todayForecast?.rainfall.description)}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.weatherParamContainer}>
+                  <View style={styles.weatherParamLogo}>
+                    {renderWindIcon()}
+                  </View>
+                  <View>
+                    <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
+                      {convertValue(
+                        "wind",
+                        docUnits,
+                        todayForecast?.wind.speed
+                      ) +
+                        " " +
+                        docUnits?.windSpeed}
+                    </Text>
+                    <Text style={[styles.weatherParamText, { fontSize: 6.5 }]}>
+                      {renderWindText()}
+                    </Text>
+                  </View>
+                </View>
 
-          <View style={todayContainerStyle}>
-            <Text style={styles.todayDate}>
-              {"TODAY " + format(new Date(), "MMM d").toUpperCase()}
-            </Text>
-            <View style={weatherParamsContainerStyle}>
-              <View style={styles.weatherParamContainer}>
-                <View style={styles.weatherParamLogo}>
-                  {renderWeatherIcon()}
-                </View>
-                <View>
-                  <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
-                    {convertValue(
-                      "temperature",
-                      docUnits,
-                      todayForecast?.temperature.mean
-                    ) +
-                      " " +
-                      docUnits?.temperature}
-                  </Text>
-                  <Text style={[styles.weatherParamText, { fontSize: 6.5 }]}>
-                    {todayForecast?.cloud_cover +
-                      (todayForecast?.rainfall.description === "NO RAIN"
-                        ? ""
-                        : " WITH " + todayForecast?.rainfall.description)}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.weatherParamContainer}>
-                <View style={styles.weatherParamLogo}>{renderWindIcon()}</View>
-                <View>
-                  <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
-                    {convertValue("wind", docUnits, todayForecast?.wind.speed) +
-                      " " +
-                      docUnits?.windSpeed}
-                  </Text>
-                  <Text style={[styles.weatherParamText, { fontSize: 6.5 }]}>
-                    {renderWindText()}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.weatherParamContainer}>
-                <View style={styles.weatherParamLogo}>
-                  <VerticalBarGraph
-                    value={todayForecast?.humidity}
-                    maxHeight={30}
-                    width={10}
-                  />
-                </View>
-                <View
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "flex-end",
-                  }}
-                >
-                  <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
-                    {todayForecast?.humidity + "% "}
-                  </Text>
-                  <Text style={[styles.weatherParamText, { fontSize: 8 }]}>
-                    humid
-                  </Text>
+                <View style={styles.weatherParamContainer}>
+                  <View style={styles.weatherParamLogo}>
+                    <VerticalBarGraph
+                      value={todayForecast?.humidity}
+                      maxHeight={30}
+                      width={10}
+                    />
+                  </View>
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
+                      {todayForecast?.humidity + "% "}
+                    </Text>
+                    <Text style={[styles.weatherParamText, { fontSize: 8 }]}>
+                      humid
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
           </View>
-        </View>
+        )}
 
         <View style={styles.titleContainer}>
           <View style={[styles.dateText, { flexGrow: 1 }]}>
@@ -567,7 +616,24 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
           </View>
         </View>
 
-        <View style={styles.tableContainer}>
+        {docExtendForecast && (
+          <View style={styles.tableTitleContainer}>
+            <Text style={styles.tableTitle}>
+              {forecast.municity + ", " + forecast.province}
+            </Text>
+            <Text style={styles.tableSubtitle}>
+              {"[" + location?.latLng.lat.toFixed(4) + ","}
+              {+location?.latLng.lng.toFixed(4) + "]"}
+            </Text>
+          </View>
+        )}
+
+        <View
+          style={[
+            styles.tableContainer,
+            docExtendForecast ? { marginTop: 5 } : null,
+          ]}
+        >
           <View style={styles.table}>
             <View style={styles.tableRow}>
               <Text style={[styles.tableHeader, styles.tableHeaderColumn]} />
@@ -575,7 +641,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
                 style={[styles.tableHeader, styles.tableUnitsColumn]}
               ></Text>
               {forecast.forecasts.map((data) => (
-                <Text style={styles.tableHeader}>
+                <Text key={data.forecast_id} style={styles.tableHeader}>
                   {format(data.date, "EEE d")}
                 </Text>
               ))}

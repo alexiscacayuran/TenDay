@@ -101,9 +101,9 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
           click: (event) => {
             const clickedFeature = event.target.feature;
 
-            // if (selectedPolygon.current) {
-            //   map.removeLayer(selectedPolygon.current);
-            // }
+            if (selectedPolygon.current) {
+              map.removeLayer(selectedPolygon.current);
+            }
 
             const selectedMunicity = L.geoJSON(clickedFeature, {
               style: {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useState, useEffect, Fragment, useRef } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 
@@ -65,6 +65,7 @@ import ForecastTable from "./ForecastTable";
 import ToggleUnits from "./ToggleUnits";
 import ForecastDownload from "./ForecastDownload";
 import MunicitySelector from "./MunicitySelector";
+import MunicitiesSelector from "./MunicitiesSelector";
 
 const ForecastContainer = ({
   map,
@@ -88,6 +89,7 @@ const ForecastContainer = ({
   arcgisToken,
   selectedPolygon,
 }) => {
+  const isInitial = useRef(true);
   const [forecast, setForecast] = useState(null);
   const [activeColumn, setActiveColumn] = useState(null);
   const [todayColumn, setTodayColumn] = useState(null);
@@ -97,6 +99,9 @@ const ForecastContainer = ({
   const [docUnits, setDocUnits] = useState(units);
   const [docFormat, setDocFormat] = useState("pdf");
   const [docColored, setDocColored] = useState(true);
+  const [docExtendForecast, setDocExtendForecast] = useState(false);
+  const [selectedMunicities, setSelectedMunicities] = useState([]);
+  console.log(selectedMunicities);
 
   useEffect(() => {
     setDocUnits(units);
@@ -182,6 +187,10 @@ const ForecastContainer = ({
   }, [open]);
 
   useEffect(() => {
+    if (isInitial.current) {
+      isInitial.current = false;
+      return;
+    }
     if (!open && location.municity) return;
 
     axios
@@ -202,6 +211,230 @@ const ForecastContainer = ({
         setForecast(null);
       });
   }, [open, location]);
+
+  const renderWeatherIcon = (data) => {
+    switch (data.rainfall.description) {
+      case "NO RAIN":
+        switch (data.cloud_cover) {
+          case "SUNNY":
+            return <SunnyIcon />;
+          case "PARTLY CLOUDY":
+            return <NoRainParCloudyIcon />;
+          case "MOSTLY CLOUDY":
+            return <NoRainMosCloudyIcon />;
+          case "CLOUDY":
+            return <NoRainCloudyIcon />;
+          default:
+            return null;
+        }
+      case "LIGHT RAINS":
+        switch (data.cloud_cover) {
+          case "SUNNY":
+            return <LightRainsParCloudyIcon />;
+          case "PARTLY CLOUDY":
+            return <LightRainsParCloudyIcon />;
+          case "MOSTLY CLOUDY":
+            return <LightRainsMosCloudyIcon />;
+          case "CLOUDY":
+            return <LightRainsCloudyIcon />;
+          default:
+            return null;
+        }
+      case "MODERATE RAINS":
+        switch (data.cloud_cover) {
+          case "SUNNY":
+            return <ModRainsParCloudyIcon />;
+          case "PARTLY CLOUDY":
+            return <ModRainsParCloudyIcon />;
+          case "MOSTLY CLOUDY":
+            return <ModRainsMosCloudyIcon />;
+          case "CLOUDY":
+            return <ModRainsCloudyIcon />;
+          default:
+            return null;
+        }
+      case "HEAVY RAINS":
+        switch (data.cloud_cover) {
+          case "SUNNY":
+            return <HeavyRainsParCloudyIcon />;
+          case "PARTLY CLOUDY":
+            return <HeavyRainsParCloudyIcon />;
+          case "MOSTLY CLOUDY":
+            return <HeavyRainsMosCloudyIcon />;
+          case "CLOUDY":
+            return <HeavyRainsCloudyIcon />;
+          default:
+            return null;
+        }
+      default:
+        return null;
+    }
+  };
+
+  const renderWindIcon = (data) => {
+    switch (data.wind.direction) {
+      case "N":
+        return <NIcon />;
+      case "NNE":
+        return <NNEIcon />;
+      case "NE":
+        return <NEIcon />; // Northeast
+      case "ENE":
+        return <ENEIcon />; // East-Northeast
+      case "E":
+        return <EIcon />; // East
+      case "ESE":
+        return <ESEIcon />; // East-Southeast
+      case "SE":
+        return <SEIcon />; // Southeast
+      case "SSE":
+        return <SSEIcon />; // South-Southeast
+      case "S":
+        return <SIcon />; // South
+      case "SSW":
+        return <SSWIcon />; // South-Southwest
+      case "SW":
+        return <SWIcon />; // Southwest
+      case "WSW":
+        return <WSWIcon />; // West-Southwest
+      case "W":
+        return <WIcon />; // West
+      case "WNW":
+        return <WNWIcon />; // West-Northwest
+      case "NW":
+        return <NWIcon />; // Northwest
+      case "NNW":
+        return <NNWIcon />; // North-Northwest
+      default:
+        return null;
+    }
+  };
+
+  const config = {
+    "--highlightColor": "#007FFF",
+    "--borderStyle": "3px solid var(--highlightColor)",
+    "--cellHeight": "20px",
+    "--hoverColor": "#EDF5FD",
+    "--hoverBorderStyle": "3px solid var(--hoverColor)",
+    "--transpBorderStyle": "3px solid transparent",
+
+    backgroundColor: "common.white",
+    width: "900px",
+    maxWidth: "900px",
+    minWidth: "900px",
+    tableLayout: "fixed",
+
+    "& thead > tr > th": {
+      bgcolor: "primary.softBg",
+    },
+
+    "& thead > tr p": {
+      color: "primary.softColor",
+    },
+
+    "& tbody > tr > td": {
+      bgcolor: "common.white",
+    },
+
+    "& thead > tr th:last-of-type": {
+      borderTopRightRadius: 0,
+    },
+
+    "& td, & th": {
+      height: "var(--cellHeight)",
+      boxSizing: "border-box",
+    },
+
+    "& th:first-of-type": {
+      width: "15%",
+      textAlign: "right",
+    },
+    "& th:nth-of-type(2)": { width: "7%" },
+
+    "& thead th:nth-of-type(n+3)": {
+      textAlign: "center",
+      width: "6%",
+    },
+    "& td:nth-of-type(n+1)": {
+      textAlign: "center",
+      width: "6%",
+    },
+
+    "& tbody tr:last-of-type > th:first-of-type": {
+      borderBottomLeftRadius: "var(--unstable_actionRadius)",
+    },
+
+    "& tbody tr > th:first-of-type, & tbody tr > th:nth-of-type(2)": {
+      bgcolor: "neutral.100",
+    },
+
+    "& tbody > tr:first-of-type": {
+      height: "50px",
+    },
+
+    "& thead tr > th": {
+      borderTop: "var(--transpBorderStyle)",
+    },
+    "& tbody tr:last-of-type > td": {
+      borderBottom: "var(--transpBorderStyle)",
+    },
+
+    ...(activeColumn !== null && {
+      [`& thead tr > th:nth-of-type(${activeColumn})`]: {
+        borderTop: "var(--borderStyle)",
+        borderLeft: "var(--borderStyle)",
+        borderRight: "var(--borderStyle)",
+        bgcolor:
+          hoveredColumn === activeColumn - 1 ? "primary.300" : "primary.100",
+      },
+      [`& tbody tr:not(:last-of-type) > td:nth-of-type(${activeColumn - 2})`]: {
+        borderLeft: "var(--borderStyle)",
+        borderRight: "var(--borderStyle)",
+        bgcolor:
+          hoveredColumn === activeColumn - 1 ? "primary.softHoverBg" : "none",
+      },
+      [`& tbody tr:last-of-type > td:nth-of-type(${activeColumn - 2})`]: {
+        borderLeft: "var(--borderStyle)",
+        borderRight: "var(--borderStyle)",
+        borderBottom: "var(--borderStyle)",
+        bgcolor:
+          hoveredColumn === activeColumn - 1 ? "primary.softHoverBg" : "none",
+      },
+    }),
+
+    ...(hoveredColumn !== null && {
+      [`& thead tr > th:nth-of-type(${hoveredColumn + 1})`]: {
+        bgcolor: "primary.300",
+        borderTop:
+          hoveredColumn === activeColumn - 1
+            ? "var(--borderStyle)"
+            : "var(--transpBorderStyle)",
+        borderLeft:
+          hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+        borderRight:
+          hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+      },
+      [`& tbody tr:not(:last-of-type) > td:nth-of-type(${hoveredColumn - 1})`]:
+        {
+          bgcolor: "primary.softHoverBg",
+          borderLeft:
+            hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+          borderRight:
+            hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+        },
+      [`& tbody tr:last-of-type > td:nth-of-type(${hoveredColumn - 1})`]: {
+        bgcolor: "primary.softHoverBg",
+        borderBottom:
+          hoveredColumn === activeColumn - 1
+            ? "var(--borderStyle)"
+            : "var(--transpBorderStyle)",
+        borderLeft:
+          hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+        borderRight:
+          hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+      },
+    }),
+  };
 
   return (
     <Slide direction="up" in={open} mountOnEnter unmountOnExit>
@@ -245,161 +478,7 @@ const ForecastContainer = ({
                   variant="plain"
                   size="sm"
                   borderAxis="none"
-                  sx={{
-                    // Custom CSS variables for styling
-                    "--highlightColor": "#007FFF", // Highlight color for active cells
-                    "--borderStyle": "3px solid var(--highlightColor)", // Border style for active cells
-                    "--cellHeight": "20px", // Height for each cell
-                    "--hoverColor": "#EDF5FD", // Hover color for cells
-                    "--hoverBorderStyle": "3px solid var(--hoverColor)", // Border style for hovered cells
-                    "--transpBorderStyle": "3px solid transparent", // Transparent border style for cells
-
-                    // General table styling
-                    backgroundColor: "common.white", // Background color for the table
-                    width: "900px",
-                    maxWidth: "900px",
-                    minWidth: "900px", // Width of the table
-                    tableLayout: "fixed", // Prevent resizing of the table
-
-                    // Table header styles
-                    "& thead > tr > th": {
-                      bgcolor: "primary.softBg", // Background color for table headers
-                    },
-
-                    "& thead > tr p": {
-                      color: "primary.softColor", // Text color for table headers
-                    },
-
-                    // Table body styles
-                    "& tbody > tr > td": {
-                      bgcolor: "common.white", // Background color for table body cells
-                    },
-
-                    "& thead > tr th:last-child": {
-                      borderTopRightRadius: 0, // Remove top-right corner radius for the last header cell
-                    },
-
-                    // Cell height and column text alignment
-                    "& td, & th": {
-                      height: "var(--cellHeight)", // Apply custom cell height
-                      alignContent: "center", // Align content in the center
-                      boxSizing: "border-box", // Include padding and border in the element's width and height
-                    },
-                    "& tr > *:first-child": {
-                      width: "15%", // Width for the first column
-                      textAlign: "right", // Align text to the right for the first column
-                    },
-                    "& thead th:nth-child(2)": { width: "7%" }, // Width for the second column header
-                    "& tr > *:not(:first-child):not(:nth-child(2))": {
-                      textAlign: "center", // Align text to the center for all columns except the first and second
-                      width: "6%", // Width for all columns except the first and second
-                    },
-                    "& tr > *:nth-child(2)": { borderLeftStyle: "none" }, // Remove left border for the second column
-
-                    "& tbody tr:last-child > th:first-child": {
-                      borderBottomLeftRadius: "var(--unstable_actionRadius)", // Bottom-left corner radius for the last cell in the first column
-                    },
-                    "& tbody tr > *:first-child, & tbody tr > *:nth-child(2)": {
-                      bgcolor: "neutral.100", // Background color for the first and second columns in the body
-                    },
-                    "& tbody > tr:first-child": {
-                      height: "50px", // Height for the first row in the body
-                    },
-
-                    "& thead tr > th": {
-                      borderTop: "var(--transpBorderStyle)", // Transparent border on top for table headers
-                    },
-                    "& tbody tr:last-child > td": {
-                      borderBottom: "var(--transpBorderStyle)", // Transparent border on bottom for the last row in the body
-                    },
-                    // ✅ Highlight the active column (date match or user-clicked column)
-                    ...(activeColumn !== null && {
-                      // Header (top, left, right borders)
-                      [`& thead tr > *:nth-child(${activeColumn})`]: {
-                        borderTop: "var(--borderStyle)",
-                        borderLeft: "var(--borderStyle)",
-                        borderRight: "var(--borderStyle)",
-                        bgcolor:
-                          hoveredColumn === activeColumn - 1
-                            ? "primary.300" // Apply hover bg if active and hovered
-                            : "primary.100", // Active background otherwise
-                      },
-                      // Middle rows (left, right borders)
-                      [`& tbody tr:not(:last-child) > *:nth-child(${activeColumn})`]:
-                        {
-                          borderLeft: "var(--borderStyle)",
-                          borderRight: "var(--borderStyle)",
-                          bgcolor:
-                            hoveredColumn === activeColumn - 1
-                              ? "primary.softHoverBg" // Apply hover bg
-                              : "none", // Active background otherwise
-                        },
-                      // Last row (left, right, bottom borders)
-                      [`& tbody tr:last-child > *:nth-child(${activeColumn})`]:
-                        {
-                          borderLeft: "var(--borderStyle)",
-                          borderRight: "var(--borderStyle)",
-                          borderBottom: "var(--borderStyle)",
-                          bgcolor:
-                            hoveredColumn === activeColumn - 1
-                              ? "primary.softHoverBg" // Apply hover bg
-                              : "none", // Active background otherwise
-                        },
-                    }),
-
-                    // Highlight column with borders on hover
-                    ...(hoveredColumn !== null && {
-                      // Highlight header (top border, left, right)
-                      [`& thead tr > *:nth-child(${hoveredColumn + 1})`]: {
-                        bgcolor: "primary.300",
-                        borderTop:
-                          hoveredColumn === activeColumn - 1
-                            ? "var(--borderStyle)"
-                            : "var(--transpBorderStyle)", // Add border if hovered column matches active column
-                        borderLeft:
-                          hoveredColumn === activeColumn - 1
-                            ? "var(--borderStyle)"
-                            : "none",
-                        borderRight:
-                          hoveredColumn === activeColumn - 1
-                            ? "var(--borderStyle)"
-                            : "none",
-                      },
-                      // Highlight middle rows (left, right)
-                      [`& tbody tr:not(:last-child) > *:nth-child(${
-                        hoveredColumn + 1
-                      })`]: {
-                        bgcolor: "primary.softHoverBg",
-                        borderLeft:
-                          hoveredColumn === activeColumn - 1
-                            ? "var(--borderStyle)"
-                            : "none", // Add border if hovered column matches active column
-                        borderRight:
-                          hoveredColumn === activeColumn - 1
-                            ? "var(--borderStyle)"
-                            : "none",
-                      },
-                      // Highlight last row (left, right, bottom)
-                      [`& tbody tr:last-child > *:nth-child(${
-                        hoveredColumn + 1
-                      })`]: {
-                        bgcolor: "primary.softHoverBg",
-                        borderBottom:
-                          hoveredColumn === activeColumn - 1
-                            ? "var(--borderStyle)"
-                            : "var(--transpBorderStyle)", // Add border if hovered column matches active column
-
-                        borderLeft:
-                          hoveredColumn === activeColumn - 1
-                            ? "var(--borderStyle)"
-                            : "none",
-                        borderRight:
-                          hoveredColumn === activeColumn - 1
-                            ? "var(--borderStyle)"
-                            : "none",
-                      },
-                    }),
-                  }}
+                  sx={config}
                 >
                   <thead>
                     <tr>
@@ -454,64 +533,7 @@ const ForecastContainer = ({
                             setDate(data.date); // ✅ Set the date using setDate
                           }}
                         >
-                          {(() => {
-                            switch (data.rainfall.description) {
-                              case "NO RAIN":
-                                switch (data.cloud_cover) {
-                                  case "SUNNY":
-                                    return <SunnyIcon />;
-                                  case "PARTLY CLOUDY":
-                                    return <NoRainParCloudyIcon />;
-                                  case "MOSTLY CLOUDY":
-                                    return <NoRainMosCloudyIcon />;
-                                  case "CLOUDY":
-                                    return <NoRainCloudyIcon />;
-                                  default:
-                                    return null;
-                                }
-                              case "LIGHT RAINS":
-                                switch (data.cloud_cover) {
-                                  case "SUNNY":
-                                    return <LightRainsParCloudyIcon />;
-                                  case "PARTLY CLOUDY":
-                                    return <LightRainsParCloudyIcon />;
-                                  case "MOSTLY CLOUDY":
-                                    return <LightRainsMosCloudyIcon />;
-                                  case "CLOUDY":
-                                    return <LightRainsCloudyIcon />;
-                                  default:
-                                    return null;
-                                }
-                              case "MODERATE RAINS":
-                                switch (data.cloud_cover) {
-                                  case "SUNNY":
-                                    return <ModRainsParCloudyIcon />;
-                                  case "PARTLY CLOUDY":
-                                    return <ModRainsParCloudyIcon />;
-                                  case "MOSTLY CLOUDY":
-                                    return <ModRainsMosCloudyIcon />;
-                                  case "CLOUDY":
-                                    return <ModRainsCloudyIcon />;
-                                  default:
-                                    return null;
-                                }
-                              case "HEAVY RAINS":
-                                switch (data.cloud_cover) {
-                                  case "SUNNY":
-                                    return <HeavyRainsParCloudyIcon />;
-                                  case "PARTLY CLOUDY":
-                                    return <HeavyRainsParCloudyIcon />;
-                                  case "MOSTLY CLOUDY":
-                                    return <HeavyRainsMosCloudyIcon />;
-                                  case "CLOUDY":
-                                    return <HeavyRainsCloudyIcon />;
-                                  default:
-                                    return null;
-                                }
-                              default:
-                                return null;
-                            }
-                          })()}
+                          {renderWeatherIcon(data)}
                         </td>
                       ))}
                     </tr>
@@ -560,44 +582,7 @@ const ForecastContainer = ({
                           style={{ minHeight: "28px" }}
                         >
                           {units.windDirection === "arrow" ? (
-                            (() => {
-                              switch (data.wind.direction) {
-                                case "N":
-                                  return <NIcon />;
-                                case "NNE":
-                                  return <NNEIcon />;
-                                case "NE":
-                                  return <NEIcon />; // Northeast
-                                case "ENE":
-                                  return <ENEIcon />; // East-Northeast
-                                case "E":
-                                  return <EIcon />; // East
-                                case "ESE":
-                                  return <ESEIcon />; // East-Southeast
-                                case "SE":
-                                  return <SEIcon />; // Southeast
-                                case "SSE":
-                                  return <SSEIcon />; // South-Southeast
-                                case "S":
-                                  return <SIcon />; // South
-                                case "SSW":
-                                  return <SSWIcon />; // South-Southwest
-                                case "SW":
-                                  return <SWIcon />; // Southwest
-                                case "WSW":
-                                  return <WSWIcon />; // West-Southwest
-                                case "W":
-                                  return <WIcon />; // West
-                                case "WNW":
-                                  return <WNWIcon />; // West-Northwest
-                                case "NW":
-                                  return <NWIcon />; // Northwest
-                                case "NNW":
-                                  return <NNWIcon />; // North-Northwest
-                                default:
-                                  return null;
-                              }
-                            })()
+                            renderWindIcon(data)
                           ) : (
                             <Typography sx={{ my: 0.65 }}>
                               {data.wind.direction}
@@ -644,9 +629,14 @@ const ForecastContainer = ({
                         open={openDownload}
                         onClose={() => setOpenDownload(false)}
                       >
-                        <ModalDialog sx={{ "--ModalDialog-minWidth": "400px" }}>
-                          <DialogTitle>
-                            {"Download forecast for"}
+                        <ModalDialog
+                          sx={{
+                            width: "450px",
+                            "--ModalDialog-maxWidth": "450px",
+                          }}
+                        >
+                          <DialogTitle sx={{ mb: 2 }}>
+                            Download forecast for
                             <Typography
                               level="title-lg"
                               sx={{
@@ -758,14 +748,14 @@ const ForecastContainer = ({
                                         })
                                       }
                                     >
-                                      <Button value="mm/24h">
+                                      <Button value="mm/day">
                                         <Typography level="body-xs">
-                                          mm/24h
+                                          mm/day
                                         </Typography>
                                       </Button>
-                                      <Button value="in/24h">
+                                      <Button value="in/day">
                                         <Typography level="body-xs">
-                                          in/24h
+                                          in/day
                                         </Typography>
                                       </Button>
                                     </ToggleButtonGroup>
@@ -854,27 +844,73 @@ const ForecastContainer = ({
                             </FormControl>
 
                             {docFormat === "pdf" && (
-                              <FormControl orientation="horizontal">
-                                <FormLabel>
-                                  Show colors for visualization
-                                </FormLabel>
-                                <Switch
-                                  size="sm"
-                                  checked={docColored}
-                                  onChange={(event) =>
-                                    setDocColored(event.target.checked)
-                                  }
-                                  variant={docColored ? "solid" : "outlined"}
-                                  endDecorator={docColored ? "On" : "Off"}
-                                  slotProps={{
-                                    endDecorator: {
-                                      sx: {
-                                        minWidth: 24,
+                              <>
+                                <FormControl orientation="horizontal">
+                                  <FormLabel sx={{ mr: "auto" }}>
+                                    Show colors for visualization
+                                  </FormLabel>
+                                  <Switch
+                                    size="sm"
+                                    checked={docColored}
+                                    onChange={(event) =>
+                                      setDocColored(event.target.checked)
+                                    }
+                                    variant={docColored ? "solid" : "outlined"}
+                                    endDecorator={docColored ? "On" : "Off"}
+                                    slotProps={{
+                                      endDecorator: {
+                                        sx: {
+                                          minWidth: 24,
+                                          fontWeight: 400,
+                                        },
                                       },
-                                    },
-                                  }}
-                                />
-                              </FormControl>
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormControl
+                                  orientation="horizontal"
+                                  sx={{ flexWrap: "wrap" }}
+                                >
+                                  <FormLabel sx={{ flexGrow: 1 }}>
+                                    Add other municipalities in{" "}
+                                    {forecast.province}
+                                  </FormLabel>
+                                  <Switch
+                                    sx={{ flexGrow: 0 }}
+                                    size="sm"
+                                    checked={docExtendForecast}
+                                    onChange={(event) => {
+                                      setDocExtendForecast(
+                                        event.target.checked
+                                      );
+                                    }}
+                                    variant={
+                                      docExtendForecast ? "solid" : "outlined"
+                                    }
+                                    endDecorator={
+                                      docExtendForecast ? "Yes" : "No"
+                                    }
+                                    slotProps={{
+                                      endDecorator: {
+                                        sx: {
+                                          minWidth: 24,
+                                          fontWeight: 400,
+                                        },
+                                      },
+                                    }}
+                                  />
+                                  {docExtendForecast && (
+                                    <MunicitiesSelector
+                                      forecast={forecast}
+                                      serverToken={serverToken}
+                                      selectedMunicities={selectedMunicities}
+                                      setSelectedMunicities={
+                                        setSelectedMunicities
+                                      }
+                                    />
+                                  )}
+                                </FormControl>
+                              </>
                             )}
 
                             <FormControl>
@@ -889,13 +925,15 @@ const ForecastContainer = ({
                               </Select>
                             </FormControl>
 
-                            <ForecastDownload
+                            {/* <ForecastDownload
                               location={location}
                               forecast={forecast}
                               docFormat={docFormat}
                               docUnits={docUnits}
                               docColored={docColored}
-                            />
+                              docExtendForecast={docExtendForecast}
+                              selectedMunicities={selectedMunicities}
+                            /> */}
                           </Stack>
                         </ModalDialog>
                       </Modal>
@@ -932,7 +970,6 @@ const ForecastContainer = ({
                         location.latLng.lng.toFixed(4)}
                     </Typography>
 
-                    {/* <Typography level="h3">{forecast.municity}</Typography> */}
                     <MunicitySelector
                       map={map}
                       arcgisToken={arcgisToken}

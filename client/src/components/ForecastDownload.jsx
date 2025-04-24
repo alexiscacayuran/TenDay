@@ -21,7 +21,9 @@ const downloadButton = (
   docFormat,
   docUnits,
   docColored,
-  location
+  location,
+  docExtendForecast,
+  selectedMunicities
 ) => {
   switch (docFormat) {
     case "pdf":
@@ -33,6 +35,8 @@ const downloadButton = (
               forecast={forecast}
               docUnits={docUnits}
               docColored={docColored}
+              docExtendForecast={docExtendForecast}
+              selectedMunicities={selectedMunicities}
             />
           }
           fileName={timestamp}
@@ -51,9 +55,23 @@ const downloadButton = (
         </PDFDownloadLink>
       );
     case "csv":
-      return <ForecastReportCSV forecast={forecast} docUnits={docUnits} />;
+      return (
+        <ForecastReportCSV
+          forecast={forecast}
+          docUnits={docUnits}
+          docExtendForecast={docExtendForecast}
+          selectedMunicities={selectedMunicities}
+        />
+      );
     case "txt":
-      return <ForecastReportTXT forecast={forecast} docUnits={docUnits} />;
+      return (
+        <ForecastReportTXT
+          forecast={forecast}
+          docUnits={docUnits}
+          docExtendForecast={docExtendForecast}
+          selectedMunicities={selectedMunicities}
+        />
+      );
   }
 };
 
@@ -63,8 +81,9 @@ const ForecastDownload = ({
   docUnits,
   docColored,
   location,
+  docExtendForecast,
+  selectedMunicities,
 }) => {
-  console.log(forecast);
   return (
     <>
       {docFormat === "pdf" ? (
@@ -73,10 +92,20 @@ const ForecastDownload = ({
           forecast={forecast}
           docUnits={docUnits}
           docColored={docColored}
+          docExtendForecast={docExtendForecast}
+          selectedMunicities={selectedMunicities}
         />
       ) : null}
 
-      {downloadButton(forecast, docFormat, docUnits, docColored, location)}
+      {downloadButton(
+        forecast,
+        docFormat,
+        docUnits,
+        docColored,
+        location,
+        docExtendForecast,
+        selectedMunicities
+      )}
     </>
   );
 };

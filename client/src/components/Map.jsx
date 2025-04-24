@@ -268,7 +268,7 @@ const Map = () => {
     ]
   );
 
-  return <div>{displayMap}</div>;
+  return <>{displayMap}</>;
 };
 
 export default Map;

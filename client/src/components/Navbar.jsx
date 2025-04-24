@@ -111,18 +111,7 @@ const Navbar = ({
         color="transparent"
       >
         <Toolbar className="app-bar">
-          {/* <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{
-              mr: 2,
-              color: "primaryvar(--joy-palette-primary-500, #0B6BCB)",
-            }}
-          >
-            <MenuIcon />
-          </IconButton> */}
+          \
           <Box sx={{ mr: 4, flexGrow: 0, pt: "0.3em" }}>
             <img src={Logo} alt="10-Day Forecast Logo" height="40" />
           </Box>
@@ -231,7 +220,6 @@ const Navbar = ({
                     size="sm"
                     variant="outlined"
                     value={units.temperature}
-                    exclusive
                     onChange={(e, value) =>
                       value && setUnits({ ...units, temperature: value })
                     }
@@ -253,7 +241,7 @@ const Navbar = ({
                     size="sm"
                     variant="outlined"
                     value={units.rainfall}
-                    exclusive
+                    exclusive="true"
                     onChange={(e, value) =>
                       value && setUnits({ ...units, rainfall: value })
                     }
@@ -275,7 +263,7 @@ const Navbar = ({
                     size="sm"
                     variant="outlined"
                     value={units.windSpeed}
-                    exclusive
+                    exclusive="true"
                     onChange={(e, value) =>
                       value && setUnits({ ...units, windSpeed: value })
                     }
@@ -298,7 +286,7 @@ const Navbar = ({
                     size="sm"
                     variant="outlined"
                     value={units.windDirection}
-                    exclusive
+                    exclusive="true"
                     onChange={(e, value) =>
                       value && setUnits({ ...units, windDirection: value })
                     }
@@ -325,7 +313,7 @@ const Navbar = ({
                         ? "imperial"
                         : undefined
                     }
-                    exclusive
+                    exclusive="true"
                     onChange={(e, value) => {
                       if (value === "metric") {
                         setScale({ metric: true, imperial: false });
