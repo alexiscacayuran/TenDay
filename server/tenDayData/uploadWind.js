@@ -14,7 +14,7 @@ const s3 = new S3Client({
 
 const BUCKET_NAME = "tendayforecast";
 const TEMP_DIR = "C:\\Users\\gabri\\PAGASA\\server\\temp";
-const GEOJSON_PATH = "./country_lowres_dissolved.geojson";
+const GEOJSON_PATH = "C:\\Users\\gabri\\10_DAY_FORECAST\\TanawPH\\server\\tenDayData\\country_lowres_dissolved.geojson"; 
 
 const monthMap = {
   "01": "01_January", "02": "02_February", "03": "03_March", "04": "04_April",

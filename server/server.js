@@ -15,6 +15,8 @@ import humidityRoutes from "./controller/humidity.js";
 import usersRouter from './controller/users.js';
 import authenticate from './middleware/authorization.js';
 import getTokenRoute from "./API/serverToken.js";
+import archiver from 'archiver';
+import moment from 'moment';
 
 
 import authRoutes from "./API/token.js"; 
@@ -28,6 +30,10 @@ import "./backgroundJob/cleanUpDB.js"; // Runs cleanup job on startup
 //API tenday (internal)
 import { uploadForecastData } from './tenDayData/uploadTenDay.js';
 import { uploadForecastTIF } from './tenDayData/tProcessTIF.js';
+import { uploadForecastXLSX } from './tenDayData/tProcessXLSX.js';
+import { retrieveForecastFile, streamForecastFile } from './tenDayData/retrieveFile.js';
+
+
 import { processWindFiles } from "./tenDayData/uploadWind.js";
 //API tenday (external)
 import getFullForecast from "./tenDayData/getFullForecast.js";
@@ -52,7 +58,12 @@ import seasonalDataRegional from "./seasonalData/seasonalRegional.js";  // Impor
 
 import tokenRoutes from './API/tokenRoutes.js';
 import seasonalRoutes from './API/seasonalRoutes.js';
-;
+
+//Admin
+import apiTokens from './admin/apiToken.js';
+import apiOrg from './admin/apiOrg.js';
+import apiLogs from './admin/apiLogs.js';
+
 const app = express();
 const port = 5000;
 
@@ -123,11 +134,11 @@ app.use("/valid", getValidDate);
 // Route for fetching current date - internal
 app.use("/dateinternal", getDateForecastInternal);
 
-// Route for fetching current date - internal
+// Route for fetching full date - internal
 app.use("/fullinternal", getFullForecastInternal);
 
-// Route for fetching full forecast internal
-app.use("/provinceinternal", getMunicities);
+// Route for fetching municities - internal
+app.use("/municitiesInternal", getMunicities);
 
 // Route for uploading Ten Day Data
 app.get('/uploadForecastData', authenticate, async (req, res) => {
@@ -169,6 +180,62 @@ app.get('/uploadForecastTIF', authenticate, async (req, res) => {
     return res.status(500).send('Error processing files');
   }
 });
+
+app.get('/uploadForecastXLSX', authenticate, async (req, res) => {
+  const { year, month, day } = req.query;
+
+  if (!year || !month || !day) {
+    return res.status(400).send('Error: Missing required parameters (year, month, day)');
+  }
+
+  try {
+    const result = await uploadForecastXLSX(year, month, day);
+    return res.status(200).send(result);
+  } catch (error) {
+    console.error('❌ Error processing files:', error);
+    return res.status(500).send('Error processing files');
+  }
+});
+
+app.get('/retrievefile', async (req, res) => {
+  const { year, month, day, file, offset, masked, vector, specyear, specmonth, specday } = req.query;
+
+  if (!year || !month || !day || !file) {
+    return res.status(400).send('Error: Missing required parameters (year, month, day, file)');
+  }
+
+  try {
+    const result = await retrieveForecastFile(year, month, day, file, offset, masked, vector, specyear, specmonth, specday);
+
+    // If only one file to download, redirect to presigned URL
+    if (result.length === 1) {
+      return res.redirect(result[0].url);
+    }
+
+    // Prepare filename based on fileType + specDate if available
+    const zipDate = specyear && specmonth && specday ? `${specyear}${specmonth}${specday}` : moment(`${year}-${month}-${day}`).format('YYYYMMDD');
+    const zipFilename = `${file.toUpperCase()}_${zipDate}.zip`;
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    for (const file of result) {
+      const stream = await streamForecastFile(file.key);
+      archive.append(stream, { name: file.file });
+    }
+
+    archive.finalize();
+  } catch (error) {
+    console.error('❌ Error retrieving files:', error);
+    if (!res.headersSent) {
+      res.status(500).send(`Error retrieving files: ${error.message}`);
+    }
+  }
+});
+
 
 
 // Route for uploading Seasonal Data
@@ -255,6 +322,12 @@ app.use('/api', tokenRoutes);
 app.use('/api', seasonalRoutes);
 
 app.use("/seasonal-reg", seasonalDataRegional);
+
+//Admin
+app.use('/api', apiTokens);
+app.use('/api', apiOrg);
+app.use('/api', apiLogs);
+
 
 
 // Start the server
