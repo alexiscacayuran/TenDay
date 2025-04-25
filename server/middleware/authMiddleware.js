@@ -1,25 +1,43 @@
-import jwt from "jsonwebtoken";
+import { pool } from '../db.js';
 
-const SECRET_KEY = process.env.jwtSecret;
+// ✅ Authenticate API Token by DB lookup (no JWT decode)
+export const authenticateToken = async (req, res, next) => {
+  const token = req.headers["token"];
 
-export const authenticateToken = (req, res, next) => {
-  const token = req.headers["token"]; // ✅ Get token from headers
-
-  console.log("🔍 Received Token:", token); // Log received token
+  console.log("🔍 Received Token:", token);
 
   if (!token) {
     return res.status(403).json({ error: "No token provided" });
   }
 
-  jwt.verify(token, SECRET_KEY, (err, decoded) => {
-    if (err) {
-      console.log("❌ Invalid Token:", err.message);
+  try {
+    // Pull organization and api_ids from the database
+    const result = await pool.query(
+      `SELECT organization, expires_at, api_ids FROM api_tokens WHERE token = $1`,
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      console.log("❌ Token not found in database");
       return res.status(401).json({ error: "Unauthorized! Invalid token." });
     }
 
-    console.log("✅ Decoded Token:", decoded); // Log decoded token
+    const { organization, expires_at, api_ids } = result.rows[0];
 
-    req.user = decoded; // Attach decoded data to request
+    if (expires_at && new Date(expires_at) < new Date()) {
+      console.log("⏰ Token expired");
+      return res.status(403).json({ error: "Token expired" });
+    }
+
+    req.user = {
+      organization,
+      api_ids: Array.isArray(api_ids) ? api_ids : []  // Ensure it's an array
+    };
+
+    console.log("✅ Token authenticated for:", organization);
     next();
-  });
+  } catch (error) {
+    console.error("🚨 DB error during token validation:", error.message);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 };
