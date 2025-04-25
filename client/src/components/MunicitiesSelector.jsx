@@ -8,6 +8,7 @@ const MunicitiesSelector = ({
   serverToken,
   selectedMunicities,
   setSelectedMunicities,
+  setDocExtendForecast,
 }) => {
   const [municities, setMunicities] = useState([]);
   const action = React.useRef(null);
@@ -32,11 +33,6 @@ const MunicitiesSelector = ({
         setMunicities(
           response.data.filter((municity) => municity !== forecast.municity)
         );
-
-        // // Set default selectedMunicities value only when data is loaded
-        // if (response.data.includes(forecast.municity)) {
-        //   setSelectedMunicities(forecast.municity);
-        // }
       } catch (error) {
         console.log(error);
       }
@@ -89,6 +85,7 @@ const MunicitiesSelector = ({
               }}
               onClick={() => {
                 setSelectedMunicities([]);
+                setDocExtendForecast(false);
                 action.current?.focusVisible();
               }}
             >

@@ -33,9 +33,19 @@ const createRows = (data, headers) => {
   return rows.join("\n");
 };
 
-const ForecastReportTXT = ({ forecast, docUnits }) => {
+const ForecastReportTXT = ({
+  forecast,
+  docUnits,
+  docExtendForecast,
+  forecastExtended,
+}) => {
   const downloadForecast = () => {
-    const txtData = flattenForecast(forecast, docUnits);
+    const txtData = flattenForecast(
+      forecast,
+      docUnits,
+      docExtendForecast,
+      forecastExtended
+    );
     const string = createRows(txtData, headers);
     const markdown = csvToMarkdown(string, ",", true);
 

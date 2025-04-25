@@ -102,6 +102,7 @@ const Navbar = ({
 
     setOpenAbout(inOpen);
   };
+
   return (
     <Box>
       <AppBar
@@ -111,7 +112,6 @@ const Navbar = ({
         color="transparent"
       >
         <Toolbar className="app-bar">
-          \
           <Box sx={{ mr: 4, flexGrow: 0, pt: "0.3em" }}>
             <img src={Logo} alt="10-Day Forecast Logo" height="40" />
           </Box>

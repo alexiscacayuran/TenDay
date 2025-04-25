@@ -21,6 +21,8 @@ import HeavyRainsParCloudy from "../assets/icons/weather/10-heavy-rains_partly-c
 import HeavyRainsMosCloudy from "../assets/icons/weather/11-heavy-rains_mostly-cloudy.svg";
 import HeavyRainsCloudy from "../assets/icons/weather/12-heavy-rains_cloudy.svg";
 
+import LightRainsSunny from "../assets/icons/weather/13-light-rains_sunny.svg";
+
 import SunnyPNG from "../assets/icons/weather/0-sunny.png";
 
 import NoRainParCloudyPNG from "../assets/icons/weather/1-no-rain_partly-cloudy.png";
@@ -39,6 +41,8 @@ import HeavyRainsParCloudyPNG from "../assets/icons/weather/10-heavy-rains_partl
 import HeavyRainsMosCloudyPNG from "../assets/icons/weather/11-heavy-rains_mostly-cloudy.png";
 import HeavyRainsCloudyPNG from "../assets/icons/weather/12-heavy-rains_cloudy.png";
 
+import LightRainsSunnyPNG from "../assets/icons/weather/13-light-rains_sunny.png";
+
 import SunnyLgPNG from "../assets/icons/weather/0-sunny-lg.png";
 
 import NoRainParCloudyLgPNG from "../assets/icons/weather/1-no-rain_partly-cloudy-lg.png";
@@ -56,6 +60,8 @@ import ModRainsCloudyLgPNG from "../assets/icons/weather/9-mod-rains_cloudy-lg.p
 import HeavyRainsParCloudyLgPNG from "../assets/icons/weather/10-heavy-rains_partly-cloudy-lg.png";
 import HeavyRainsMosCloudyLgPNG from "../assets/icons/weather/11-heavy-rains_mostly-cloudy-lg.png";
 import HeavyRainsCloudyLgPNG from "../assets/icons/weather/12-heavy-rains_cloudy-lg.png";
+
+import LightRainsSunnyLgPNG from "../assets/icons/weather/13-light-rains_sunny-lg.png";
 
 import { ReactComponent as N } from "../assets/icons/wind-direction/0-n.svg";
 import { ReactComponent as NNE } from "../assets/icons/wind-direction/1-nne.svg";
@@ -352,6 +358,20 @@ export const HeavyRainsCloudyIcon = (props) => (
   />
 );
 
+export const LightRainsSunnyIcon = (props) => (
+  <ImgWrapper
+    Icon={LightRainsSunny}
+    Title={
+      <>
+        Light Rains
+        <br />
+        Sunny
+      </>
+    }
+    {...props}
+  />
+);
+
 export const SunnyIconPDF = (props) => (
   <ImgPDFWrapper src={SunnyPNG} {...props} />
 );
@@ -404,6 +424,10 @@ export const HeavyRainsCloudyIconPDF = (props) => (
   <ImgPDFWrapper src={HeavyRainsCloudyPNG} {...props} />
 );
 
+export const LightRainsSunnyIconPDF = (props) => (
+  <ImgPDFWrapper src={LightRainsSunnyPNG} {...props} />
+);
+
 export const SunnyIconLgPDF = (props) => (
   <ImgPDFWrapper src={SunnyLgPNG} {...props} />
 );
@@ -454,6 +478,10 @@ export const HeavyRainsMosCloudyIconLgPDF = (props) => (
 
 export const HeavyRainsCloudyIconLgPDF = (props) => (
   <ImgPDFWrapper src={HeavyRainsCloudyLgPNG} {...props} />
+);
+
+export const LightRainsSunnyIconLgPDF = (props) => (
+  <ImgPDFWrapper src={LightRainsSunnyLgPNG} {...props} />
 );
 
 export const NIcon = (props) => <SvgWrapper Icon={N} {...props} />;

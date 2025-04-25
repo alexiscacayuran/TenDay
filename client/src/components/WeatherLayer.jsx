@@ -66,15 +66,15 @@ const baseParticleOption = {
 };
 
 const particleOptions = [
-  { zoom: 5, width: 1.8, paths: 1200, maxAge: 85 },
-  { zoom: 6, width: 2, paths: 1600, maxAge: 80 },
-  { zoom: 7, width: 2.5, paths: 1800, maxAge: 75 },
-  { zoom: 8, width: 2.8, paths: 2500, maxAge: 70 },
-  { zoom: 9, width: 3.2, paths: 4000, maxAge: 55 },
-  { zoom: 10, width: 3.5, paths: 10000, maxAge: 35 },
-  { zoom: 11, width: 3.8, paths: 20000, maxAge: 20 },
-  { zoom: 12, width: 4.2, paths: 30000, maxAge: 15 },
-  { zoom: 13, width: 4.5, paths: 70000, maxAge: 10 },
+  { zoom: 5, width: 1.8, paths: 1200, maxAge: 95 },
+  { zoom: 6, width: 2, paths: 1600, maxAge: 90 },
+  { zoom: 7, width: 2.5, paths: 1800, maxAge: 85 },
+  { zoom: 8, width: 2.8, paths: 2500, maxAge: 80 },
+  { zoom: 9, width: 3.2, paths: 4000, maxAge: 65 },
+  { zoom: 10, width: 3.5, paths: 10000, maxAge: 45 },
+  { zoom: 11, width: 3.8, paths: 20000, maxAge: 30 },
+  { zoom: 12, width: 4.2, paths: 30000, maxAge: 25 },
+  { zoom: 13, width: 4.5, paths: 70000, maxAge: 20 },
 ];
 
 const WeatherLayer = ({
@@ -107,7 +107,13 @@ const WeatherLayer = ({
     return colorScale.current(value).css();
   };
 
-  const loadScalar = async () => {
+  useEffect(() => {
+    const controller = new AbortController();
+    loadScalar(controller.signal);
+    return () => controller.abort(); // cancel previous if new one triggers
+  }, [overlay, date]);
+
+  const loadScalar = async (signal) => {
     const url = writeURL(
       startDate.current.latest_date,
       overlay,
@@ -115,19 +121,23 @@ const WeatherLayer = ({
       false,
       isLayerClipped
     );
-    if (!url) return;
+    if (!url || signal?.aborted) return;
 
     try {
       let cached = await db.scalars.get(url);
+      if (signal?.aborted) return;
       let buffer;
 
       if (cached) {
         // console.log("Loaded array buffer from IndexedDB:", url);
         buffer = cached.scalarData;
       } else {
-        // console.log("Fetching tif from AWS: ", url);
-        const response = await fetch(url);
-        buffer = await response.arrayBuffer();
+        // Fetch from network if not cached
+        const response = await fetch(url, { signal });
+        if (signal?.aborted) return;
+
+        const buffer = await response.arrayBuffer();
+
         await db.scalars.put({ url, scalarData: buffer }); // Store in IndexedDB
       }
 
@@ -136,7 +146,7 @@ const WeatherLayer = ({
 
       let scalarLayer = new GeorasterLayer({
         georaster: georaster,
-        resolution: 32,
+        resolution: 64,
         pixelValuesToColorFn: colorScaleFn,
         keepBuffer: 50,
         pane: "tilePane",
@@ -152,16 +162,8 @@ const WeatherLayer = ({
 
       overlayLayer.current.addLayer(scalarLayer);
       scalarLayerRef.current = scalarLayer; // Store reference
-
-      // Cleanup function to remove the layer
-      return () => {
-        if (scalarLayerRef.current) {
-          overlayLayer.current.removeLayer(scalarLayerRef.current);
-          scalarLayerRef.current = null; // Clear reference
-        }
-      };
     } catch (error) {
-      console.error("Error: ", error);
+      if (error.name !== "AbortError") console.error(error);
     }
   };
 
@@ -188,8 +190,8 @@ const WeatherLayer = ({
           return;
         }
 
-        // Introduce a delay to ensure source data is available
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
+        // // Introduce a delay to ensure source data is available
+        // await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
 
         let cachedU = await db.vectors.get(uUrl);
         let cachedV = await db.vectors.get(vUrl);
@@ -268,21 +270,8 @@ const WeatherLayer = ({
   }, [map, date, isLayerClipped, zoomLevel]);
 
   useEffect(() => {
-    setLoading(loadingScalar || loadingVector);
+    setLoading(loadingScalar && loadingVector);
   }, [loadingScalar, loadingVector]);
-
-  // useEffect(() => {
-  //   localOverlay.current = overlayList.find((o) => o.name === overlay);
-
-  //   const loadData = async () => {
-  //     setLoading(true);
-  //     await loadScalar();
-  //     await loadVectorAnim();
-  //     setLoading(false);
-  //   };
-
-  //   loadData();
-  // }, [overlay, date, isLayerClipped, zoomLevel]);
 
   useEffect(() => {
     if (isAnimHidden) {
@@ -303,7 +292,7 @@ const WeatherLayer = ({
       <Box
         sx={{
           position: "fixed",
-          bottom: open ? 300 : 70,
+          bottom: open ? 310 : 70,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 999,

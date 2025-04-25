@@ -19,7 +19,7 @@ const ForecastDownload = ({
   docExtendForecast,
   selectedMunicities,
 }) => {
-  const [forecastExtend, setForecastExtend] = useState([]);
+  const [forecastExtended, setForecastExtend] = useState([]);
 
   useEffect(() => {
     const fetchForecastExtend = async () => {
@@ -55,7 +55,7 @@ const ForecastDownload = ({
                 docUnits={docUnits}
                 docColored={docColored}
                 docExtendForecast={docExtendForecast}
-                forecastExtend={forecastExtend}
+                forecastExtended={forecastExtended}
               />
             }
             fileName={timestamp}
@@ -79,7 +79,7 @@ const ForecastDownload = ({
             forecast={forecast}
             docUnits={docUnits}
             docExtendForecast={docExtendForecast}
-            forecastExtend={forecastExtend}
+            forecastExtended={forecastExtended}
           />
         );
       case "txt":
@@ -88,7 +88,7 @@ const ForecastDownload = ({
             forecast={forecast}
             docUnits={docUnits}
             docExtendForecast={docExtendForecast}
-            forecastExtend={forecastExtend}
+            forecastExtended={forecastExtended}
           />
         );
     }
@@ -102,7 +102,7 @@ const ForecastDownload = ({
           docUnits={docUnits}
           docColored={docColored}
           docExtendForecast={docExtendForecast}
-          forecastExtend={forecastExtend}
+          forecastExtended={forecastExtended}
         />
       ) : null}
 

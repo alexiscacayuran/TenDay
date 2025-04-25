@@ -26,31 +26,104 @@ const headers = [
   { label: "humidity_unit", key: "humidity_unit" },
 ];
 
-export const flattenForecast = (data, docUnits) => {
-  return data.forecasts.map((f) => ({
-    municity: data.municity,
-    province: data.province,
-    date: format(f.date, "MM/dd/yyyy"),
-    rainfall_total: convertValue("rainfall", docUnits, f.rainfall.total),
+export const flattenForecast = (
+  forecast,
+  docUnits,
+  extend = false,
+  forecastExtended = []
+) => {
+  const mainForecast = forecast.forecasts.map((forecastData) => ({
+    municity: forecast.municity,
+    province: forecast.province,
+    date: format(forecastData.date, "MM/dd/yyyy"),
+    rainfall_total: convertValue(
+      "rainfall",
+      docUnits,
+      forecastData.rainfall.total
+    ),
     rainfall_total_unit: docUnits.rainfall,
-    rainfall_desc: f.rainfall.description,
-    cloud_cover_desc: f.cloud_cover,
-    max_temp: convertValue("temperature", docUnits, f.temperature.max),
-    mean_temp: convertValue("temperature", docUnits, f.temperature.mean),
-    min_temp: convertValue("temperature", docUnits, f.temperature.min),
+    rainfall_desc: forecastData.rainfall.description,
+    cloud_cover_desc: forecastData.cloud_cover,
+    max_temp: convertValue(
+      "temperature",
+      docUnits,
+      forecastData.temperature.max
+    ),
+    mean_temp: convertValue(
+      "temperature",
+      docUnits,
+      forecastData.temperature.mean
+    ),
+    min_temp: convertValue(
+      "temperature",
+      docUnits,
+      forecastData.temperature.min
+    ),
     temp_unit: docUnits.temperature,
-    wind_speed: convertValue("wind", docUnits, f.wind.speed),
+    wind_speed: convertValue("wind", docUnits, forecastData.wind.speed),
     wind_speed_unit: docUnits.windSpeed,
-    wind_direction: f.wind.direction,
+    wind_direction: forecastData.wind.direction,
     wind_direction_unit: "desc",
-    humidity: f.humidity,
+    humidity: forecastData.humidity,
     humidity_unit: "%",
   }));
+
+  if (!extend || !forecastExtended.length) return mainForecast;
+
+  const extendedForecast = forecastExtended.flatMap((forecast) =>
+    forecast.forecasts.map((forecastData) => ({
+      municity: forecast.municity,
+      province: forecast.province,
+      date: format(forecastData.date, "MM/dd/yyyy"),
+      rainfall_total: convertValue(
+        "rainfall",
+        docUnits,
+        forecastData.rainfall.total
+      ),
+      rainfall_total_unit: docUnits.rainfall,
+      rainfall_desc: forecastData.rainfall.description,
+      cloud_cover_desc: forecastData.cloud_cover,
+      max_temp: convertValue(
+        "temperature",
+        docUnits,
+        forecastData.temperature.max
+      ),
+      mean_temp: convertValue(
+        "temperature",
+        docUnits,
+        forecastData.temperature.mean
+      ),
+      min_temp: convertValue(
+        "temperature",
+        docUnits,
+        forecastData.temperature.min
+      ),
+      temp_unit: docUnits.temperature,
+      wind_speed: convertValue("wind", docUnits, forecastData.wind.speed),
+      wind_speed_unit: docUnits.windSpeed,
+      wind_direction: forecastData.wind.direction,
+      wind_direction_unit: "desc",
+      humidity: forecastData.humidity,
+      humidity_unit: "%",
+    }))
+  );
+
+  return [...mainForecast, ...extendedForecast];
 };
 
-const ForecastReportCSV = ({ forecast, docUnits }) => {
-  const csvData = flattenForecast(forecast, docUnits);
-
+const ForecastReportCSV = ({
+  forecast,
+  docUnits,
+  docExtendForecast,
+  forecastExtended,
+}) => {
+  const csvData = flattenForecast(
+    forecast,
+    docUnits,
+    docExtendForecast,
+    forecastExtended
+  );
+  console.log("csvData", csvData);
   return (
     <CSVLink data={csvData} headers={headers} filename={timestamp}>
       <Button

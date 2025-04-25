@@ -41,6 +41,7 @@ import {
   HeavyRainsParCloudyIcon,
   HeavyRainsMosCloudyIcon,
   HeavyRainsCloudyIcon,
+  LightRainsSunnyIcon,
   NIcon,
   NNEIcon,
   NEIcon,
@@ -191,30 +192,29 @@ const ForecastContainer = ({
       return;
     }
 
-    if (location.municity === "" && location.province === "") {
+    if (!open && location.municity === "" && location.province === "") {
       setForecast(null);
+    } else {
+      const fetchFullForecast = async () => {
+        try {
+          const response = await axios.get("/fullInternal", {
+            params: {
+              municity: location.municity,
+              province: location.province,
+            },
+            headers: {
+              token: serverToken,
+            },
+          });
+
+          setForecast(response.data);
+        } catch (error) {
+          console.error(error);
+          setForecast(null);
+        }
+      };
+      fetchFullForecast();
     }
-
-    const fetchFullForecast = async () => {
-      try {
-        const response = await axios.get("/fullInternal", {
-          params: {
-            municity: location.municity,
-            province: location.province,
-          },
-          headers: {
-            token: serverToken,
-          },
-        });
-
-        setForecast(response.data);
-      } catch (error) {
-        console.error(error);
-        setForecast(null);
-      }
-    };
-
-    fetchFullForecast();
   }, [open, location]);
 
   const renderWeatherIcon = (data) => {
@@ -235,7 +235,7 @@ const ForecastContainer = ({
       case "LIGHT RAINS":
         switch (data.cloud_cover) {
           case "SUNNY":
-            return <LightRainsParCloudyIcon />;
+            return <LightRainsSunnyIcon />;
           case "PARTLY CLOUDY":
             return <LightRainsParCloudyIcon />;
           case "MOSTLY CLOUDY":
@@ -872,50 +872,46 @@ const ForecastContainer = ({
                                     }}
                                   />
                                 </FormControl>
-                                <FormControl
-                                  orientation="horizontal"
-                                  sx={{ flexWrap: "wrap" }}
-                                >
-                                  <FormLabel sx={{ flexGrow: 1 }}>
-                                    Add other forecast data
-                                  </FormLabel>
-                                  <Switch
-                                    sx={{ flexGrow: 0 }}
-                                    size="sm"
-                                    checked={docExtendForecast}
-                                    onChange={(event) => {
-                                      setDocExtendForecast(
-                                        event.target.checked
-                                      );
-                                    }}
-                                    variant={
-                                      docExtendForecast ? "solid" : "outlined"
-                                    }
-                                    endDecorator={
-                                      docExtendForecast ? "Yes" : "No"
-                                    }
-                                    slotProps={{
-                                      endDecorator: {
-                                        sx: {
-                                          minWidth: 24,
-                                          fontWeight: 400,
-                                        },
-                                      },
-                                    }}
-                                  />
-                                  {docExtendForecast && (
-                                    <MunicitiesSelector
-                                      forecast={forecast}
-                                      serverToken={serverToken}
-                                      selectedMunicities={selectedMunicities}
-                                      setSelectedMunicities={
-                                        setSelectedMunicities
-                                      }
-                                    />
-                                  )}
-                                </FormControl>
                               </>
                             )}
+
+                            <FormControl
+                              orientation="horizontal"
+                              sx={{ flexWrap: "wrap" }}
+                            >
+                              <FormLabel sx={{ flexGrow: 1 }}>
+                                Add other forecast data
+                              </FormLabel>
+                              <Switch
+                                sx={{ flexGrow: 0 }}
+                                size="sm"
+                                checked={docExtendForecast}
+                                onChange={(event) => {
+                                  setDocExtendForecast(event.target.checked);
+                                }}
+                                variant={
+                                  docExtendForecast ? "solid" : "outlined"
+                                }
+                                endDecorator={docExtendForecast ? "Yes" : "No"}
+                                slotProps={{
+                                  endDecorator: {
+                                    sx: {
+                                      minWidth: 24,
+                                      fontWeight: 400,
+                                    },
+                                  },
+                                }}
+                              />
+                              {docExtendForecast && (
+                                <MunicitiesSelector
+                                  forecast={forecast}
+                                  serverToken={serverToken}
+                                  selectedMunicities={selectedMunicities}
+                                  setSelectedMunicities={setSelectedMunicities}
+                                  setDocExtendForecast={setDocExtendForecast}
+                                />
+                              )}
+                            </FormControl>
 
                             <FormControl>
                               <FormLabel>File format</FormLabel>
