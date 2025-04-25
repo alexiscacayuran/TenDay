@@ -1,24 +1,24 @@
 import cron from "node-cron";
-import { pool } from "../db.js"; // Import the database connection
-import Redis from 'ioredis';  // Import Redis client
-const redis = new Redis();  // Create Redis client
+import { pool } from "../db.js";
+import Redis from 'ioredis';
+const redis = new Redis();
 
-// Function to delete expired records based on start_date + 3 days
+// Function to delete expired records based on start_date + 6 days
 async function deleteOldRecords() {
   try {
-    // Delete dependent rows in rainfall first
+    // Delete from dependent table first
     await pool.query(`
       DELETE FROM rainfall
       WHERE date_id IN (
         SELECT id FROM date
-        WHERE start_date + interval '3 days' <= CURRENT_DATE
+        WHERE start_date + interval '6 days' <= CURRENT_DATE
       );
     `);
 
-    // Then delete expired records from the date table
+    // Then delete from date table
     const result = await pool.query(`
       DELETE FROM date
-      WHERE start_date + interval '3 days' <= CURRENT_DATE;
+      WHERE start_date + interval '6 days' <= CURRENT_DATE;
     `);
 
     console.log(`✅ Deleted ${result.rowCount} expired records from date table.`);
@@ -27,12 +27,11 @@ async function deleteOldRecords() {
   }
 }
 
+// Schedule at 6:00 AM UTC = 2:00 PM Manila (UTC+8)
+cron.schedule("0 6 * * *", () => {
+  console.log("🕙 Running scheduled cleanup task...");
+  deleteOldRecords();
+});
 
-cron.schedule("59 15 * * *", () => {
-    console.log("🕙 Running scheduled cleanup task...");
-    deleteOldRecords();
-  });
-  
-
-// Export the function if needed elsewhere
+// Export if needed elsewhere
 export { deleteOldRecords };
