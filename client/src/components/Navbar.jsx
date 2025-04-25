@@ -224,8 +224,12 @@ const Navbar = ({
                       value && setUnits({ ...units, temperature: value })
                     }
                   >
-                    <Button value="°C">°C</Button>
-                    <Button value="°F">°F</Button>
+                    <Button value="°C" sx={{ width: 120 }}>
+                      °C
+                    </Button>
+                    <Button value="°F" sx={{ width: 120 }}>
+                      °F
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 
@@ -246,8 +250,12 @@ const Navbar = ({
                       value && setUnits({ ...units, rainfall: value })
                     }
                   >
-                    <Button value="mm/day">mm/day</Button>
-                    <Button value="in/day">in/day</Button>
+                    <Button value="mm/day" sx={{ width: 120 }}>
+                      mm/day
+                    </Button>
+                    <Button value="in/day" sx={{ width: 120 }}>
+                      in/day
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 
@@ -268,9 +276,15 @@ const Navbar = ({
                       value && setUnits({ ...units, windSpeed: value })
                     }
                   >
-                    <Button value="m/s">m/s</Button>
-                    <Button value="km/h">km/h</Button>
-                    <Button value="kt">knot</Button>
+                    <Button value="m/s" sx={{ width: 80 }}>
+                      m/s
+                    </Button>
+                    <Button value="km/h" sx={{ width: 80 }}>
+                      km/h
+                    </Button>
+                    <Button value="kt" sx={{ width: 80 }}>
+                      knot
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 
@@ -291,8 +305,12 @@ const Navbar = ({
                       value && setUnits({ ...units, windDirection: value })
                     }
                   >
-                    <Button value="arrow">arrow</Button>
-                    <Button value="desc">description</Button>
+                    <Button value="arrow" sx={{ width: 120 }}>
+                      arrow
+                    </Button>
+                    <Button value="desc" sx={{ width: 120 }}>
+                      description
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 
@@ -322,8 +340,12 @@ const Navbar = ({
                       }
                     }}
                   >
-                    <Button value="metric">km</Button>
-                    <Button value="imperial">mi</Button>
+                    <Button value="metric" sx={{ width: 120 }}>
+                      km
+                    </Button>
+                    <Button value="imperial" sx={{ width: 120 }}>
+                      mi
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 

@@ -11,10 +11,8 @@ const MunicitiesSelector = ({
 }) => {
   const [municities, setMunicities] = useState([]);
   const action = React.useRef(null);
-  console.log("selectedMunicities", selectedMunicities);
 
   const handleChange = (event, newValue) => {
-    // console.log("selectedMunicities:", newValue + " " + forecast.province);
     setSelectedMunicities(newValue);
   };
 

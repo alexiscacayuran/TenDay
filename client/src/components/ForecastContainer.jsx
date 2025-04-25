@@ -101,7 +101,6 @@ const ForecastContainer = ({
   const [docColored, setDocColored] = useState(true);
   const [docExtendForecast, setDocExtendForecast] = useState(false);
   const [selectedMunicities, setSelectedMunicities] = useState([]);
-  console.log(selectedMunicities);
 
   useEffect(() => {
     setDocUnits(units);
@@ -191,25 +190,31 @@ const ForecastContainer = ({
       isInitial.current = false;
       return;
     }
-    if (!open && location.municity) return;
 
-    axios
-      .get("/fullInternal", {
-        params: {
-          municity: location.municity,
-          province: location.province,
-        },
-        headers: {
-          token: serverToken,
-        },
-      })
-      .then((res) => {
-        setForecast(res.data);
-      })
-      .catch((error) => {
+    if (location.municity === "" && location.province === "") {
+      setForecast(null);
+    }
+
+    const fetchFullForecast = async () => {
+      try {
+        const response = await axios.get("/fullInternal", {
+          params: {
+            municity: location.municity,
+            province: location.province,
+          },
+          headers: {
+            token: serverToken,
+          },
+        });
+
+        setForecast(response.data);
+      } catch (error) {
         console.error(error);
         setForecast(null);
-      });
+      }
+    };
+
+    fetchFullForecast();
   }, [open, location]);
 
   const renderWeatherIcon = (data) => {
@@ -872,8 +877,7 @@ const ForecastContainer = ({
                                   sx={{ flexWrap: "wrap" }}
                                 >
                                   <FormLabel sx={{ flexGrow: 1 }}>
-                                    Add other municipalities in{" "}
-                                    {forecast.province}
+                                    Add other forecast data
                                   </FormLabel>
                                   <Switch
                                     sx={{ flexGrow: 0 }}
@@ -925,7 +929,8 @@ const ForecastContainer = ({
                               </Select>
                             </FormControl>
 
-                            {/* <ForecastDownload
+                            <ForecastDownload
+                              serverToken={serverToken}
                               location={location}
                               forecast={forecast}
                               docFormat={docFormat}
@@ -933,7 +938,7 @@ const ForecastContainer = ({
                               docColored={docColored}
                               docExtendForecast={docExtendForecast}
                               selectedMunicities={selectedMunicities}
-                            /> */}
+                            />
                           </Stack>
                         </ModalDialog>
                       </Modal>

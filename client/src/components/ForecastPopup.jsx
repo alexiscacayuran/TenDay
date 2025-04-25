@@ -53,6 +53,11 @@ const ForecastPopup = ({
   }, [markerRef, markerLayer]);
 
   useEffect(() => {
+    if (location.municity === "" && location.province === "") {
+      setLoading(false);
+      return;
+    }
+
     const fetchForecast = async () => {
       try {
         setForecastRetrieval(false);
