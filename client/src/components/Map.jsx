@@ -126,6 +126,7 @@ const Map = () => {
           scale={scale}
           setScale={setScale}
           setIsLocationReady={setIsLocationReady}
+          selectedPolygon={selectedPolygon}
         />
         <MapContainer
           center={[13, 122]}

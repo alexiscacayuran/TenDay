@@ -199,43 +199,13 @@ export const SunnyIcon = (props) => (
 );
 
 export const NoRainParCloudyIcon = (props) => (
-  <ImgWrapper
-    Icon={NoRainParCloudy}
-    Title={
-      <>
-        No Rain
-        <br />
-        Partly Cloudy
-      </>
-    }
-    {...props}
-  />
+  <ImgWrapper Icon={NoRainParCloudy} Title={<>Partly Cloudy</>} {...props} />
 );
 export const NoRainMosCloudyIcon = (props) => (
-  <ImgWrapper
-    Icon={NoRainMosCloudy}
-    Title={
-      <>
-        No Rain
-        <br />
-        Mostly Cloudy
-      </>
-    }
-    {...props}
-  />
+  <ImgWrapper Icon={NoRainMosCloudy} Title={<>Mostly Cloudy</>} {...props} />
 );
 export const NoRainCloudyIcon = (props) => (
-  <ImgWrapper
-    Icon={NoRainCloudy}
-    Title={
-      <>
-        No Rain
-        <br />
-        Cloudy
-      </>
-    }
-    {...props}
-  />
+  <ImgWrapper Icon={NoRainCloudy} Title={<>Cloudy</>} {...props} />
 );
 
 export const LightRainsParCloudyIcon = (props) => (

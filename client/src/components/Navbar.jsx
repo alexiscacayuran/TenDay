@@ -71,6 +71,7 @@ const Navbar = ({
   scale,
   setScale,
   setIsLocationReady,
+  selectedPolygon,
 }) => {
   const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
@@ -124,6 +125,7 @@ const Navbar = ({
               setOpen={setOpen}
               open={open}
               setIsLocationReady={setIsLocationReady}
+              selectedPolygon={selectedPolygon}
             />
           </Box>
           <Stack

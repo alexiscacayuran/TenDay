@@ -4,6 +4,7 @@ import { DivIcon } from "leaflet";
 import { ModalClose } from "@mui/joy";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { geocodeService, reverseGeocode } from "esri-leaflet-geocoder";
+import { query } from "esri-leaflet";
 
 //styles
 import {
@@ -30,6 +31,7 @@ const GeoSearch = ({
   setOpen,
   setIsLocationReady,
   location,
+  selectedPolygon,
 }) => {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
@@ -38,6 +40,42 @@ const GeoSearch = ({
     municity: "",
     province: "",
   });
+  const _query = query({
+    url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/3",
+  });
+
+  _query.token(arcgisToken);
+
+  const executeQuery = (result) => {
+    _query.nearby(result.latlng, 1);
+
+    _query.run(function (error, featureCollection, response) {
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      if (selectedPolygon.current) {
+        map.removeLayer(selectedPolygon.current);
+      }
+
+      const feature = featureCollection.features[0];
+
+      const selectedMunicity = L.geoJSON(feature, {
+        style: {
+          color: "#3E7BFF",
+          weight: 3,
+          opacity: 1,
+          fillColor: "#3E7BFF",
+          fillOpacity: 0.3,
+          interactive: false,
+        },
+      });
+
+      selectedMunicity.addTo(map);
+      selectedPolygon.current = selectedMunicity;
+    });
+  };
 
   useEffect(() => {
     setLocalLocation(location);
@@ -142,6 +180,8 @@ const GeoSearch = ({
             province: result.properties.Subregion,
           });
 
+          executeQuery(result);
+
           map.flyTo(result.latlng, 12, { duration: 2 });
           setInput("");
           setSuggestions([]);
@@ -173,6 +213,8 @@ const GeoSearch = ({
               municity: result.address.City,
               province: result.address.Subregion,
             });
+
+            executeQuery(result);
 
             // markerLayer.current.clearLayers();
             map.flyTo(result.latlng, 12, { duration: 2 });

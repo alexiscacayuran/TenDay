@@ -9,10 +9,13 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
   const [provinceId, setProvinceId] = useState(null);
   const municityLayerRef = useRef(null);
   const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
-  // const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
+  const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
 
   useEffect(() => {
     if (!arcgisToken) return;
+
+    map.createPane("hillshadePane");
+    map.getPane("hillshadePane").style.zIndex = 250;
 
     const weatherBasemap = vectorBasemapLayer(weatherBasemapEnum, {
       apiKey: arcgisToken,
@@ -43,12 +46,11 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
 
     provinceBoundaries.addTo(map);
 
-    // const hillshade = vectorBasemapLayer(hilshadeEnum, {
-    //   serverToken: arcgisToken,
-
-    //   zIndex: 200,
-    // });
-    // hillshade.addTo(map);
+    const hillshade = vectorBasemapLayer(hilshadeEnum, {
+      apiKey: arcgisToken,
+      pane: "hillshadePane",
+    });
+    hillshade.addTo(map);
 
     map.attributionControl.setPrefix(false);
     map.attributionControl.setPosition("bottomleft");

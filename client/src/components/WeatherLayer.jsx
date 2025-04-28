@@ -12,11 +12,33 @@ import Dexie from "dexie";
 import Box from "@mui/joy/Box";
 import overlayList from "./OverlayList";
 
+const TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const db = new Dexie("WeatherLayerCache");
-db.version(1).stores({
-  scalars: "url, scalarData", // Stores pre-built raster layers
-  vectors: "url, vectorData", // Stores pre-built vector layers
+db.version(2).stores({
+  scalars: "url, timestamp",
+  vectors: "url, timestamp",
 });
+
+const baseParticleOption = {
+  velocityScale: 1 / 500,
+  fade: 0.94,
+  color: chroma("white").alpha(0.25),
+  width: 4.5,
+  paths: 70000,
+  maxAge: 10,
+};
+
+const particleOptions = [
+  { zoom: 5, width: 1.8, paths: 1200, maxAge: 95 },
+  { zoom: 6, width: 2, paths: 1600, maxAge: 90 },
+  { zoom: 7, width: 2.5, paths: 1800, maxAge: 85 },
+  { zoom: 8, width: 2.8, paths: 2500, maxAge: 80 },
+  { zoom: 9, width: 3.2, paths: 4000, maxAge: 65 },
+  { zoom: 10, width: 3.5, paths: 10000, maxAge: 45 },
+  { zoom: 11, width: 3.8, paths: 20000, maxAge: 30 },
+  { zoom: 12, width: 4.2, paths: 30000, maxAge: 25 },
+  { zoom: 13, width: 4.5, paths: 70000, maxAge: 20 },
+];
 
 const writeURL = (startDate, overlay, date, isVector, isLayerClipped) => {
   const formattedStartDate = format(startDate, "yyyyMMdd");
@@ -56,27 +78,6 @@ const getColorScale = (overlay, isDiscrete) => {
   return isDiscrete ? colorScale.classes(currentOverlay.classes) : colorScale;
 };
 
-const baseParticleOption = {
-  velocityScale: 1 / 500,
-  fade: 0.94,
-  color: chroma("white").alpha(0.25),
-  width: 4.5,
-  paths: 70000,
-  maxAge: 10,
-};
-
-const particleOptions = [
-  { zoom: 5, width: 1.8, paths: 1200, maxAge: 95 },
-  { zoom: 6, width: 2, paths: 1600, maxAge: 90 },
-  { zoom: 7, width: 2.5, paths: 1800, maxAge: 85 },
-  { zoom: 8, width: 2.8, paths: 2500, maxAge: 80 },
-  { zoom: 9, width: 3.2, paths: 4000, maxAge: 65 },
-  { zoom: 10, width: 3.5, paths: 10000, maxAge: 45 },
-  { zoom: 11, width: 3.8, paths: 20000, maxAge: 30 },
-  { zoom: 12, width: 4.2, paths: 30000, maxAge: 25 },
-  { zoom: 13, width: 4.5, paths: 70000, maxAge: 20 },
-];
-
 const WeatherLayer = ({
   startDate,
   overlay,
@@ -96,8 +97,65 @@ const WeatherLayer = ({
   const [loadingScalar, setLoadingScalar] = useState(true);
   const [loadingVector, setLoadingVector] = useState(true);
   const [loading, setLoading] = useState(true);
+  const vectorFieldRef = useRef(null);
   // console.log("Loading scalar", loadingScalar);
   // console.log("Loading vector", loadingVector);
+
+  // Monkey-patch drawParticle once
+  useEffect(() => {
+    if (!L.CanvasLayer.VectorFieldAnim.prototype._drawParticleWrapped) {
+      const originalDrawParticle =
+        L.CanvasLayer.VectorFieldAnim.prototype._drawParticle;
+
+      L.CanvasLayer.VectorFieldAnim.prototype._drawParticle = function (
+        viewInfo,
+        ctx,
+        par
+      ) {
+        try {
+          originalDrawParticle.call(this, viewInfo, ctx, par);
+        } catch (error) {
+          console.error("Error inside _drawParticle:", error);
+          this._stopAnimation();
+
+          if (vectorLayerRef.current) {
+            overlayLayer.current.removeLayer(vectorLayerRef.current);
+            vectorLayerRef.current = null;
+          }
+
+          if (vectorFieldRef.current) {
+            setTimeout(() => {
+              createVectorLayer(vectorFieldRef.current);
+            }, 1000);
+          }
+        }
+      };
+
+      L.CanvasLayer.VectorFieldAnim.prototype._drawParticleWrapped = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    const cleanupOldCache = async () => {
+      const now = Date.now();
+
+      const expiredScalars = await db.scalars
+        .filter((item) => now - item.timestamp > TTL_MS)
+        .toArray();
+      if (expiredScalars.length) {
+        await db.scalars.bulkDelete(expiredScalars.map((item) => item.url));
+      }
+
+      const expiredVectors = await db.vectors
+        .filter((item) => now - item.timestamp > TTL_MS)
+        .toArray();
+      if (expiredVectors.length) {
+        await db.vectors.bulkDelete(expiredVectors.map((item) => item.url));
+      }
+    };
+
+    cleanupOldCache();
+  }, []);
 
   const colorScaleFn = (value) => {
     if (value[0] <= 0) {
@@ -124,21 +182,21 @@ const WeatherLayer = ({
     if (!url || signal?.aborted) return;
 
     try {
+      const now = Date.now();
       let cached = await db.scalars.get(url);
       if (signal?.aborted) return;
-      let buffer;
 
-      if (cached) {
-        // console.log("Loaded array buffer from IndexedDB:", url);
+      let buffer;
+      const isFresh = cached && now - cached.timestamp < TTL_MS;
+
+      if (isFresh) {
         buffer = cached.scalarData;
       } else {
-        // Fetch from network if not cached
         const response = await fetch(url, { signal });
         if (signal?.aborted) return;
 
-        const buffer = await response.arrayBuffer();
-
-        await db.scalars.put({ url, scalarData: buffer }); // Store in IndexedDB
+        buffer = await response.arrayBuffer();
+        await db.scalars.put({ url, scalarData: buffer, timestamp: now });
       }
 
       const georaster = await parseGeoraster(buffer);
@@ -155,87 +213,83 @@ const WeatherLayer = ({
         updateWhenIdle: true,
       });
 
-      // Replace scalar layer if it already exists
       if (scalarLayerRef.current) {
         overlayLayer.current.removeLayer(scalarLayerRef.current);
       }
 
       overlayLayer.current.addLayer(scalarLayer);
-      scalarLayerRef.current = scalarLayer; // Store reference
+      scalarLayerRef.current = scalarLayer;
     } catch (error) {
       if (error.name !== "AbortError") console.error(error);
     }
   };
 
-  const loadVectorAnim = async () => {
-    if (!isAnimHidden) {
-      const uUrl = writeURL(
-        startDate.current.latest_date,
-        overlay,
-        date,
-        "u",
-        isLayerClipped
-      );
-      const vUrl = writeURL(
-        startDate.current.latest_date,
-        overlay,
-        date,
-        "v",
-        isLayerClipped
-      );
+  const createVectorLayer = (vf) => {
+    if (!vf) return;
 
-      try {
-        if (!map) {
-          console.error("Map is not available yet!");
-          return;
-        }
+    try {
+      const options = {
+        ...baseParticleOption,
+        ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
+      };
 
-        // // Introduce a delay to ensure source data is available
-        // await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
+      const vectorLayer = L.canvasLayer.vectorFieldAnim(vf, options);
 
-        let cachedU = await db.vectors.get(uUrl);
-        let cachedV = await db.vectors.get(vUrl);
-        let u, v;
-
-        if (cachedU && cachedV) {
-          // console.log("Loaded vector data from IndexedDB:", vectorUrl);
-          u = cachedU.vectorData;
-          v = cachedV.vectorData;
-        } else {
-          // console.log("Fetching vector data from AWS...");
-          u = await text(uUrl);
-          v = await text(vUrl);
-
-          // ✅ Store raw ASCII grids in IndexedDB
-          await db.vectors.put({ url: uUrl, vectorData: u });
-          await db.vectors.put({ url: vUrl, vectorData: v });
-        }
-
-        let vf = L.VectorField.fromASCIIGrids(u, v);
-
-        let vectorLayer = L.canvasLayer.vectorFieldAnim(vf, {
-          ...baseParticleOption,
-          ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
-        });
-
-        // Replace vector layer if it already exists
-        if (vectorLayerRef.current) {
-          overlayLayer.current.removeLayer(vectorLayerRef.current);
-        }
-
-        overlayLayer.current.addLayer(vectorLayer);
-        vectorLayerRef.current = vectorLayer; // Store reference
-
-        // Cleanup function to remove the layer
-        return () => {
-          if (vectorLayerRef.current) {
-            overlayLayer.current.removeLayer(vectorLayerRef.current);
-            vectorLayerRef.current = null;
-          }
-        };
-      } catch (error) {
-        console.error("Error loading vector layer: ", error);
+      if (vectorLayerRef.current) {
+        overlayLayer.current.removeLayer(vectorLayerRef.current);
       }
+
+      overlayLayer.current.addLayer(vectorLayer);
+      vectorLayerRef.current = vectorLayer;
+    } catch (error) {
+      console.error("Error creating vector layer:", error);
+    }
+  };
+
+  const loadVectorAnim = async () => {
+    if (isAnimHidden || !map) return;
+
+    const uUrl = writeURL(
+      startDate.current.latest_date,
+      overlay,
+      date,
+      "u",
+      isLayerClipped
+    );
+    const vUrl = writeURL(
+      startDate.current.latest_date,
+      overlay,
+      date,
+      "v",
+      isLayerClipped
+    );
+
+    try {
+      const now = Date.now();
+
+      let cachedU = await db.vectors.get(uUrl);
+      let cachedV = await db.vectors.get(vUrl);
+
+      const isFreshU = cachedU && now - cachedU.timestamp < TTL_MS;
+      const isFreshV = cachedV && now - cachedV.timestamp < TTL_MS;
+
+      let u, v;
+
+      if (isFreshU && isFreshV) {
+        u = cachedU.vectorData;
+        v = cachedV.vectorData;
+      } else {
+        u = await text(uUrl);
+        v = await text(vUrl);
+        await db.vectors.put({ url: uUrl, vectorData: u, timestamp: now });
+        await db.vectors.put({ url: vUrl, vectorData: v, timestamp: now });
+      }
+
+      let vf = L.VectorField.fromASCIIGrids(u, v);
+      vectorFieldRef.current = vf;
+      createVectorLayer(vf);
+    } catch (error) {
+      console.error("Error loading vector layer: ", error);
     }
   };
 
@@ -250,24 +304,32 @@ const WeatherLayer = ({
   useEffect(() => {
     localOverlay.current = overlayList.find((o) => o.name === overlay);
 
-    const loadScalarData = async () => {
-      setLoadingScalar(true);
-      await loadScalar();
-      setLoadingScalar(false);
-    };
+    if (!map) return; // Map must exist first
 
-    loadScalarData();
+    map.whenReady(() => {
+      const loadScalarData = async () => {
+        setLoadingScalar(true);
+        await loadScalar();
+        setLoadingScalar(false);
+      };
+
+      loadScalarData();
+    });
   }, [map, overlay, date, isLayerClipped]);
 
   useEffect(() => {
-    const loadVectorData = async () => {
-      setLoadingVector(true);
-      await loadVectorAnim();
-      setLoadingVector(false);
-    };
+    if (!map) return;
 
-    loadVectorData();
-  }, [map, date, isLayerClipped, zoomLevel]);
+    map.whenReady(() => {
+      const loadVectorData = async () => {
+        setLoadingVector(true);
+        await loadVectorAnim();
+        setLoadingVector(false);
+      };
+
+      loadVectorData();
+    });
+  }, [map, date, isLayerClipped]);
 
   useEffect(() => {
     setLoading(loadingScalar && loadingVector);
@@ -286,6 +348,28 @@ const WeatherLayer = ({
       }
     }
   }, [map, isAnimHidden]);
+
+  useEffect(() => {
+    if (!map) return;
+
+    let zoomEndTimeout;
+
+    const handleZoomEnd = () => {
+      clearTimeout(zoomEndTimeout);
+      zoomEndTimeout = setTimeout(() => {
+        if (vectorFieldRef.current) {
+          createVectorLayer(vectorFieldRef.current);
+        }
+      }, 100);
+    };
+
+    map.on("zoomend", handleZoomEnd);
+
+    return () => {
+      map.off("zoomend", handleZoomEnd);
+      clearTimeout(zoomEndTimeout);
+    };
+  }, [map, zoomLevel]);
 
   return (
     loading && (
