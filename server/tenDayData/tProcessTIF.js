@@ -13,7 +13,22 @@ const s3 = new S3Client({
   maxAttempts: 3,
 });
 
-const geojsonPath = './country_lowres_dissolved.geojson'; // GeoJSON for clipping
+const geojsonPath = "C:\\Users\\gabri\\10_DAY_FORECAST\\TanawPH\\server\\tenDayData\\country_lowres_dissolved.geojson"; // GeoJSON for clipping
+
+const deleteTempFiles = async () => {
+  const TEMP_DIR = path.join('.', 'tif');
+  try {
+    if (fs.existsSync(TEMP_DIR)) {
+      const files = await fs.readdir(TEMP_DIR);
+      await Promise.all(files.map((file) => fs.unlink(path.join(TEMP_DIR, file))));
+      console.log("🧹 Deleted all temp files from ./tif.");
+    } else {
+      console.log("No ./tif directory found, skipping temp cleanup.");
+    }
+  } catch (error) {
+    console.error("❌ Error deleting temp files:", error);
+  }
+};
 
 const maskTif = async (targetFilePath, tifFileName) => {
   if (!fs.existsSync(targetFilePath)) {
@@ -34,31 +49,27 @@ const maskTif = async (targetFilePath, tifFileName) => {
       [tif],
       ['-co', 'COMPRESS=LZW']
     );
-
+    tif.close(); // ✅ Close source file
     console.log(`Compressed TIF saved to: ${tifCompressedPath}`);
 
-    try {
-      const maskedPath = `./tif/${tifFileName}_masked.tif`;
+    const maskedPath = `./tif/${tifFileName}_masked.tif`;
 
-      await gdal.warpAsync(
-        maskedPath,
-        null,
-        [tifCompressed],
-        ['-cutline', geojsonPath, '-crop_to_cutline', '-co', 'COMPRESS=LZW']
-      );
+    const tifMasked = await gdal.warpAsync(
+      maskedPath,
+      null,
+      [tifCompressed],
+      ['-cutline', geojsonPath, '-crop_to_cutline', '-co', 'COMPRESS=LZW']
+    );
 
-      console.log(`TIF clipped successfully: ${maskedPath}`);
-      tifCompressed.close();
-      return maskedPath;
-    } catch (error) {
-      console.error('Error clipping TIF.', error);
-    }
+    tifCompressed.close(); // ✅ Close compressed file
+    tifMasked.close(); // ✅ Close masked file
 
-    tif.close();
+    console.log(`TIF clipped successfully: ${maskedPath}`);
+    return maskedPath;
   } catch (error) {
     console.error('Error processing file.', error);
+    return null;
   }
-  return null;
 };
 
 export const uploadForecastTIF = async (year, month, day) => {
@@ -74,7 +85,7 @@ export const uploadForecastTIF = async (year, month, day) => {
 
     if (!fs.existsSync(dayPath)) {
       console.error(`Day folder not found: ${dayPath}`);
-      console.timeEnd('Upload Time'); // End timer if early exit
+      console.timeEnd('Upload Time');
       return;
     }
 
@@ -117,7 +128,6 @@ export const uploadForecastTIF = async (year, month, day) => {
               console.error(`Error uploading ${resCFile} to S3: ${err}`);
             }
 
-            // Generate and upload clipped version
             const clipFileName = `${folderName}_${newDate}_masked.tif`;
             const clipFilePath = await maskTif(path.join(folderPath, resCFile), `${folderName}_${newDate}`);
 
@@ -177,30 +187,29 @@ export const uploadForecastTIF = async (year, month, day) => {
                 console.error(`Error uploading ${resFile} to S3: ${err}`);
               }
 
-            // Generate and upload clipped version
-            const clipFileName = `${folderName}_${newDate}_masked.tif`;
-            const clipFilePath = await maskTif(path.join(folderPath, resFile), `${folderName}_${newDate}`);
+              const clipFileName = `${folderName}_${newDate}_masked.tif`;
+              const clipFilePath = await maskTif(path.join(folderPath, resFile), `${folderName}_${newDate}`);
 
-            if (clipFilePath && fs.existsSync(clipFilePath)) {
-              const clipFileContent = fs.readFileSync(clipFilePath);
-              const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${clipFileName}`;
+              if (clipFilePath && fs.existsSync(clipFilePath)) {
+                const clipFileContent = fs.readFileSync(clipFilePath);
+                const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${clipFileName}`;
 
-              const clipParams = new PutObjectCommand({
-                Bucket: BUCKET_NAME,
-                Key: clipS3Key,
-                Body: clipFileContent,
-                ContentType: 'application/octet-stream',
-              });
+                const clipParams = new PutObjectCommand({
+                  Bucket: BUCKET_NAME,
+                  Key: clipS3Key,
+                  Body: clipFileContent,
+                  ContentType: 'application/octet-stream',
+                });
 
-              try {
-                await s3.send(clipParams);
-                console.log(`${clipFileName} uploaded to S3`);
-              } catch (err) {
-                console.error(`Error uploading ${clipFileName} to S3: ${err}`);
+                try {
+                  await s3.send(clipParams);
+                  console.log(`${clipFileName} uploaded to S3`);
+                } catch (err) {
+                  console.error(`Error uploading ${clipFileName} to S3: ${err}`);
+                }
+              } else {
+                console.log(`Clipped file ${clipFileName} not found.`);
               }
-            } else {
-              console.log(`Clipped file ${clipFileName} not found.`);
-            }
             }
           }
         }
@@ -208,27 +217,27 @@ export const uploadForecastTIF = async (year, month, day) => {
         console.log(`Folder not found: ${folder} in ${dayPath}`);
       }
     }
+
     const endTime = Date.now();
-  const duration = endTime - startTime;
+    const duration = endTime - startTime;
+    const hours = Math.floor(duration / (1000 * 60 * 60));
+    const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((duration % (1000 * 60)) / 1000);
+    const durationFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-  const hours = Math.floor(duration / (1000 * 60 * 60));
-  const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((duration % (1000 * 60)) / 1000);
-
-  const durationFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-
-  const messagePlain = `Upload completed for ${year}-${month}-${day} in ${durationFormatted} (HH:MM:SS)`;
-  const messageDecorated = `
+    const messagePlain = `Upload completed for ${year}-${month}-${day} in ${durationFormatted} (HH:MM:SS)`;
+    const messageDecorated = `
 👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍
 ${messagePlain}
 👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍
 `;
 
-  console.log(messageDecorated);
-  return messagePlain;
-};
+    console.log(messageDecorated);
 
-return await processFolder(year, month, day);
-};
+    await deleteTempFiles(); // Clean up
 
+    return messagePlain;
+  };
+
+  return await processFolder(year, month, day);
+};

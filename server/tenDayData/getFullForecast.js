@@ -1,5 +1,5 @@
 import express from "express";
-import chalk from 'chalk';
+import chalk from "chalk";
 import { pool, redisClient } from "../db.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
 
@@ -14,13 +14,13 @@ router.get("/", async (req, res) => {
   }
 
   try {
-    // Validate token and API ID
+    // ✅ Validate token, API access, and check for expiration
     const tokenResult = await pool.query(
-      `SELECT id, organization, api_ids 
-      FROM api_tokens 
-      WHERE token = $1 
-      AND 2 = ANY(api_ids) 
-      LIMIT 1`,
+      `SELECT id, organization, api_ids, expires_at 
+       FROM api_tokens 
+       WHERE token = $1 
+       AND 2 = ANY(api_ids) 
+       LIMIT 1`,
       [token]
     );
 
@@ -28,28 +28,38 @@ router.get("/", async (req, res) => {
       return res.status(401).json({ error: "Unauthorized: Invalid token or API access denied" });
     }
 
-    const requestId = await logApiRequest(req,2);
+    const { expires_at } = tokenResult.rows[0];
+
+    // ✅ Check if expired
+    if (expires_at && new Date(expires_at) < new Date()) {
+      return res.status(403).json({ error: "Forbidden: Token expired" });
+    }
+
+    // ✅ Log request
+    const requestId = await logApiRequest(req, 2);
     if (!requestId) {
       return res.status(401).json({ error: "Invalid token" });
     }
 
+    // ✅ Validate query
     if (!municity || !province) {
       return res.status(400).json({ error: "municity and province are required" });
     }
 
     const cacheKey = `forecast:${municity}:${province}`;
 
-    // Check Redis cache
+    // ✅ Redis cache check
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       console.log(
-        chalk.bgGray.black(' Cache hit ') + ' ' +
-        chalk.bgGreen.black(' Returning data from Redis ')
+        chalk.bgGray.black(" Cache hit ") +
+          " " +
+          chalk.bgGreen.black(" Returning data from Redis ")
       );
       return res.json(JSON.parse(cachedData));
     }
 
-    // Query PostgreSQL if not cached
+    // ✅ Fetch forecast from DB
     const query = `
       SELECT 
         m.id AS location_id, m.municity, m.province, 
@@ -84,7 +94,7 @@ router.get("/", async (req, res) => {
     }
 
     const { location_id, municity: _municity, province: _province, start_date } = result.rows[0];
-    
+
     const data = {
       metadata: {
         request_no: requestId,
@@ -118,14 +128,14 @@ router.get("/", async (req, res) => {
         total_pages: 1,
         current_page: 1,
         per_page: 10,
-        timestamp: new Date().toLocaleString('en-CA', { timeZone: 'Asia/Manila' }).replace(',', ''),
+        timestamp: new Date().toLocaleString("en-CA", { timeZone: "Asia/Manila" }).replace(",", ""),
         method: "GET",
         status_code: 200,
         description: "OK",
       },
     };
 
-    // Store in Redis for 1 hour
+    // ✅ Cache result in Redis
     await redisClient.set(cacheKey, JSON.stringify(data), "EX", 3600);
 
     console.log("❌ Cache miss - Fetching from database");

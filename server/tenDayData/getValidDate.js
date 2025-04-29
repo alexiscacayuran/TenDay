@@ -1,19 +1,10 @@
 import express from "express";
-import { pool, redisClient } from "../db.js";
+import { pool } from "../db.js"; // Removed redisClient
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const cacheKey = "latestValidDateTime";
-
   try {
-    // Check Redis cache
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      console.log("✅ Cache hit - Returning latest date and time from Redis");
-      return res.json(JSON.parse(cachedData));
-    }
-
     // ✅ Query latest date from DB (Make sure it's in Manila Time)
     const dateQuery = `SELECT MAX(start_date) as latest_date FROM date`;
     const dateResult = await pool.query(dateQuery);
@@ -27,8 +18,6 @@ router.get("/", async (req, res) => {
 
     // ✅ Force conversion to Manila Time
     latestDate = new Date(latestDate.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
-
-  
 
     // ✅ Format as YYYY-MM-DD (Manila Time)
     const options = { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" };
@@ -44,29 +33,24 @@ router.get("/", async (req, res) => {
 
     // ✅ Query latest time from activity_log for `day10.csv`
     const logQuery = `
-    SELECT TO_CHAR(logdate, 'HH12:MI:SS AM') AS formatted_time 
-    FROM activity_log 
-    WHERE file_name LIKE $1 
-    ORDER BY logdate DESC 
-    LIMIT 1
-  `;
+      SELECT TO_CHAR(logdate, 'HH12:MI:SS AM') AS formatted_time 
+      FROM activity_log 
+      WHERE file_name LIKE $1 
+      ORDER BY logdate DESC 
+      LIMIT 1
+    `;
   
-  const logResult = await pool.query(logQuery, [`%${datePart}(day10.csv)%`]);
+    const logResult = await pool.query(logQuery, [`%${datePart}(day10.csv)%`]);
   
-  let latestTime = null;
-  if (logResult.rows.length > 0) {
-    latestTime = logResult.rows[0].formatted_time; // Already formatted in SQL
-  }
-  
-  
+    let latestTime = null;
+    if (logResult.rows.length > 0) {
+      latestTime = logResult.rows[0].formatted_time; // Already formatted in SQL
+    }
 
     // ✅ Final JSON response
     const data = { latest_date: formattedDate, latest_time: latestTime };
 
-    // ✅ Store result in Redis cache for 1 hour
-    await redisClient.set(cacheKey, JSON.stringify(data), "EX", 3600);
-
-    console.log("❌ Cache miss - Fetching latest date and time from database");
+    console.log("✅ Fetched latest date and time from database");
     res.json(data);
   } catch (error) {
     console.error("Error executing query", error.stack);
