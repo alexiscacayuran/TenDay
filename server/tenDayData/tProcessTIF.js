@@ -3,6 +3,8 @@ import path from 'path';
 import moment from 'moment';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import gdal from 'gdal-async';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 const s3 = new S3Client({
   region: process.env.AWS_R,
@@ -14,7 +16,12 @@ const s3 = new S3Client({
 });
 
 const TEMP_DIR = './tif'; // temp directory for TIF files
-const geojsonPath = 'C:/Users/gabri/10_DAY_FORECAST/TanawPH/server/tenDayData/country_lowres_dissolved.geojson'; // GeoJSON for clipping
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// ✅ Construct a path that's relative to this file's location
+const geojsonPath = join(__dirname, 'country_lowres_dissolved.geojson');
 
 const deleteTempFiles = async () => {
   try {

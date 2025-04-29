@@ -18,7 +18,7 @@ export const uploadForecastXLSX = async (year, month, day) => {
 
   const baseDate = moment(`${year}-${month}-${day}`, 'YYYY-MM-DD');
   const formattedDate = baseDate.format('YYYY-MM-DD');
-  const s3DateFolder = baseDate.format('YYYYMMDD'); // <-- for creating 20250425
+  const s3DateFolder = baseDate.format('YYYYMMDD'); 
   const monthNumber = String(month).padStart(2, '0');
   const monthName = moment().month(month - 1).format('MMMM');
   const dayFolder = `${moment().month(month - 1).format('MMM')}${String(day).padStart(2, '0')}`;
@@ -68,7 +68,6 @@ export const uploadForecastXLSX = async (year, month, day) => {
       continue;
     }
 
-    // 🔥 S3 path now has 20250425/XLSX/
     const s3Key = `${s3DateFolder}/XLSX/${newFileName}`;
 
     try {
