@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { format } from "date-fns";
 import parseGeoraster from "georaster";
+// client\node_modules\georaster-layer-for-leaflet\dist\georaster-layer-for-leaflet.min.js
 import GeorasterLayer from "georaster-layer-for-leaflet";
 import chroma from "chroma-js";
 import "ih-leaflet-canvaslayer-field/dist/leaflet.canvaslayer.field.js";
@@ -28,16 +29,28 @@ const baseParticleOption = {
   maxAge: 10,
 };
 
+// const particleOptions = [
+//   { zoom: 5, width: 1.8, paths: 1200, maxAge: 95 },
+//   { zoom: 6, width: 2, paths: 1600, maxAge: 90 },
+//   { zoom: 7, width: 2.5, paths: 1800, maxAge: 85 },
+//   { zoom: 8, width: 2.8, paths: 2500, maxAge: 80 },
+//   { zoom: 9, width: 3.2, paths: 4000, maxAge: 65 },
+//   { zoom: 10, width: 3.5, paths: 10000, maxAge: 45 },
+//   { zoom: 11, width: 3.8, paths: 20000, maxAge: 30 },
+//   { zoom: 12, width: 4.2, paths: 30000, maxAge: 25 },
+//   { zoom: 13, width: 4.5, paths: 70000, maxAge: 20 },
+// ];
+
 const particleOptions = [
-  { zoom: 5, width: 1.8, paths: 1200, maxAge: 95 },
-  { zoom: 6, width: 2, paths: 1600, maxAge: 90 },
-  { zoom: 7, width: 2.5, paths: 1800, maxAge: 85 },
-  { zoom: 8, width: 2.8, paths: 2500, maxAge: 80 },
-  { zoom: 9, width: 3.2, paths: 4000, maxAge: 65 },
-  { zoom: 10, width: 3.5, paths: 10000, maxAge: 45 },
-  { zoom: 11, width: 3.8, paths: 20000, maxAge: 30 },
-  { zoom: 12, width: 4.2, paths: 30000, maxAge: 25 },
-  { zoom: 13, width: 4.5, paths: 70000, maxAge: 20 },
+  { zoom: 5, width: 2.8, paths: 3600, maxAge: 125 },
+  { zoom: 6, width: 3, paths: 4800, maxAge: 120 },
+  { zoom: 7, width: 3.5, paths: 5400, maxAge: 115 },
+  { zoom: 8, width: 3.8, paths: 7500, maxAge: 110 },
+  { zoom: 9, width: 4.2, paths: 12000, maxAge: 95 },
+  { zoom: 10, width: 4.5, paths: 30000, maxAge: 75 },
+  { zoom: 11, width: 4.8, paths: 60000, maxAge: 60 },
+  { zoom: 12, width: 5.2, paths: 90000, maxAge: 55 },
+  { zoom: 13, width: 5.5, paths: 210000, maxAge: 50 },
 ];
 
 const writeURL = (startDate, overlay, date, isVector, isLayerClipped) => {
@@ -99,41 +112,41 @@ const WeatherLayer = ({
   const [loading, setLoading] = useState(true);
   const vectorFieldRef = useRef(null);
   // console.log("Loading scalar", loadingScalar);
-  // console.log("Loading vector", loadingVector);
+  console.log("Loading vector", loadingVector);
 
-  // Monkey-patch drawParticle once
-  useEffect(() => {
-    if (!L.CanvasLayer.VectorFieldAnim.prototype._drawParticleWrapped) {
-      const originalDrawParticle =
-        L.CanvasLayer.VectorFieldAnim.prototype._drawParticle;
+  // // Monkey-patch drawParticle once
+  // useEffect(() => {
+  //   if (!L.CanvasLayer.VectorFieldAnim.prototype._drawParticleWrapped) {
+  //     const originalDrawParticle =
+  //       L.CanvasLayer.VectorFieldAnim.prototype._drawParticle;
 
-      L.CanvasLayer.VectorFieldAnim.prototype._drawParticle = function (
-        viewInfo,
-        ctx,
-        par
-      ) {
-        try {
-          originalDrawParticle.call(this, viewInfo, ctx, par);
-        } catch (error) {
-          console.error("Error inside _drawParticle:", error);
-          this._stopAnimation();
+  //     L.CanvasLayer.VectorFieldAnim.prototype._drawParticle = function (
+  //       viewInfo,
+  //       ctx,
+  //       par
+  //     ) {
+  //       try {
+  //         originalDrawParticle.call(this, viewInfo, ctx, par);
+  //       } catch (error) {
+  //         console.error("Error inside _drawParticle:", error);
+  //         this._stopAnimation();
 
-          if (vectorLayerRef.current) {
-            overlayLayer.current.removeLayer(vectorLayerRef.current);
-            vectorLayerRef.current = null;
-          }
+  //         if (vectorLayerRef.current) {
+  //           overlayLayer.current.removeLayer(vectorLayerRef.current);
+  //           vectorLayerRef.current = null;
+  //         }
 
-          if (vectorFieldRef.current) {
-            setTimeout(() => {
-              createVectorLayer(vectorFieldRef.current);
-            }, 1000);
-          }
-        }
-      };
+  //         if (vectorFieldRef.current) {
+  //           setTimeout(() => {
+  //             createVectorLayer(vectorFieldRef.current);
+  //           }, 1000);
+  //         }
+  //       }
+  //     };
 
-      L.CanvasLayer.VectorFieldAnim.prototype._drawParticleWrapped = true;
-    }
-  }, []);
+  //     L.CanvasLayer.VectorFieldAnim.prototype._drawParticleWrapped = true;
+  //   }
+  // }, []);
 
   useEffect(() => {
     const cleanupOldCache = async () => {
@@ -206,7 +219,7 @@ const WeatherLayer = ({
         georaster: georaster,
         resolution: 64,
         pixelValuesToColorFn: colorScaleFn,
-        keepBuffer: 50,
+        // keepBuffer: 50,
         pane: "tilePane",
         zIndex: 100,
         opacity: 0.8,
@@ -304,35 +317,27 @@ const WeatherLayer = ({
   useEffect(() => {
     localOverlay.current = overlayList.find((o) => o.name === overlay);
 
-    if (!map) return; // Map must exist first
+    const loadScalarData = async () => {
+      setLoadingScalar(true);
+      await loadScalar();
+      setLoadingScalar(false);
+    };
 
-    map.whenReady(() => {
-      const loadScalarData = async () => {
-        setLoadingScalar(true);
-        await loadScalar();
-        setLoadingScalar(false);
-      };
-
-      loadScalarData();
-    });
+    loadScalarData();
   }, [map, overlay, date, isLayerClipped]);
 
   useEffect(() => {
-    if (!map) return;
+    const loadVectorData = async () => {
+      setLoadingVector(true);
+      await loadVectorAnim();
+      setLoadingVector(false);
+    };
 
-    map.whenReady(() => {
-      const loadVectorData = async () => {
-        setLoadingVector(true);
-        await loadVectorAnim();
-        setLoadingVector(false);
-      };
-
-      loadVectorData();
-    });
-  }, [map, date, isLayerClipped]);
+    loadVectorData();
+  }, [map, date, isLayerClipped, zoomLevel]);
 
   useEffect(() => {
-    setLoading(loadingScalar && loadingVector);
+    setLoading(loadingVector || loadingScalar);
   }, [loadingScalar, loadingVector]);
 
   useEffect(() => {
@@ -349,27 +354,27 @@ const WeatherLayer = ({
     }
   }, [map, isAnimHidden]);
 
-  useEffect(() => {
-    if (!map) return;
+  // useEffect(() => {
+  //   if (!map) return;
 
-    let zoomEndTimeout;
+  //   let zoomEndTimeout;
 
-    const handleZoomEnd = () => {
-      clearTimeout(zoomEndTimeout);
-      zoomEndTimeout = setTimeout(() => {
-        if (vectorFieldRef.current) {
-          createVectorLayer(vectorFieldRef.current);
-        }
-      }, 100);
-    };
+  //   const handleZoomEnd = () => {
+  //     clearTimeout(zoomEndTimeout);
+  //     zoomEndTimeout = setTimeout(() => {
+  //       if (vectorFieldRef.current) {
+  //         createVectorLayer(vectorFieldRef.current);
+  //       }
+  //     }, 100);
+  //   };
 
-    map.on("zoomend", handleZoomEnd);
+  //   map.on("zoomend", handleZoomEnd);
 
-    return () => {
-      map.off("zoomend", handleZoomEnd);
-      clearTimeout(zoomEndTimeout);
-    };
-  }, [map, zoomLevel]);
+  //   return () => {
+  //     map.off("zoomend", handleZoomEnd);
+  //     clearTimeout(zoomEndTimeout);
+  //   };
+  // }, [map, zoomLevel]);
 
   return (
     loading && (
