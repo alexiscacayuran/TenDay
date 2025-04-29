@@ -3,6 +3,8 @@ import path from 'path';
 import moment from 'moment';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import gdal from 'gdal-async';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 const s3 = new S3Client({
   region: process.env.AWS_R,
@@ -13,20 +15,23 @@ const s3 = new S3Client({
   maxAttempts: 3,
 });
 
-const geojsonPath = "C:\\Users\\gabri\\10_DAY_FORECAST\\TanawPH\\server\\tenDayData\\country_lowres_dissolved.geojson"; // GeoJSON for clipping
+const TEMP_DIR = './tif'; // temp directory for TIF files
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// ✅ Construct a path that's relative to this file's location
+const geojsonPath = join(__dirname, 'country_lowres_dissolved.geojson');
 
 const deleteTempFiles = async () => {
-  const TEMP_DIR = path.join('.', 'tif');
   try {
     if (fs.existsSync(TEMP_DIR)) {
       const files = await fs.readdir(TEMP_DIR);
       await Promise.all(files.map((file) => fs.unlink(path.join(TEMP_DIR, file))));
-      console.log("🧹 Deleted all temp files from ./tif.");
-    } else {
-      console.log("No ./tif directory found, skipping temp cleanup.");
+      console.log("Deleted all temp files.");
     }
   } catch (error) {
-    console.error("❌ Error deleting temp files:", error);
+    console.error("Error deleting temp files:", error);
   }
 };
 
@@ -49,28 +54,38 @@ const maskTif = async (targetFilePath, tifFileName) => {
       [tif],
       ['-co', 'COMPRESS=LZW']
     );
-    tif.close(); // ✅ Close source file
+
     console.log(`Compressed TIF saved to: ${tifCompressedPath}`);
 
-    const maskedPath = `./tif/${tifFileName}_masked.tif`;
+    try {
+      const maskedPath = `./tif/${tifFileName}_masked.tif`;
 
-    const tifMasked = await gdal.warpAsync(
-      maskedPath,
-      null,
-      [tifCompressed],
-      ['-cutline', geojsonPath, '-crop_to_cutline', '-co', 'COMPRESS=LZW']
-    );
+      const tifMasked = await gdal.warpAsync(
+        maskedPath,
+        null,
+        [tifCompressed],
+        ['-cutline', geojsonPath, '-crop_to_cutline', '-co', 'COMPRESS=LZW']
+      );
 
-    tifCompressed.close(); // ✅ Close compressed file
-    tifMasked.close(); // ✅ Close masked file
+      console.log(`TIF clipped successfully: ${maskedPath}`);
 
-    console.log(`TIF clipped successfully: ${maskedPath}`);
-    return maskedPath;
+      // VERY IMPORTANT: close the masked TIF after processing
+      tifMasked.close();
+      tifCompressed.close();
+      tif.close();
+
+      return maskedPath;
+    } catch (error) {
+      console.error('Error clipping TIF.', error);
+      tifCompressed.close();
+      tif.close();
+    }
   } catch (error) {
     console.error('Error processing file.', error);
-    return null;
   }
+  return null;
 };
+
 
 export const uploadForecastTIF = async (year, month, day) => {
   const SOURCE_PATH = '\\\\10.10.3.118\\climps\\10_Day\\Data';
@@ -85,7 +100,6 @@ export const uploadForecastTIF = async (year, month, day) => {
 
     if (!fs.existsSync(dayPath)) {
       console.error(`Day folder not found: ${dayPath}`);
-      console.timeEnd('Upload Time');
       return;
     }
 
@@ -114,20 +128,19 @@ export const uploadForecastTIF = async (year, month, day) => {
             const s3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${newFileName}`;
             const fileContent = fs.readFileSync(path.join(folderPath, resCFile));
 
-            const params = new PutObjectCommand({
-              Bucket: BUCKET_NAME,
-              Key: s3Key,
-              Body: fileContent,
-              ContentType: 'application/octet-stream',
-            });
-
             try {
-              await s3.send(params);
+              await s3.send(new PutObjectCommand({
+                Bucket: BUCKET_NAME,
+                Key: s3Key,
+                Body: fileContent,
+                ContentType: 'application/octet-stream',
+              }));
               console.log(`${resCFile} uploaded as ${newFileName} to S3`);
             } catch (err) {
               console.error(`Error uploading ${resCFile} to S3: ${err}`);
             }
 
+            // Generate and upload clipped version
             const clipFileName = `${folderName}_${newDate}_masked.tif`;
             const clipFilePath = await maskTif(path.join(folderPath, resCFile), `${folderName}_${newDate}`);
 
@@ -135,15 +148,13 @@ export const uploadForecastTIF = async (year, month, day) => {
               const clipFileContent = fs.readFileSync(clipFilePath);
               const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${clipFileName}`;
 
-              const clipParams = new PutObjectCommand({
-                Bucket: BUCKET_NAME,
-                Key: clipS3Key,
-                Body: clipFileContent,
-                ContentType: 'application/octet-stream',
-              });
-
               try {
-                await s3.send(clipParams);
+                await s3.send(new PutObjectCommand({
+                  Bucket: BUCKET_NAME,
+                  Key: clipS3Key,
+                  Body: clipFileContent,
+                  ContentType: 'application/octet-stream',
+                }));
                 console.log(`${clipFileName} uploaded to S3`);
               } catch (err) {
                 console.error(`Error uploading ${clipFileName} to S3: ${err}`);
@@ -173,20 +184,19 @@ export const uploadForecastTIF = async (year, month, day) => {
               const s3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${newFileName}`;
               const fileContent = fs.readFileSync(path.join(folderPath, resFile));
 
-              const params = new PutObjectCommand({
-                Bucket: BUCKET_NAME,
-                Key: s3Key,
-                Body: fileContent,
-                ContentType: 'application/octet-stream',
-              });
-
               try {
-                await s3.send(params);
+                await s3.send(new PutObjectCommand({
+                  Bucket: BUCKET_NAME,
+                  Key: s3Key,
+                  Body: fileContent,
+                  ContentType: 'application/octet-stream',
+                }));
                 console.log(`${resFile} uploaded as ${newFileName} to S3`);
               } catch (err) {
                 console.error(`Error uploading ${resFile} to S3: ${err}`);
               }
 
+              // Generate and upload clipped version
               const clipFileName = `${folderName}_${newDate}_masked.tif`;
               const clipFilePath = await maskTif(path.join(folderPath, resFile), `${folderName}_${newDate}`);
 
@@ -194,15 +204,13 @@ export const uploadForecastTIF = async (year, month, day) => {
                 const clipFileContent = fs.readFileSync(clipFilePath);
                 const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${clipFileName}`;
 
-                const clipParams = new PutObjectCommand({
-                  Bucket: BUCKET_NAME,
-                  Key: clipS3Key,
-                  Body: clipFileContent,
-                  ContentType: 'application/octet-stream',
-                });
-
                 try {
-                  await s3.send(clipParams);
+                  await s3.send(new PutObjectCommand({
+                    Bucket: BUCKET_NAME,
+                    Key: clipS3Key,
+                    Body: clipFileContent,
+                    ContentType: 'application/octet-stream',
+                  }));
                   console.log(`${clipFileName} uploaded to S3`);
                 } catch (err) {
                   console.error(`Error uploading ${clipFileName} to S3: ${err}`);
@@ -218,6 +226,9 @@ export const uploadForecastTIF = async (year, month, day) => {
       }
     }
 
+    // Cleanup after processing all folders
+    await deleteTempFiles();
+
     const endTime = Date.now();
     const duration = endTime - startTime;
     const hours = Math.floor(duration / (1000 * 60 * 60));
@@ -231,11 +242,7 @@ export const uploadForecastTIF = async (year, month, day) => {
 ${messagePlain}
 👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍
 `;
-
     console.log(messageDecorated);
-
-    await deleteTempFiles(); // Clean up
-
     return messagePlain;
   };
 

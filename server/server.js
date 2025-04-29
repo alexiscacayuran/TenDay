@@ -23,7 +23,8 @@ import authRoutes from "./API/token.js";
 import pieChart from "./route/pieChart.js";
 
 // //Background job
-// import "./backgroundJob/cleanUpDB.js"; // Runs cleanup job on startup
+ import "./backgroundJob/cleanUpDB.js"; 
+ import './backgroundJob/cleanUpS3.js'; 
 
 //API tenday (internal)
 import { uploadForecastData } from './tenDayData/uploadTenDay.js';
@@ -56,9 +57,7 @@ import tokenRoutes from './API/tokenRoutes.js';
 import seasonalRoutes from './API/seasonalRoutes.js';
 
 //Admin
-import apiTokens from './admin/apiToken.js';
 import apiOrg from './admin/apiOrg.js';
-import apiLogs from './admin/apiLogs.js';
 
 const app = express();
 const port = 5000;
@@ -237,7 +236,6 @@ app.get('/retrievefile', async (req, res) => {
 });
 
 
-
 // Route for uploading Seasonal Data
 app.get("/seasonal-date", authenticate, async (req, res) => {
   try {
@@ -342,9 +340,7 @@ app.use("/api", seasonalRoutes);
 app.use("/seasonal-reg", seasonalDataRegional);
 
 //Admin
-app.use('/api', apiTokens);
 app.use('/api', apiOrg);
-app.use('/api', apiLogs);
 
 
 

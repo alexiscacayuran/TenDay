@@ -2,6 +2,8 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import gdal from "gdal-async";
 import fs from "fs/promises";
 import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 const s3 = new S3Client({
   region: process.env.AWS_R,
@@ -13,8 +15,18 @@ const s3 = new S3Client({
 });
 
 const BUCKET_NAME = "tendayforecast";
+<<<<<<< HEAD
 const TEMP_DIR = "C:\\Users\\gabri\\PAGASA\\server\\temp";
 const GEOJSON_PATH = "C:\\Users\\gabri\\10_DAY_FORECAST\\TanawPH\\server\\tenDayData\\country_lowres_dissolved.geojson"; 
+=======
+const TEMP_DIR = './tif'; // temp directory for TIF files
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// ✅ Construct a path that's relative to this file's location
+const GEOJSON_PATH = join(__dirname, 'country_lowres_dissolved.geojson');
+
+>>>>>>> backend
 
 const monthMap = {
   "01": "01_January",
