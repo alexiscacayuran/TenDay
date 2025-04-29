@@ -16,21 +16,36 @@ import Legend from "./Legend";
 import ZoomLevel from "./ZoomLevel";
 import ScaleNautic from "react-leaflet-nauticsale";
 import ForecastPopup from "./ForecastPopup";
+import Issuance from "./Issuance";
 
 const Map = () => {
-  const [accessToken, setAccessToken] = useState(null);
+  const [arcgisToken, setArcgisToken] = useState(null);
+  const [serverToken, setServerToken] = useState(null);
 
   useEffect(() => {
-    const fetchToken = async () => {
+    // Fetch token from server
+  }, []);
+
+  useEffect(() => {
+    const fetchServerToken = async () => {
       try {
-        const response = await axios.get("/api/token");
-        setAccessToken(response.data.accessToken);
+        const response = await axios.get("/serverToken");
+        setServerToken(response.data.token);
       } catch (error) {
-        console.error("Error fetching token:", error);
+        console.error("Error fetching server token:", error);
       }
     };
 
-    fetchToken();
+    const fetchArcgisToken = async () => {
+      try {
+        const response = await axios.get("/api/token");
+        setArcgisToken(response.data.accessToken);
+      } catch (error) {
+        console.error("Error fetching Arcgis token:", error);
+      }
+    };
+    fetchServerToken();
+    fetchArcgisToken();
   }, []);
 
   const bounds = useMemo(
@@ -66,19 +81,15 @@ const Map = () => {
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
   const [isLayerClipped, setIsLayerClipped] = useState(false);
-  const [isPolygonHighlighted, setIsPolygonHighlighted] = useState(false);
 
   const [units, setUnits] = useState({
     temperature: "°C",
-    rainfall: "mm/24h",
+    rainfall: "mm/day",
     windSpeed: "m/s",
     windDirection: "arrow",
   });
 
   const [scale, setScale] = useState({ metric: true, imperial: false });
-
-  console.log(isPolygonHighlighted);
-  console.log(isLocationReady);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -96,14 +107,14 @@ const Map = () => {
       }
     };
 
-    fetchDate(); // Trigger the data fetch when the component mounts
-  }, []); // Empty dependency array to run only on component mount
+    fetchDate();
+  }, []); //
 
   const displayMap = useMemo(
     () => (
       <Box sx={{ maxHeight: "100vh" }}>
         <Navbar
-          accessToken={accessToken}
+          arcgisToken={arcgisToken}
           map={map}
           markerLayer={markerLayer}
           location={location}
@@ -115,18 +126,20 @@ const Map = () => {
           scale={scale}
           setScale={setScale}
           setIsLocationReady={setIsLocationReady}
+          selectedPolygon={selectedPolygon}
         />
         <MapContainer
           center={[13, 122]}
           zoom={8}
-          minZoom={5} //5
+          minZoom={5}
           maxZoom={20}
           maxBounds={bounds}
-          maxBoundsViscosity={2}
+          maxBoundsViscosity={0.5}
           zoomControl={false}
           ref={setMap} // Set map instance to external state
+          paddingTopLeft={[2, 2]}
         >
-          {isPolygonHighlighted && isLocationReady ? (
+          {isLocationReady ? (
             <ForecastPopup
               location={location}
               markerLayer={markerLayer}
@@ -138,7 +151,6 @@ const Map = () => {
               units={units}
               setUnits={setUnits}
               selectedPolygon={selectedPolygon}
-              setIsPolygonHighlighted={setIsPolygonHighlighted}
             />
           ) : null}
           <ScaleNautic
@@ -163,19 +175,18 @@ const Map = () => {
               zoomLevel={zoomLevel}
             />
           )}
-          <Base
-            accessToken={accessToken}
-            selectedPolygon={selectedPolygon}
-            setIsPolygonHighlighted={setIsPolygonHighlighted}
-          />
-          <Labels accessToken={accessToken} />
+          <Base arcgisToken={arcgisToken} selectedPolygon={selectedPolygon} />
+          <Labels arcgisToken={arcgisToken} />
 
           <ReverseGeocode
-            accessToken={accessToken}
+            arcgisToken={arcgisToken}
             setLocation={setLocation}
             setIsLocationReady={setIsLocationReady}
+            selectedPolygon={selectedPolygon}
           />
         </MapContainer>
+
+        {dateReady && <Issuance startDate={startDate} />}
 
         <MapControl map={map} />
         <LayerMenu
@@ -202,21 +213,22 @@ const Map = () => {
           setUnits={setUnits}
         />
 
-        {dateReady &&
-          !open && ( // Render DateNavigation only if `dateReady` is true
-            <DateNavigation
-              initialDate={new Date(startDate.current.latest_date)} // Pass the fetched `latest_date`
-              range={10}
-              setDate={setDate}
-              date={date}
-            />
-          )}
+        {dateReady && !open && (
+          <DateNavigation
+            initialDate={new Date(startDate.current.latest_date)}
+            range={10}
+            setDate={setDate}
+            date={date}
+          />
+        )}
 
         <ForecastContainer
+          serverToken={serverToken}
           map={map}
           open={open}
           setOpen={setOpen}
           location={location}
+          setLocation={setLocation}
           markerLayer={markerLayer}
           overlay={overlay}
           setOverlay={setOverlay}
@@ -229,6 +241,8 @@ const Map = () => {
           date={date}
           setDate={setDate}
           isDiscrete={isDiscrete}
+          arcgisToken={arcgisToken}
+          selectedPolygon={selectedPolygon}
         />
       </Box>
     ),
@@ -236,7 +250,7 @@ const Map = () => {
     [
       map,
       bounds,
-      accessToken,
+      arcgisToken,
       open,
       location,
       dateReady,
@@ -252,11 +266,10 @@ const Map = () => {
       zoomLevel,
       scale,
       isLocationReady,
-      isPolygonHighlighted,
     ]
   );
 
-  return <div>{displayMap}</div>;
+  return <>{displayMap}</>;
 };
 
 export default Map;

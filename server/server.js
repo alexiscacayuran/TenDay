@@ -1,5 +1,5 @@
 import express from "express";
-import fs from 'fs';
+import fs from "fs";
 import cors from "cors";
 import multer from "multer";
 import jwtAuth from "./route/jwtAuth.js";
@@ -12,21 +12,19 @@ import temperatureRoutes from "./controller/temperature.js";
 import rainfallRoutes from "./controller/rainfall.js";
 import cloudCoverRoutes from "./controller/cloud_cover.js";
 import humidityRoutes from "./controller/humidity.js";
-import usersRouter from './controller/users.js';
-import authenticate from './middleware/authorization.js';
+import usersRouter from "./controller/users.js";
+import authenticate from "./middleware/authorization.js";
 import getTokenRoute from "./API/serverToken.js";
 import archiver from 'archiver';
 import moment from 'moment';
 
-
-import authRoutes from "./API/token.js"; 
+import authRoutes from "./API/token.js";
 
 import pieChart from "./route/pieChart.js";
 
+// //Background job
+// import "./backgroundJob/cleanUpDB.js"; // Runs cleanup job on startup
 
-//Background job
-import "./backgroundJob/cleanUpDB.js"; // Runs cleanup job on startup
-	
 //API tenday (internal)
 import { uploadForecastData } from './tenDayData/uploadTenDay.js';
 import { uploadForecastTIF } from './tenDayData/tProcessTIF.js';
@@ -40,19 +38,17 @@ import getFullForecast from "./tenDayData/getFullForecast.js";
 import getDateForecast from "./tenDayData/getDateForecast.js";
 import getValidDate from "./tenDayData/getValidDate.js";
 import getCurrentAllForecast from "./tenDayData/getCurrentAllForecast.js";
-import getCurrentForecast from "./tenDayData/getCurrentForecast.js";  // Import the route
+import getCurrentForecast from "./tenDayData/getCurrentForecast.js"; // Import the route
 
 import getFullForecastInternal from "./tenDayData/internal/getFullForecast.js";
 import getDateForecastInternal from "./tenDayData/internal/getDateForecast.js";
 import getMunicities from "./tenDayData/internal/getMunicities.js";
 
-
 //API seasonal (internal)
-import { processSeasonalData } from './seasonalData/uploadSeasonal.js';
-import { processSeasonalFiles } from './seasonalData/sProcessTIF.js';
+import { processSeasonalData } from "./seasonalData/uploadSeasonal.js";
+import { processSeasonalFiles } from "./seasonalData/sProcessTIF.js";
 
-import seasonalDataRegional from "./seasonalData/seasonalRegional.js";  // Import the route
-
+import seasonalDataRegional from "./seasonalData/seasonalRegional.js"; // Import the route
 
 //API
 
@@ -114,7 +110,7 @@ app.use("/api/cloud_cover", cloudCoverRoutes);
 // Route for municities
 app.use("/api/humidity", humidityRoutes);
 
-app.use('/users', usersRouter); 
+app.use("/users", usersRouter);
 
 // Route for fetching current forecast for a certain municities
 app.use("/", getCurrentForecast);
@@ -141,43 +137,47 @@ app.use("/fullinternal", getFullForecastInternal);
 app.use("/municitiesInternal", getMunicities);
 
 // Route for uploading Ten Day Data
-app.get('/uploadForecastData', authenticate, async (req, res) => {
+app.get("/uploadForecastData", authenticate, async (req, res) => {
   const { year, month, day } = req.query;
 
   // Validate input
   if (!year || !month || !day) {
-      return res.status(400).json({ error: 'Please provide Year, Month, and Day.' });
+    return res
+      .status(400)
+      .json({ error: "Please provide Year, Month, and Day." });
   }
 
   try {
-      const userId = req.user; // Extract the user ID from the authenticated user
-      console.log('Authenticated User ID:', userId);
+    const userId = req.user; // Extract the user ID from the authenticated user
+    console.log("Authenticated User ID:", userId);
 
-      const result = await uploadForecastData(year, month, parseInt(day), userId); // Pass user ID to uploadForecastData
-      if (result.message.startsWith('Error:')) {
-          return res.status(400).json({ error: result.message });
-      }
-      res.json({ message: result.message });
+    const result = await uploadForecastData(year, month, parseInt(day), userId); // Pass user ID to uploadForecastData
+    if (result.message.startsWith("Error:")) {
+      return res.status(400).json({ error: result.message });
+    }
+    res.json({ message: result.message });
   } catch (error) {
-      console.error('Error in /uploadForecastData:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error in /uploadForecastData:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-app.get('/uploadForecastTIF', authenticate, async (req, res) => {
+app.get("/uploadForecastTIF", authenticate, async (req, res) => {
   const { year, month, day } = req.query;
 
   if (!year || !month || !day) {
-    return res.status(400).send('Error: Missing required parameters (year, month, day)');
+    return res
+      .status(400)
+      .send("Error: Missing required parameters (year, month, day)");
   }
 
   try {
     // Wait for processing to finish before sending the response
     const result = await uploadForecastTIF(year, month, day);
-    return res.status(200).send(result); 
+    return res.status(200).send(result);
   } catch (error) {
-    console.error('❌ Error processing files:', error);
-    return res.status(500).send('Error processing files');
+    console.error("❌ Error processing files:", error);
+    return res.status(500).send("Error processing files");
   }
 });
 
@@ -239,10 +239,10 @@ app.get('/retrievefile', async (req, res) => {
 
 
 // Route for uploading Seasonal Data
-app.get('/seasonal-date', authenticate, async (req, res) => {
+app.get("/seasonal-date", authenticate, async (req, res) => {
   try {
     const userId = req.user; // Extract the user ID from the authenticated user
-    console.log('Authenticated User ID:', userId);
+    console.log("Authenticated User ID:", userId);
 
     const batch = req.query.batch;
     if (!batch) {
@@ -261,19 +261,31 @@ app.get('/seasonal-date', authenticate, async (req, res) => {
 
     // Process seasonal data
     await processSeasonalData(batch, folderPath, userId); // Pass userID to track the user
-    res.send('Seasonal data processed successfully.');
+    res.send("Seasonal data processed successfully.");
   } catch (error) {
-    console.error('Error processing seasonal data:', error);
-    res.status(500).send('Error processing seasonal data.');
+    console.error("Error processing seasonal data:", error);
+    res.status(500).send("Error processing seasonal data.");
   }
 });
 
 // Helper function to get month name based on batch number
 function getMonthName(batch) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   return months[(batch - 180) % 12];
 }
-
 
 // Route for uploading Wind Data
 app.get("/getWind", authenticate, async (req, res) => {
@@ -281,7 +293,9 @@ app.get("/getWind", authenticate, async (req, res) => {
     const { year, month, day } = req.query;
 
     if (!year || !month || !day) {
-      return res.status(400).json({ error: "Missing year, month, or day parameter" });
+      return res
+        .status(400)
+        .json({ error: "Missing year, month, or day parameter" });
     }
 
     const start = Date.now();
@@ -292,34 +306,38 @@ app.get("/getWind", authenticate, async (req, res) => {
     const hours = Math.floor(duration / (1000 * 60 * 60));
     const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((duration % (1000 * 60)) / 1000);
-    const durationFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const durationFormatted = `${String(hours).padStart(2, "0")}:${String(
+      minutes
+    ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
     const message = `Upload completed for ${year}-${month}-${day} in ${durationFormatted} (HH:MM:SS)`;
     res.send(message); // <-- plain text instead of JSON
   } catch (error) {
-    res.status(500).json({ error: "Internal server error", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
   }
 });
 
 // Endpoint to Process TIF files (Seasonal)
-app.get('/seasonalprocess', async (req, res) => {
+app.get("/seasonalprocess", async (req, res) => {
   try {
     const batch = parseInt(req.query.batch, 10);
     if (isNaN(batch) || batch < 180) {
-      return res.status(400).json({ error: 'Invalid batch number' });
+      return res.status(400).json({ error: "Invalid batch number" });
     }
 
     const result = await processSeasonalFiles(batch);
-    res.json({ message: 'Processing completed', result });
+    res.json({ message: "Processing completed", result });
   } catch (error) {
-    console.error('Error processing TIFF files:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error("Error processing TIFF files:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 // Use API routes
-app.use('/api', tokenRoutes);
-app.use('/api', seasonalRoutes);
+app.use("/api", tokenRoutes);
+app.use("/api", seasonalRoutes);
 
 app.use("/seasonal-reg", seasonalDataRegional);
 

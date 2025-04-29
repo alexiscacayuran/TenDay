@@ -1,13 +1,6 @@
-import React from "react";
-import {
-  Page,
-  Image,
-  Text,
-  View,
-  Document,
-  StyleSheet,
-  PDFDownloadLink,
-} from "@react-pdf/renderer";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import { Button } from "@mui/joy";
 import { format } from "date-fns";
 import ForecastReportPDF, { ReportViewer } from "./ForecastReportPDF";
@@ -16,55 +9,90 @@ import ForecastReportTXT from "./ForecastReportTXT";
 
 const timestamp = `tanawPH_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`;
 
-const downloadButton = (
-  forecast,
-  docFormat,
-  docUnits,
-  docColored,
-  location
-) => {
-  switch (docFormat) {
-    case "pdf":
-      return (
-        <PDFDownloadLink
-          document={
-            <ForecastReportPDF
-              location={location}
-              forecast={forecast}
-              docUnits={docUnits}
-              docColored={docColored}
-            />
-          }
-          fileName={timestamp}
-        >
-          {({ blob, url, loading, error }) => (
-            <Button
-              loading={loading}
-              sx={{
-                flexGrow: 1,
-                width: "-webkit-fill-available",
-              }}
-            >
-              {error ? `Error: ${error.message}` : "Download"}
-            </Button>
-          )}
-        </PDFDownloadLink>
-      );
-    case "csv":
-      return <ForecastReportCSV forecast={forecast} docUnits={docUnits} />;
-    case "txt":
-      return <ForecastReportTXT forecast={forecast} docUnits={docUnits} />;
-  }
-};
-
 const ForecastDownload = ({
+  serverToken,
   forecast,
   docFormat,
   docUnits,
   docColored,
   location,
+  docExtendForecast,
+  selectedMunicities,
 }) => {
-  console.log(forecast);
+  const [forecastExtended, setForecastExtend] = useState([]);
+
+  useEffect(() => {
+    const fetchForecastExtend = async () => {
+      const forecasts = await Promise.all(
+        selectedMunicities.map(async (municity) => {
+          const response = await axios.get("/fullInternal", {
+            params: {
+              municity: municity,
+              province: forecast.province,
+            },
+            headers: {
+              token: serverToken,
+            },
+          });
+          return response.data;
+        })
+      );
+      setForecastExtend(forecasts);
+    };
+
+    fetchForecastExtend();
+  }, [selectedMunicities]);
+
+  const downloadButton = () => {
+    switch (docFormat) {
+      case "pdf":
+        return (
+          <PDFDownloadLink
+            document={
+              <ForecastReportPDF
+                location={location}
+                forecast={forecast}
+                docUnits={docUnits}
+                docColored={docColored}
+                docExtendForecast={docExtendForecast}
+                forecastExtended={forecastExtended}
+              />
+            }
+            fileName={timestamp}
+          >
+            {({ blob, url, loading, error }) => (
+              <Button
+                loading={loading}
+                sx={{
+                  flexGrow: 1,
+                  width: "-webkit-fill-available",
+                }}
+              >
+                {error ? `Error: ${error.message}` : "Download"}
+              </Button>
+            )}
+          </PDFDownloadLink>
+        );
+      case "csv":
+        return (
+          <ForecastReportCSV
+            forecast={forecast}
+            docUnits={docUnits}
+            docExtendForecast={docExtendForecast}
+            forecastExtended={forecastExtended}
+          />
+        );
+      case "txt":
+        return (
+          <ForecastReportTXT
+            forecast={forecast}
+            docUnits={docUnits}
+            docExtendForecast={docExtendForecast}
+            forecastExtended={forecastExtended}
+          />
+        );
+    }
+  };
   return (
     <>
       {docFormat === "pdf" ? (
@@ -73,10 +101,12 @@ const ForecastDownload = ({
           forecast={forecast}
           docUnits={docUnits}
           docColored={docColored}
+          docExtendForecast={docExtendForecast}
+          forecastExtended={forecastExtended}
         />
       ) : null}
 
-      {downloadButton(forecast, docFormat, docUnits, docColored, location)}
+      {downloadButton()}
     </>
   );
 };

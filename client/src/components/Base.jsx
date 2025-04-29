@@ -4,26 +4,28 @@ import { featureLayer } from "esri-leaflet";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 
-const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
+const Base = ({ arcgisToken, selectedPolygon }) => {
   const map = useMap();
-  const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
-  // const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
   const [provinceId, setProvinceId] = useState(null);
-
   const municityLayerRef = useRef(null);
+  const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
+  const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
 
   useEffect(() => {
-    if (!accessToken) return;
+    if (!arcgisToken) return;
+
+    map.createPane("hillshadePane");
+    map.getPane("hillshadePane").style.zIndex = 250;
 
     const weatherBasemap = vectorBasemapLayer(weatherBasemapEnum, {
-      apiKey: accessToken,
+      apiKey: arcgisToken,
       pane: "overlayPane",
       zIndex: 200,
     });
     weatherBasemap.addTo(map);
 
     const provinceBoundaries = featureLayer({
-      token: accessToken,
+      token: arcgisToken,
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/2",
       simplifyFactor: 0.5,
       precision: 4,
@@ -35,7 +37,7 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
       }),
       onEachFeature: (feature, layer) => {
         layer.on({
-          mousemove: () => {
+          mouseover: () => {
             setProvinceId(feature.properties.ID);
           },
         });
@@ -44,12 +46,11 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
 
     provinceBoundaries.addTo(map);
 
-    // const hillshade = vectorBasemapLayer(hilshadeEnum, {
-    //   token: accessToken,
-
-    //   zIndex: 200,
-    // });
-    // hillshade.addTo(map);
+    const hillshade = vectorBasemapLayer(hilshadeEnum, {
+      apiKey: arcgisToken,
+      pane: "hillshadePane",
+    });
+    hillshade.addTo(map);
 
     map.attributionControl.setPrefix(false);
     map.attributionControl.setPosition("bottomleft");
@@ -58,13 +59,10 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
       map.removeLayer(weatherBasemap);
       map.removeLayer(provinceBoundaries);
     };
-  }, [map, accessToken]);
+  }, [map, arcgisToken]);
 
   useEffect(() => {
     if (!provinceId) return;
-
-    // const selectedMunicityID =
-    //   selectedPolygon.current?.getLayers?.()?.[0]?.feature?.properties?.ID;
 
     const where = `ID LIKE '${provinceId}%'`;
 
@@ -73,7 +71,7 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
       map.removeLayer(municityLayerRef.current);
     }
     const municityBoundaries = featureLayer({
-      token: accessToken,
+      token: arcgisToken,
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/3",
       simplifyFactor: 0.5,
       precision: 4,
@@ -89,26 +87,26 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
       onEachFeature: (feature, layer) => {
         layer.on({
           mouseover: () => {
+            setProvinceId(feature.properties.ID.substring(0, 4));
             layer.setStyle({
               fillColor: "#3E7BFF",
             });
           },
+
           mouseout: () => {
+            setProvinceId(null);
             layer.setStyle({
               fillColor: "white",
             });
           },
-          click: (event) => {
-            setIsPolygonHighlighted(false);
-            const clickedFeature = event.target.feature;
-            console.log("Clicked feature", event.target);
 
-            // Remove previous selected layer if it exists
+          click: (event) => {
+            const clickedFeature = event.target.feature;
+
             if (selectedPolygon.current) {
               map.removeLayer(selectedPolygon.current);
             }
 
-            // Create new GeoJSON layer from the clicked feature
             const selectedMunicity = L.geoJSON(clickedFeature, {
               style: {
                 color: "#3E7BFF",
@@ -116,18 +114,19 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
                 opacity: 1,
                 fillColor: "#3E7BFF",
                 fillOpacity: 0.3,
+                interactive: false,
               },
             });
 
             selectedMunicity.addTo(map);
             selectedPolygon.current = selectedMunicity;
-            setIsPolygonHighlighted(true);
           },
         });
       },
     });
 
     municityBoundaries.addTo(map);
+
     municityLayerRef.current = municityBoundaries;
 
     return () => {
@@ -135,7 +134,7 @@ const Base = ({ accessToken, selectedPolygon, setIsPolygonHighlighted }) => {
         map.removeLayer(municityBoundaries);
       }
     };
-  }, [map, accessToken, provinceId]);
+  }, [map, arcgisToken, provinceId]);
 
   return null;
 };

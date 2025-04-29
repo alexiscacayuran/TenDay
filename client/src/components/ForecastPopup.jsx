@@ -22,7 +22,6 @@ const ForecastPopup = ({
   units,
   setUnits,
   selectedPolygon,
-  setIsPolygonHighlighted,
 }) => {
   const map = useMap();
   const markerRef = useRef(null);
@@ -54,6 +53,11 @@ const ForecastPopup = ({
   }, [markerRef, markerLayer]);
 
   useEffect(() => {
+    if (location.municity === "" && location.province === "") {
+      setLoading(false);
+      return;
+    }
+
     const fetchForecast = async () => {
       try {
         setForecastRetrieval(false);
@@ -80,7 +84,6 @@ const ForecastPopup = ({
   }, [location, date]);
 
   const handlePopupClose = useCallback(() => {
-    setIsPolygonHighlighted(false);
     if (markerLayer.current && markerRef.current) {
       markerLayer.current.removeLayer(markerRef.current);
     }

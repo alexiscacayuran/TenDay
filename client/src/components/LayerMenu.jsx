@@ -109,7 +109,13 @@ const LayerMenu = ({
                   sx={{
                     backgroundColor: "transparent",
                     "&[aria-pressed=false]": { color: "neutral.700" },
-                    "&[aria-pressed=false]:hover": { color: "common.white" },
+                    "&[aria-pressed=false]:hover": {
+                      backgroundColor: "transparent",
+                    },
+                    "&[aria-pressed=false]:focus": {
+                      backgroundColor: "neutral.500",
+                      color: "white",
+                    },
                   }}
                 >
                   <FontAwesomeIcon
@@ -196,7 +202,11 @@ const LayerMenu = ({
                         backgroundColor: "transparent",
                         "&[aria-pressed=false]": { color: "neutral.700" },
                         "&[aria-pressed=false]:hover": {
-                          color: "common.white",
+                          backgroundColor: "transparent",
+                        },
+                        "&[aria-pressed=false]:focus": {
+                          backgroundColor: "neutral.500",
+                          color: "white",
                         },
                       }}
                       onClick={() => setActiveTooltip("Temperature")}

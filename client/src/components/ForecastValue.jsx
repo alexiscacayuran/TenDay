@@ -8,7 +8,7 @@ export const convertValue = (overlay, units, value) => {
         ? parseFloat(convert(value).from("C").to("F").toFixed(0))
         : value;
     case overlay.includes("rainfall"):
-      return units.rainfall === "in/24h"
+      return units.rainfall === "in/day"
         ? parseFloat(convert(value).from("mm").to("in").toFixed(1))
         : value;
     case overlay.includes("wind"):

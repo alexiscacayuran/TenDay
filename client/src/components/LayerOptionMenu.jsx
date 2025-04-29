@@ -40,7 +40,7 @@ const LayerOptionMenu = ({
                 backgroundColor: "rgba(255, 255, 255, 0.4)",
                 backdropFilter: "blur(7px)",
                 "&:hover": {
-                  backgroundColor: "neutral.600",
+                  backgroundColor: "neutral.700",
                   color: "common.white",
                 },
               }}
