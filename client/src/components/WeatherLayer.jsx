@@ -111,8 +111,8 @@ const WeatherLayer = ({
   const [loadingVector, setLoadingVector] = useState(true);
   const [loading, setLoading] = useState(true);
   const vectorFieldRef = useRef(null);
-  // console.log("Loading scalar", loadingScalar);
-  console.log("Loading vector", loadingVector);
+  console.log(loadingScalar ? "Scalar is loading" : "Scalar has loaded");
+  console.log(loadingVector ? "Vector is loading" : "Vector has loaded");
 
   // // Monkey-patch drawParticle once
   // useEffect(() => {
@@ -217,7 +217,7 @@ const WeatherLayer = ({
 
       let scalarLayer = new GeorasterLayer({
         georaster: georaster,
-        resolution: 64,
+        resolution: 128,
         pixelValuesToColorFn: colorScaleFn,
         // keepBuffer: 50,
         pane: "tilePane",
@@ -234,28 +234,6 @@ const WeatherLayer = ({
       scalarLayerRef.current = scalarLayer;
     } catch (error) {
       if (error.name !== "AbortError") console.error(error);
-    }
-  };
-
-  const createVectorLayer = (vf) => {
-    if (!vf) return;
-
-    try {
-      const options = {
-        ...baseParticleOption,
-        ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
-      };
-
-      const vectorLayer = L.canvasLayer.vectorFieldAnim(vf, options);
-
-      if (vectorLayerRef.current) {
-        overlayLayer.current.removeLayer(vectorLayerRef.current);
-      }
-
-      overlayLayer.current.addLayer(vectorLayer);
-      vectorLayerRef.current = vectorLayer;
-    } catch (error) {
-      console.error("Error creating vector layer:", error);
     }
   };
 
@@ -300,7 +278,24 @@ const WeatherLayer = ({
 
       let vf = L.VectorField.fromASCIIGrids(u, v);
       vectorFieldRef.current = vf;
-      createVectorLayer(vf);
+
+      try {
+        const options = {
+          ...baseParticleOption,
+          ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
+        };
+
+        const vectorLayer = L.canvasLayer.vectorFieldAnim(vf, options);
+
+        if (vectorLayerRef.current) {
+          overlayLayer.current.removeLayer(vectorLayerRef.current);
+        }
+
+        overlayLayer.current.addLayer(vectorLayer);
+        vectorLayerRef.current = vectorLayer;
+      } catch (error) {
+        console.error("Error creating vector layer:", error);
+      }
     } catch (error) {
       console.error("Error loading vector layer: ", error);
     }
@@ -334,7 +329,7 @@ const WeatherLayer = ({
     };
 
     loadVectorData();
-  }, [map, date, isLayerClipped, zoomLevel]);
+  }, [map, date, isLayerClipped]); //removed zoomLevel
 
   useEffect(() => {
     setLoading(loadingVector || loadingScalar);
@@ -353,28 +348,6 @@ const WeatherLayer = ({
       }
     }
   }, [map, isAnimHidden]);
-
-  // useEffect(() => {
-  //   if (!map) return;
-
-  //   let zoomEndTimeout;
-
-  //   const handleZoomEnd = () => {
-  //     clearTimeout(zoomEndTimeout);
-  //     zoomEndTimeout = setTimeout(() => {
-  //       if (vectorFieldRef.current) {
-  //         createVectorLayer(vectorFieldRef.current);
-  //       }
-  //     }, 100);
-  //   };
-
-  //   map.on("zoomend", handleZoomEnd);
-
-  //   return () => {
-  //     map.off("zoomend", handleZoomEnd);
-  //     clearTimeout(zoomEndTimeout);
-  //   };
-  // }, [map, zoomLevel]);
 
   return (
     loading && (

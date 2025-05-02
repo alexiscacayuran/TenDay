@@ -51,9 +51,9 @@ const Map = () => {
   const bounds = useMemo(
     () =>
       L.latLngBounds([
-        [4.64, 116.93],
-        [20.94, 126.61],
-      ]).pad(0.1),
+        [0, 110], // Southwest corner (lat, lng)
+        [27, 155], // Northeast corner (lat, lng)
+      ]),
     []
   );
   const [location, setLocation] = useState({

@@ -95,7 +95,7 @@ const ForecastDownload = ({
   };
   return (
     <>
-      {docFormat === "pdf" ? (
+      {/* {docFormat === "pdf" ? (
         <ReportViewer
           location={location}
           forecast={forecast}
@@ -104,7 +104,7 @@ const ForecastDownload = ({
           docExtendForecast={docExtendForecast}
           forecastExtended={forecastExtended}
         />
-      ) : null}
+      ) : null} */}
 
       {downloadButton()}
     </>
