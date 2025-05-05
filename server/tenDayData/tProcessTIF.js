@@ -68,6 +68,8 @@ const maskTif = async (targetFilePath, outputFileName) => {
       "-co", "COMPRESS=LZW",
     ]);
 
+    await cog.buildOverviewsAsync("AVERAGE", [2, 4, 8, 16, 32]);
+
     log(chalk.bgRedBright(`${originalFileName}`) + '→ COG saved to:' + chalk.bgRedBright(`${cogPath}`));
 
     const maskedPath = path.join(TEMP_DIR, `${outputFileName}_masked.tif`);
@@ -88,6 +90,10 @@ const maskTif = async (targetFilePath, outputFileName) => {
 
     log( 'COG clipped successfully: ' + chalk.yellow(`${maskedPath}`));
 
+    // Build overviews on the clipped (masked) file
+    const maskedDataset = await gdal.openAsync(maskedPath, 'r+');
+    await maskedDataset.buildOverviewsAsync("AVERAGE", [2, 4, 8, 16, 32]);
+    maskedDataset.close();
     // Close datasets
     cog.close();
     tif.close();
