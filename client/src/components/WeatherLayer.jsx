@@ -276,7 +276,8 @@ const WeatherLayer = ({
         await db.vectors.put({ url: vUrl, vectorData: v, timestamp: now });
       }
 
-      let vf = L.VectorField.fromASCIIGrids(u, v);
+      let vf = await L.VectorField.fromASCIIGrids(u, v);
+      console.log(vf);
       vectorFieldRef.current = vf;
 
       try {
