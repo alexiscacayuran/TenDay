@@ -1,3 +1,257 @@
+import fs from 'fs-extra';
+import path from 'path';
+import moment from 'moment';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import gdal from 'gdal-async';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import chalk from 'chalk';
+
+const s3 = new S3Client({
+  region: process.env.AWS_R,
+  credentials: {
+    accessKeyId: process.env.AWS_AKI,
+    secretAccessKey: process.env.AWS_SAK,
+  },
+  maxAttempts: 3,
+});
+
+const TEMP_DIR = './tif'; // Temporary directory for TIF files
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Construct a path relative to this file's location
+const geojsonPath = join(__dirname, 'country_lowres_dissolved.geojson');
+
+const log = console.log;
+
+// Function to delete temporary files
+const deleteTempFiles = async () => {
+  try {
+    if (fs.existsSync(TEMP_DIR)) {
+      const files = await fs.readdir(TEMP_DIR);
+      await Promise.all(files.map((file) => fs.unlink(path.join(TEMP_DIR, file))));
+      console.log("Deleted all temp files.");
+    }
+  } catch (error) {
+    console.error("Error deleting temp files:", error);
+  }
+};
+
+// Function to merge U10 and V10 GeoTIFF files
+const mergeTif = async (src1, src2, outputFileName) => {
+  const tempPath = `./temp.tif`;
+  const ds1 = gdal.open(src1);
+  const ds2 = gdal.open(src2);
+
+  const band1 = ds1.bands.get(1);
+  const band2 = ds2.bands.get(1);
+
+  const width = ds1.rasterSize.x;
+  const height = ds1.rasterSize.y;
+
+  if (width !== ds2.rasterSize.x || height !== ds2.rasterSize.y) {
+    throw new Error("Source rasters must have the same dimensions.");
+  }
+
+  if (band1.dataType !== band2.dataType) {
+    throw new Error("Source rasters must have the same data type.");
+  }
+
+  const driver = gdal.drivers.get("GTiff");
+  const dst = driver.create(tempPath, width, height, 2, band1.dataType);
+
+  const data1 = band1.pixels.read(0, 0, width, height);
+  const data2 = band2.pixels.read(0, 0, width, height);
+
+  dst.bands.get(1).pixels.write(0, 0, width, height, data1);
+  dst.bands.get(2).pixels.write(0, 0, width, height, data2);
+
+  dst.geoTransform = ds1.geoTransform;
+  dst.srs = ds1.srs;
+  dst.flush();
+  dst.close();
+
+  const tif = await gdal.openAsync(tempPath);
+
+  const dest = `./tif/${outputFileName}.tif`;
+  // Convert to Cloud Optimized GeoTIFF
+  const cog = await gdal.translateAsync(dest, tif, [
+    "-co",
+    "COMPRESS=DEFLATE",
+    "-co",
+    "TILED=YES",
+    "-co",
+    "INTERLEAVE=BAND",
+    "-co",
+    "COMPRESS=DEFLATE",
+  ]);
+
+  try {
+    const destMasked = `./tif/${outputFileName}_masked.tif`;
+
+    // Perform the clipping using the reopened dataset
+    const maskedCog = await gdal.warpAsync(
+      destMasked,
+      null,
+      [cog], // Corrected: Pass the reopened dataset
+      [
+        "-cutline",
+        geojsonPath, // Use the GeoJSON as the cutline
+        "-crop_to_cutline", // Crop to the polygon boundary
+        "-co",
+        "TILED=YES",
+        "-co",
+        "COPY_SRC_OVERVIEWS=YES",
+        "-co",
+        "COMPRESS=DEFLATE", // Optional: Set compression
+      ]
+    );
+
+    console.log("COG clipped successfully:", destMasked);
+
+    // Close dataset after processing
+    cog.close();
+    maskedCog.close();
+  } catch (error) {
+    console.error("Error clipping ASC.", error);
+  }
+
+  tif.close();
+
+  try {
+    await fs.promises.unlink(tempPath);
+    console.log(`Temporary file ${tempPath} removed`);
+  } catch (err) {
+    console.error(`Failed to delete ${tempPath}:`, err.message);
+  }
+
+  console.log(`COG file saved to ${dest}`);
+};
+
+export const uploadForecastWind = async (year, month, day) => {
+  const SOURCE_PATH = '\\\\10.10.3.118\\climps\\10_Day\\Data';
+  const BUCKET_NAME = 'tendayforecast';
+
+  const processFolder = async (year, month, day) => {
+    const startTime = Date.now();
+    const monthNumber = String(month).padStart(2, '0');
+    const monthName = moment().month(month - 1).format('MMMM');
+    const dayFolder = `${moment().month(month - 1).format('MMM')}${String(day).padStart(2, '0')}`;
+    const dayPath = path.join(SOURCE_PATH, year, `${monthNumber}_${monthName}`, dayFolder);
+
+    if (!fs.existsSync(dayPath)) {
+      console.error(`Day folder not found: ${dayPath}`);
+      return;
+    }
+
+    const folders = ['U10', 'V10'];
+    const u10Files = [];
+    const v10Files = [];
+
+    for (const folder of folders) {
+      const folderPath = path.join(dayPath, folder);
+      if (!fs.existsSync(folderPath)) {
+        console.log(`Folder not found: ${folder} in ${dayPath}`);
+        continue;
+      }
+
+      const files = fs.readdirSync(folderPath);
+      const resFiles = files.filter(file => file.endsWith('_res.tif'));
+
+      for (const resFile of resFiles) {
+        const match = resFile.match(/(U|V)(\d+)_res\.tif/);
+        if (!match) continue;
+
+        const type = match[1]; // U or V
+        const num = parseInt(match[2], 10);
+        const filePath = path.join(folderPath, resFile);
+
+        if (type === 'U') {
+          u10Files[num] = filePath;
+        } else {
+          v10Files[num] = filePath;
+        }
+      }
+    }
+
+    for (let i = 1; i < u10Files.length; i++) {
+      const uFile = u10Files[i];
+      const vFile = v10Files[i];
+
+      if (!uFile || !vFile) continue;
+
+      const newDate = moment(`${year}-${monthNumber}-${day}`, 'YYYY-MM-DD')
+        .add(i - 1, 'days')
+        .format('YYYYMMDD');
+
+      const mergedFileName = `UV_${newDate}`;
+      const s3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/UV/${mergedFileName}.tif`;
+      const maskedS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/UV/${mergedFileName}_masked.tif`;
+
+      await mergeTif(uFile, vFile, mergedFileName);
+
+      const mergedPath = `./tif/${mergedFileName}.tif`;
+      const maskedPath = `./tif/${mergedFileName}_masked.tif`;
+
+      if (fs.existsSync(mergedPath)) {
+        const fileContent = fs.readFileSync(mergedPath);
+        try {
+          await s3.send(new PutObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: s3Key,
+            Body: fileContent,
+            ContentType: 'application/octet-stream',
+          }));
+          console.log(`${mergedFileName}.tif uploaded to S3`);
+        } catch (err) {
+          console.error(`Error uploading ${mergedFileName}.tif to S3: ${err}`);
+        }
+      }
+
+      if (fs.existsSync(maskedPath)) {
+        const fileContent = fs.readFileSync(maskedPath);
+        try {
+          await s3.send(new PutObjectCommand({
+            Bucket: BUCKET_NAME,
+            Key: maskedS3Key,
+            Body: fileContent,
+            ContentType: 'application/octet-stream',
+          }));
+          console.log(`${mergedFileName}_masked.tif uploaded to S3`);
+        } catch (err) {
+          console.error(`Error uploading ${mergedFileName}_masked.tif to S3: ${err}`);
+        }
+      }
+    }
+
+    await deleteTempFiles();
+
+    const endTime = Date.now();
+    const duration = endTime - startTime;
+    const hours = Math.floor(duration / (1000 * 60 * 60));
+    const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((duration % (1000 * 60)) / 1000);
+    const durationFormatted = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    const messagePlain = `Wind upload completed for ${year}-${month}-${day} in ${durationFormatted} (HH:MM:SS)`;
+    const messageDecorated = `
+🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️
+${messagePlain}
+🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️🌬️
+
+`;
+    console.log(messageDecorated);
+    return messagePlain;
+  };
+
+  return await processFolder(year, month, day);
+};
+
+
+
+{/** 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import gdal from "gdal-async";
 import fs from "fs/promises";
@@ -132,3 +386,4 @@ ${messagePlain}
 
   console.log(messageDecorated);
 };
+*/}

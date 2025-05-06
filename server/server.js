@@ -34,7 +34,9 @@ import { uploadForecastXLSX } from './tenDayData/tProcessXLSX.js';
 import { retrieveForecastFile, streamForecastFile } from './tenDayData/retrieveFile.js';
 
 
-import { processWindFiles } from "./tenDayData/uploadWind.js";
+//import { processWindFiles } from "./tenDayData/uploadWind.js";
+import { uploadForecastWind } from './tenDayData/uploadWind.js';
+
 //API tenday (external)
 import getFullForecast from "./tenDayData/getFullForecast.js";
 import getDateForecast from "./tenDayData/getDateForecast.js";
@@ -62,6 +64,9 @@ import apiOrg from './admin/apiOrg.js';
 
 //CERAM
 import { uploadCeramCSV } from './ceram/uploadCSV.js';
+
+//Extemes
+import { uploadTIF } from './ceram/uploadTIF.js';
 
 //Health Check
 import { checkWebsiteStatus } from './backgroundJob/healthCheck.js'; 
@@ -296,36 +301,64 @@ function getMonthName(batch) {
 }
 
 // Route for uploading Wind Data
-app.get("/getWind", authenticate, async (req, res) => {
+//app.get("/getWind", authenticate, async (req, res) => {
+//  try {
+//    const { year, month, day } = req.query;
+//
+//    if (!year || !month || !day) {
+//      return res
+//        .status(400)
+//        .json({ error: "Missing year, month, or day parameter" });
+//    }
+//
+//    const start = Date.now();
+//    await processWindFiles(year, month, day);
+//    const end = Date.now();
+//
+//    const duration = end - start;
+//    const hours = Math.floor(duration / (1000 * 60 * 60));
+//    const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+//    const seconds = Math.floor((duration % (1000 * 60)) / 1000);
+//    const durationFormatted = `${String(hours).padStart(2, "0")}:${String(
+//      minutes
+//    ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+//
+//    const message = `Upload completed for ${year}-${month}-${day} in ${durationFormatted} (HH:MM:SS)`;
+//    res.send(message); // <-- plain text instead of JSON
+//  } catch (error) {
+//    res
+//      .status(500)
+//      .json({ error: "Internal server error", details: error.message });
+//  }
+//});
+
+// Route to upload forecast wind data
+app.get("/uploadForecastWind", authenticate, async (req, res) => {
+  const { year, month, day } = req.query;
+
+  // Check if the required parameters are present
+  if (!year || !month || !day) {
+    return res.status(400).json({
+      error: "Missing required parameters (year, month, day)"
+    });
+  }
+
   try {
-    const { year, month, day } = req.query;
-
-    if (!year || !month || !day) {
-      return res
-        .status(400)
-        .json({ error: "Missing year, month, or day parameter" });
-    }
-
-    const start = Date.now();
-    await processWindFiles(year, month, day);
-    const end = Date.now();
-
-    const duration = end - start;
-    const hours = Math.floor(duration / (1000 * 60 * 60));
-    const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((duration % (1000 * 60)) / 1000);
-    const durationFormatted = `${String(hours).padStart(2, "0")}:${String(
-      minutes
-    ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-
-    const message = `Upload completed for ${year}-${month}-${day} in ${durationFormatted} (HH:MM:SS)`;
-    res.send(message); // <-- plain text instead of JSON
+    // Call the function to upload forecast wind
+    const result = await uploadForecastWind(year, month, day);
+    return res.status(200).json({
+      message: "Successfully processed and uploaded forecast wind",
+      data: result
+    });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Internal server error", details: error.message });
+    console.error("❌ Error processing files:", error);
+    return res.status(500).json({
+      error: "Error processing files",
+      details: error.message
+    });
   }
 });
+
 
 // Endpoint to Process TIF files (Seasonal)
 app.get("/seasonalprocess", async (req, res) => {
@@ -360,6 +393,17 @@ app.get('/uploadCeramCSV', async (req, res) => {
   } catch (error) {
     console.error('Error during CSV upload:', error);
     res.status(500).json({ error: 'Failed to upload CSV files' });
+  }
+});
+
+//CERAM
+app.get('/uploadExtremesTIF', async (req, res) => {
+  try {
+    const result = await uploadTIF();
+    res.json({ message: result });
+  } catch (error) {
+    console.error('Error during TIF upload:', error);
+    res.status(500).json({ error: 'Failed to upload TIF files' });
   }
 });
 

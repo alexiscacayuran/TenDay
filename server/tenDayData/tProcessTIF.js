@@ -65,7 +65,7 @@ const maskTif = async (targetFilePath, outputFileName) => {
     const cog = await gdal.translateAsync(cogPath, tif, [
       "-co", "TILED=YES",
       "-co", "COPY_SRC_OVERVIEWS=YES",
-      "-co", "COMPRESS=LZW",
+      "-co", "COMPRESS=DEFLATE",
     ]);
 
     await cog.buildOverviewsAsync("AVERAGE", [2, 4, 8, 16, 32]);
@@ -84,7 +84,7 @@ const maskTif = async (targetFilePath, outputFileName) => {
         "-crop_to_cutline",
         "-co", "TILED=YES",
         "-co", "COPY_SRC_OVERVIEWS=YES",
-        "-co", "COMPRESS=LZW",
+        "-co", "COMPRESS=DEFLATE",
       ]
     );
 
@@ -138,14 +138,21 @@ export const uploadForecastTIF = async (year, month, day) => {
             const match = resFile.match(/(MAX|MIN|MEAN|RH|TCC|TP|WS)(\d+)_res(?:_C)?\.tif/);
             if (!match) continue;
 
-            const folderName = match[1];
+            const folderNameMap = {
+              MAX: 'TMAX',
+              MIN: 'TMIN',
+              MEAN: 'TMEAN',
+            };
+            const folderNameRaw = match[1];
+            const folderName = folderNameMap[folderNameRaw] || folderNameRaw;
+            
             const num = parseInt(match[2], 10);
             const newDate = moment(`${year}-${monthNumber}-${day}`, 'YYYY-MM-DD')
               .add(num - 1, 'days')
               .format('YYYYMMDD');
 
             const newFileName = `${folderName}_${newDate}`;
-            const s3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${newFileName}.tif`;
+            const s3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folderName}/${newFileName}.tif`;
 
             const filePath = path.join(folderPath, resFile);
 
@@ -171,7 +178,7 @@ export const uploadForecastTIF = async (year, month, day) => {
 
               if (fs.existsSync(maskedPath)) {
                 const clipFileContent = fs.readFileSync(maskedPath);
-                const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${newFileName}_masked.tif`;
+                const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folderName}/${newFileName}_masked.tif`;
 
                 try {
                   await s3.send(new PutObjectCommand({
