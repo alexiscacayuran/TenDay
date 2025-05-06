@@ -26,6 +26,7 @@ import {
   HeavyRainsParCloudyIconPDF,
   HeavyRainsMosCloudyIconPDF,
   HeavyRainsCloudyIconPDF,
+  LightRainsSunnyIconPDF,
   SunnyIconLgPDF,
   NoRainParCloudyIconLgPDF,
   NoRainMosCloudyIconLgPDF,
@@ -39,6 +40,7 @@ import {
   HeavyRainsParCloudyIconLgPDF,
   HeavyRainsMosCloudyIconLgPDF,
   HeavyRainsCloudyIconLgPDF,
+  LightRainsSunnyIconLgPDF,
   NIconPDF,
   NNEIconPDF,
   NEIconPDF,
@@ -199,7 +201,7 @@ const styles = StyleSheet.create({
   },
 
   tableContainer: {
-    marginTop: 20,
+    marginTop: 10,
     borderTop: "1px solid #bfbfbf",
     borderLeft: "1px solid #bfbfbf",
   },
@@ -258,7 +260,37 @@ const styles = StyleSheet.create({
     fontSize: 7,
     flexGrow: 1,
     justifyContent: "flex-end",
-    marginTop: 3,
+    marginTop: 10,
+  },
+
+  tableTitleContainer: {
+    display: "flex",
+    flexDirection: "row",
+    marginTop: 20,
+    alignItems: "center",
+  },
+
+  tableTitle: {
+    color: "#3e7bff",
+    fontSize: 9,
+    fontWeight: "bold",
+    marginRight: 5,
+  },
+
+  tableSubtitle: {
+    color: "#32383E",
+    fontSize: 6,
+    fontWeight: 400,
+  },
+
+  footer: {
+    fontSize: 6,
+    position: "absolute",
+    bottom: 30,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    color: "grey",
   },
 });
 
@@ -266,19 +298,29 @@ const bgColor = (value, overlay, docColored) => {
   const colorScale = getColorScale(overlay);
   return {
     backgroundColor: docColored ? colorScale(value).hex() : "transparent",
-    color:
-      chroma.deltaE(colorScale(value), "white") <= 40 ? "#32383E" : "white",
+    color: !docColored
+      ? "inherit"
+      : chroma.deltaE(colorScale(value), "white") <= 32
+      ? "#32383E"
+      : "white",
   };
 };
 
-export const ReportViewer = ({ forecast, docUnits, location, docColored }) => (
+export const ReportViewer = ({
+  forecast,
+  docUnits,
+  location,
+  docColored,
+  docExtendForecast,
+  forecastExtended,
+}) => (
   <div
     style={{
       width: "700px",
       height: "800px",
       position: "fixed",
       zIndex: 999999,
-      top: -300,
+      top: -250,
       left: -750,
     }}
   >
@@ -288,12 +330,476 @@ export const ReportViewer = ({ forecast, docUnits, location, docColored }) => (
         forecast={forecast}
         docUnits={docUnits}
         docColored={docColored}
+        docExtendForecast={docExtendForecast}
+        forecastExtended={forecastExtended}
       />
     </PDFViewer>
   </div>
 );
 
-const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
+const ForecastReportPDF = ({
+  location,
+  forecast,
+  docUnits,
+  docColored,
+  docExtendForecast,
+  forecastExtended,
+}) => {
+  if (!Array.isArray(forecastExtended)) {
+    return null;
+  }
+
+  const renderTableTitle = () => (
+    <View style={styles.tableTitleContainer}>
+      <Text style={styles.tableTitle}>
+        {forecast.municity + ", " + forecast.province}
+      </Text>
+      <Text style={styles.tableSubtitle}>
+        {"[" + location?.latLng.lat.toFixed(4) + ","}
+        {+location?.latLng.lng.toFixed(4) + "]"}
+      </Text>
+    </View>
+  );
+
+  const renderTable = () => (
+    <View
+      style={[styles.tableContainer, docExtendForecast ? { marginTop: 5 } : {}]}
+    >
+      <View style={styles.table}>
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableHeader, styles.tableHeaderColumn]} />
+          <Text style={[styles.tableHeader, styles.tableUnitsColumn]}></Text>
+          {forecast.forecasts.map((data) => (
+            <Text key={data.forecast_id} style={styles.tableHeader}>
+              {format(data.date, "EEE d")}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.tableRow}>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableHeaderColumn,
+              styles.tableHeaderMerge,
+            ]}
+          />
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableUnitsColumn,
+              styles.tableHeaderMerge,
+            ]}
+          ></Text>
+          {forecast.forecasts.map((data) => (
+            <View
+              key={data.forecast_id}
+              style={[styles.tableCell, styles.tableCellMerge]}
+            >
+              {(() => {
+                switch (data.rainfall.description) {
+                  case "NO RAIN":
+                    switch (data.cloud_cover) {
+                      case "SUNNY":
+                        return <SunnyIconPDF style={styles.tableWeatherIcon} />;
+                      case "PARTLY CLOUDY":
+                        return (
+                          <NoRainParCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "MOSTLY CLOUDY":
+                        return (
+                          <NoRainMosCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "CLOUDY":
+                        return (
+                          <NoRainCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      default:
+                        return null;
+                    }
+                  case "LIGHT RAINS":
+                    switch (data.cloud_cover) {
+                      case "SUNNY":
+                        return (
+                          <LightRainsSunnyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "PARTLY CLOUDY":
+                        return (
+                          <LightRainsParCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "MOSTLY CLOUDY":
+                        return (
+                          <LightRainsMosCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "CLOUDY":
+                        return (
+                          <LightRainsCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      default:
+                        return null;
+                    }
+                  case "MODERATE RAINS":
+                    switch (data.cloud_cover) {
+                      case "SUNNY":
+                        return (
+                          <ModRainsParCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "PARTLY CLOUDY":
+                        return (
+                          <ModRainsParCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "MOSTLY CLOUDY":
+                        return (
+                          <ModRainsMosCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "CLOUDY":
+                        return (
+                          <ModRainsCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      default:
+                        return null;
+                    }
+                  case "HEAVY RAINS":
+                    switch (data.cloud_cover) {
+                      case "SUNNY":
+                        return (
+                          <HeavyRainsParCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "PARTLY CLOUDY":
+                        return (
+                          <HeavyRainsParCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "MOSTLY CLOUDY":
+                        return (
+                          <HeavyRainsMosCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      case "CLOUDY":
+                        return (
+                          <HeavyRainsCloudyIconPDF
+                            style={styles.tableWeatherIcon}
+                          />
+                        );
+                      default:
+                        return null;
+                    }
+                  default:
+                    return null;
+                }
+              })()}
+            </View>
+          ))}
+        </View>
+
+        <View style={[styles.tableRow]}>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableHeaderColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            Rainfall
+          </Text>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableUnitsColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            {docUnits.rainfall}
+          </Text>
+          {forecast.forecasts.map((data) => (
+            <Text
+              key={data.forecast_id}
+              style={[
+                styles.tableCell,
+                styles.tableCellMerge,
+                bgColor(data.rainfall.total, "rainfall", docColored),
+              ]}
+            >
+              {convertValue("rainfall", docUnits, data.rainfall.total)}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.tableRow}>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableHeaderColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            Rainfall
+          </Text>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableUnitsColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            desc
+          </Text>
+          {forecast.forecasts.map((data) => (
+            <Text
+              key={data.forecast_id}
+              style={[styles.tableCell, styles.tableCellMerge, { fontSize: 6 }]}
+            >
+              {data.rainfall.description}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableHeader, styles.tableHeaderColumn]}>
+            Cloud cover
+          </Text>
+          <Text style={[styles.tableHeader, styles.tableUnitsColumn]}>
+            desc
+          </Text>
+          {forecast.forecasts.map((data) => (
+            <Text
+              key={data.forecast_id}
+              style={[styles.tableCell, { fontSize: 6 }]}
+            >
+              {data.cloud_cover}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.tableRow}>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableHeaderColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            Max temperature
+          </Text>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableUnitsColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            {docUnits.temperature}
+          </Text>
+          {forecast.forecasts.map((data) => (
+            <Text
+              key={data.forecast_id}
+              style={[
+                styles.tableCell,
+                styles.tableCellMerge,
+                bgColor(
+                  data.temperature.max,
+                  "temperature_maximum",
+                  docColored
+                ),
+              ]}
+            >
+              {convertValue("temperature", docUnits, data.temperature.max)}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.tableRow}>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableHeaderColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            Mean temperature
+          </Text>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableUnitsColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            {docUnits.temperature}
+          </Text>
+          {forecast.forecasts.map((data) => (
+            <Text
+              key={data.forecast_id}
+              style={[
+                styles.tableCell,
+                styles.tableCellMerge,
+                bgColor(data.temperature.mean, "temperature_mean", docColored),
+              ]}
+            >
+              {convertValue("temperature", docUnits, data.temperature.mean)}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableHeader, styles.tableHeaderColumn]}>
+            Min temperature
+          </Text>
+          <Text style={[styles.tableHeader, styles.tableUnitsColumn]}>
+            {docUnits.temperature}
+          </Text>
+          {forecast.forecasts.map((data) => (
+            <Text
+              key={data.forecast_id}
+              style={[
+                styles.tableCell,
+                bgColor(
+                  data.temperature.min,
+                  "temperature_minimum",
+                  docColored
+                ),
+              ]}
+            >
+              {convertValue("temperature", docUnits, data.temperature.min)}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.tableRow}>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableHeaderColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            Wind speed
+          </Text>
+          <Text
+            style={[
+              styles.tableHeader,
+              styles.tableUnitsColumn,
+              styles.tableHeaderMerge,
+            ]}
+          >
+            {docUnits.windSpeed}
+          </Text>
+          {forecast.forecasts.map((data) => (
+            <Text
+              key={data.forecast_id}
+              style={[
+                styles.tableCell,
+                styles.tableCellMerge,
+                bgColor(data.wind.speed, "wind", docColored),
+              ]}
+            >
+              {convertValue("wind", docUnits, data.wind.speed)}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableHeader, styles.tableHeaderColumn]}>
+            Wind direction
+          </Text>
+          <Text style={[styles.tableHeader, styles.tableUnitsColumn]}>
+            {docUnits.windDirection}
+          </Text>
+          {forecast.forecasts.map((data) => (
+            <View key={data.forecast_id} style={styles.tableCell}>
+              {docUnits.windDirection === "arrow" ? (
+                (() => {
+                  switch (data.wind.direction) {
+                    case "N":
+                      return <NIconPDF style={styles.tableDirectionIcon} />;
+                    case "NNE":
+                      return <NNEIconPDF style={styles.tableDirectionIcon} />;
+                    case "NE":
+                      return <NEIconPDF style={styles.tableDirectionIcon} />; // Northeast
+                    case "ENE":
+                      return <ENEIconPDF style={styles.tableDirectionIcon} />; // East-Northeast
+                    case "E":
+                      return <EIconPDF style={styles.tableDirectionIcon} />; // East
+                    case "ESE":
+                      return <ESEIconPDF style={styles.tableDirectionIcon} />; // East-Southeast
+                    case "SE":
+                      return <SEIconPDF style={styles.tableDirectionIcon} />; // Southeast
+                    case "SSE":
+                      return <SSEIconPDF style={styles.tableDirectionIcon} />; // South-Southeast
+                    case "S":
+                      return <SIconPDF style={styles.tableDirectionIcon} />; // South
+                    case "SSW":
+                      return <SSWIconPDF style={styles.tableDirectionIcon} />; // South-Southwest
+                    case "SW":
+                      return <SWIconPDF style={styles.tableDirectionIcon} />; // Southwest
+                    case "WSW":
+                      return <WSWIconPDF style={styles.tableDirectionIcon} />; // West-Southwest
+                    case "W":
+                      return <WIconPDF style={styles.tableDirectionIcon} />; // West
+                    case "WNW":
+                      return <WNWIconPDF style={styles.tableDirectionIcon} />; // West-Northwest
+                    case "NW":
+                      return <NWIconPDF style={styles.tableDirectionIcon} />; // Northwest
+                    case "NNW":
+                      return <NNWIconPDF style={styles.tableDirectionIcon} />; // North-Northwest
+                    default:
+                      return null;
+                  }
+                })()
+              ) : (
+                <Text>{data.wind.direction}</Text>
+              )}
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.tableRow}>
+          <Text style={[styles.tableHeader, styles.tableHeaderColumn]}>
+            Humidity
+          </Text>
+          <Text style={[styles.tableHeader, styles.tableUnitsColumn]}>%</Text>
+          {forecast.forecasts.map((data) => (
+            <Text
+              key={data.forecast_id}
+              style={[
+                styles.tableCell,
+                bgColor(data.humidity, "humidity", docColored),
+              ]}
+            >
+              {data.humidity}
+            </Text>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+
   const municity = forecast.municity;
 
   const heroStyle = municity.length >= 12 ? styles.heroAlt : styles.hero;
@@ -331,7 +837,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
       case "LIGHT RAINS":
         switch (todayForecast.cloud_cover) {
           case "SUNNY":
-            return <LightRainsParCloudyIconLgPDF />;
+            return <LightRainsSunnyIconLgPDF />;
           case "PARTLY CLOUDY":
             return <LightRainsParCloudyIconLgPDF />;
           case "MOSTLY CLOUDY":
@@ -441,9 +947,9 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
   };
 
   return (
-    <Document>
+    <Document title="tanawPH 10-Day Climate Forecast" author="PAGASA">
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
+        <View style={styles.header} fixed>
           <Image src={PAGASA} style={styles.logo} />
 
           <View style={styles.logoTextContainer}>
@@ -459,93 +965,100 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
 
           <Image src={BagongPilipinas} style={[styles.logo, { width: 55 }]} />
         </View>
+        {!docExtendForecast && (
+          <View style={heroStyle}>
+            <View style={styles.heroTitleContainer}>
+              <Text style={styles.dateText}>
+                {"LAT " + location?.latLng.lat.toFixed(4) + "  "}
+                {"LONG " + location?.latLng.lng.toFixed(4)}
+              </Text>
+              <Text style={[styles.heroTitle, { marginTop: 10 }]}>
+                {forecast.municity}
+              </Text>
+              <Text style={[styles.heroTitle, { fontSize: 9 }]}>
+                {forecast.province}
+              </Text>
+            </View>
 
-        <View style={heroStyle}>
-          <View style={styles.heroTitleContainer}>
-            <Text style={styles.dateText}>
-              {"LAT " + location?.latLng.lat.toFixed(2) + "  "}
-              {"LONG " + location?.latLng.lng.toFixed(2)}
-            </Text>
-            <Text style={[styles.heroTitle, { marginTop: 10 }]}>
-              {forecast.municity}
-            </Text>
-            <Text style={[styles.heroTitle, { fontSize: 9 }]}>
-              {forecast.province}
-            </Text>
-          </View>
-
-          <View style={todayContainerStyle}>
-            <Text style={styles.todayDate}>
-              {"TODAY " + format(new Date(), "MMM d").toUpperCase()}
-            </Text>
-            <View style={weatherParamsContainerStyle}>
-              <View style={styles.weatherParamContainer}>
-                <View style={styles.weatherParamLogo}>
-                  {renderWeatherIcon()}
+            <View style={todayContainerStyle}>
+              <Text style={styles.todayDate}>
+                {"TODAY " + format(new Date(), "MMM d").toUpperCase()}
+              </Text>
+              <View style={weatherParamsContainerStyle}>
+                <View style={styles.weatherParamContainer}>
+                  <View style={styles.weatherParamLogo}>
+                    {renderWeatherIcon()}
+                  </View>
+                  <View>
+                    <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
+                      {convertValue(
+                        "temperature",
+                        docUnits,
+                        todayForecast?.temperature.mean
+                      ) +
+                        " " +
+                        docUnits?.temperature}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.weatherParamText,
+                        { fontSize: 6.5, maxWidth: "75px" },
+                      ]}
+                    >
+                      {todayForecast?.cloud_cover +
+                        (todayForecast?.rainfall.description === "NO RAIN"
+                          ? ""
+                          : " WITH " + todayForecast?.rainfall.description)}
+                    </Text>
+                  </View>
                 </View>
-                <View>
-                  <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
-                    {convertValue(
-                      "temperature",
-                      docUnits,
-                      todayForecast?.temperature.mean
-                    ) +
-                      " " +
-                      docUnits?.temperature}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.weatherParamText,
-                      { fontSize: 6.5, width: "80px" },
-                    ]}
+                <View style={styles.weatherParamContainer}>
+                  <View style={styles.weatherParamLogo}>
+                    {renderWindIcon()}
+                  </View>
+                  <View>
+                    <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
+                      {convertValue(
+                        "wind",
+                        docUnits,
+                        todayForecast?.wind.speed
+                      ) +
+                        " " +
+                        docUnits?.windSpeed}
+                    </Text>
+                    <Text style={[styles.weatherParamText, { fontSize: 6.5 }]}>
+                      {renderWindText()}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.weatherParamContainer}>
+                  <View style={styles.weatherParamLogo}>
+                    <VerticalBarGraph
+                      value={todayForecast?.humidity}
+                      maxHeight={30}
+                      width={10}
+                    />
+                  </View>
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "flex-end",
+                    }}
                   >
-                    {todayForecast?.cloud_cover +
-                      (todayForecast?.rainfall.description === "NO RAIN"
-                        ? ""
-                        : " WITH " + todayForecast?.rainfall.description)}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.weatherParamContainer}>
-                <View style={styles.weatherParamLogo}>{renderWindIcon()}</View>
-                <View>
-                  <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
-                    {convertValue("wind", docUnits, todayForecast?.wind.speed) +
-                      " " +
-                      docUnits?.windSpeed}
-                  </Text>
-                  <Text style={[styles.weatherParamText, { fontSize: 6.5 }]}>
-                    {renderWindText()}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.weatherParamContainer}>
-                <View style={styles.weatherParamLogo}>
-                  <VerticalBarGraph
-                    value={todayForecast?.humidity}
-                    maxHeight={30}
-                    width={10}
-                  />
-                </View>
-                <View
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "flex-end",
-                  }}
-                >
-                  <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
-                    {todayForecast?.humidity + "% "}
-                  </Text>
-                  <Text style={[styles.weatherParamText, { fontSize: 8 }]}>
-                    humid
-                  </Text>
+                    <Text style={[styles.weatherParamText, { fontSize: 16 }]}>
+                      {todayForecast?.humidity + "% "}
+                    </Text>
+                    <Text style={[styles.weatherParamText, { fontSize: 8 }]}>
+                      humid
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
           </View>
-        </View>
+        )}
 
         <View style={styles.titleContainer}>
           <View style={[styles.dateText, { flexGrow: 1 }]}>
@@ -569,7 +1082,24 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
           </View>
         </View>
 
-        <View style={styles.tableContainer}>
+        {docExtendForecast && (
+          <View style={styles.tableTitleContainer}>
+            <Text style={styles.tableTitle}>
+              {forecast.municity + ", " + forecast.province}
+            </Text>
+            <Text style={styles.tableSubtitle}>
+              {"[" + location?.latLng.lat.toFixed(4) + ","}
+              {+location?.latLng.lng.toFixed(4) + "]"}
+            </Text>
+          </View>
+        )}
+
+        <View
+          style={[
+            styles.tableContainer,
+            docExtendForecast ? { marginTop: 5 } : {},
+          ]}
+        >
           <View style={styles.table}>
             <View style={styles.tableRow}>
               <Text style={[styles.tableHeader, styles.tableHeaderColumn]} />
@@ -577,7 +1107,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
                 style={[styles.tableHeader, styles.tableUnitsColumn]}
               ></Text>
               {forecast.forecasts.map((data) => (
-                <Text style={styles.tableHeader}>
+                <Text key={data.forecast_id} style={styles.tableHeader}>
                   {format(data.date, "EEE d")}
                 </Text>
               ))}
@@ -599,7 +1129,10 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
                 ]}
               ></Text>
               {forecast.forecasts.map((data) => (
-                <View style={[styles.tableCell, styles.tableCellMerge]}>
+                <View
+                  key={data.forecast_id}
+                  style={[styles.tableCell, styles.tableCellMerge]}
+                >
                   {(() => {
                     switch (data.rainfall.description) {
                       case "NO RAIN":
@@ -633,7 +1166,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
                         switch (data.cloud_cover) {
                           case "SUNNY":
                             return (
-                              <LightRainsParCloudyIconPDF
+                              <LightRainsSunnyIconPDF
                                 style={styles.tableWeatherIcon}
                               />
                             );
@@ -745,6 +1278,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
               </Text>
               {forecast.forecasts.map((data) => (
                 <Text
+                  key={data.forecast_id}
                   style={[
                     styles.tableCell,
                     styles.tableCellMerge,
@@ -777,6 +1311,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
               </Text>
               {forecast.forecasts.map((data) => (
                 <Text
+                  key={data.forecast_id}
                   style={[
                     styles.tableCell,
                     styles.tableCellMerge,
@@ -796,7 +1331,10 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
                 desc
               </Text>
               {forecast.forecasts.map((data) => (
-                <Text style={[styles.tableCell, { fontSize: 6 }]}>
+                <Text
+                  key={data.forecast_id}
+                  style={[styles.tableCell, { fontSize: 6 }]}
+                >
                   {data.cloud_cover}
                 </Text>
               ))}
@@ -823,6 +1361,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
               </Text>
               {forecast.forecasts.map((data) => (
                 <Text
+                  key={data.forecast_id}
                   style={[
                     styles.tableCell,
                     styles.tableCellMerge,
@@ -859,6 +1398,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
               </Text>
               {forecast.forecasts.map((data) => (
                 <Text
+                  key={data.forecast_id}
                   style={[
                     styles.tableCell,
                     styles.tableCellMerge,
@@ -883,6 +1423,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
               </Text>
               {forecast.forecasts.map((data) => (
                 <Text
+                  key={data.forecast_id}
                   style={[
                     styles.tableCell,
                     bgColor(
@@ -918,6 +1459,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
               </Text>
               {forecast.forecasts.map((data) => (
                 <Text
+                  key={data.forecast_id}
                   style={[
                     styles.tableCell,
                     styles.tableCellMerge,
@@ -937,7 +1479,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
                 {docUnits.windDirection}
               </Text>
               {forecast.forecasts.map((data) => (
-                <View style={styles.tableCell}>
+                <View key={data.forecast_id} style={styles.tableCell}>
                   {docUnits.windDirection === "arrow" ? (
                     (() => {
                       switch (data.wind.direction) {
@@ -1017,6 +1559,7 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
               </Text>
               {forecast.forecasts.map((data) => (
                 <Text
+                  key={data.forecast_id}
                   style={[
                     styles.tableCell,
                     bgColor(data.humidity, "humidity", docColored),
@@ -1028,9 +1571,572 @@ const ForecastReportPDF = ({ location, forecast, docUnits, docColored }) => {
             </View>
           </View>
         </View>
+
+        {docExtendForecast &&
+          forecastExtended.length > 0 &&
+          forecastExtended.map((forecast) => (
+            <View wrap={false}>
+              <View style={styles.tableTitleContainer}>
+                <Text style={styles.tableTitle}>
+                  {forecast.municity + ", " + forecast.province}
+                </Text>
+                <Text style={styles.tableSubtitle}>
+                  {"[" + location?.latLng.lat.toFixed(4) + ","}
+                  {+location?.latLng.lng.toFixed(4) + "]"}
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  styles.tableContainer,
+                  docExtendForecast ? { marginTop: 5 } : {},
+                ]}
+              >
+                <View style={styles.table}>
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[styles.tableHeader, styles.tableHeaderColumn]}
+                    />
+                    <Text
+                      style={[styles.tableHeader, styles.tableUnitsColumn]}
+                    ></Text>
+                    {forecast.forecasts.map((data) => (
+                      <Text key={data.forecast_id} style={styles.tableHeader}>
+                        {format(data.date, "EEE d")}
+                      </Text>
+                    ))}
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableHeaderColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableUnitsColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    ></Text>
+                    {forecast.forecasts.map((data) => (
+                      <View
+                        key={data.forecast_id}
+                        style={[styles.tableCell, styles.tableCellMerge]}
+                      >
+                        {(() => {
+                          switch (data.rainfall.description) {
+                            case "NO RAIN":
+                              switch (data.cloud_cover) {
+                                case "SUNNY":
+                                  return (
+                                    <SunnyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "PARTLY CLOUDY":
+                                  return (
+                                    <NoRainParCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "MOSTLY CLOUDY":
+                                  return (
+                                    <NoRainMosCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "CLOUDY":
+                                  return (
+                                    <NoRainCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                default:
+                                  return null;
+                              }
+                            case "LIGHT RAINS":
+                              switch (data.cloud_cover) {
+                                case "SUNNY":
+                                  return (
+                                    <LightRainsSunnyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "PARTLY CLOUDY":
+                                  return (
+                                    <LightRainsParCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "MOSTLY CLOUDY":
+                                  return (
+                                    <LightRainsMosCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "CLOUDY":
+                                  return (
+                                    <LightRainsCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                default:
+                                  return null;
+                              }
+                            case "MODERATE RAINS":
+                              switch (data.cloud_cover) {
+                                case "SUNNY":
+                                  return (
+                                    <ModRainsParCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "PARTLY CLOUDY":
+                                  return (
+                                    <ModRainsParCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "MOSTLY CLOUDY":
+                                  return (
+                                    <ModRainsMosCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "CLOUDY":
+                                  return (
+                                    <ModRainsCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                default:
+                                  return null;
+                              }
+                            case "HEAVY RAINS":
+                              switch (data.cloud_cover) {
+                                case "SUNNY":
+                                  return (
+                                    <HeavyRainsParCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "PARTLY CLOUDY":
+                                  return (
+                                    <HeavyRainsParCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "MOSTLY CLOUDY":
+                                  return (
+                                    <HeavyRainsMosCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                case "CLOUDY":
+                                  return (
+                                    <HeavyRainsCloudyIconPDF
+                                      style={styles.tableWeatherIcon}
+                                    />
+                                  );
+                                default:
+                                  return null;
+                              }
+                            default:
+                              return null;
+                          }
+                        })()}
+                      </View>
+                    ))}
+                  </View>
+
+                  <View style={[styles.tableRow]}>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableHeaderColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      Rainfall
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableUnitsColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      {docUnits.rainfall}
+                    </Text>
+                    {forecast.forecasts.map((data) => (
+                      <Text
+                        key={data.forecast_id}
+                        style={[
+                          styles.tableCell,
+                          styles.tableCellMerge,
+                          bgColor(data.rainfall.total, "rainfall", docColored),
+                        ]}
+                      >
+                        {convertValue(
+                          "rainfall",
+                          docUnits,
+                          data.rainfall.total
+                        )}
+                      </Text>
+                    ))}
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableHeaderColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      Rainfall
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableUnitsColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      desc
+                    </Text>
+                    {forecast.forecasts.map((data) => (
+                      <Text
+                        key={data.forecast_id}
+                        style={[
+                          styles.tableCell,
+                          styles.tableCellMerge,
+                          { fontSize: 6 },
+                        ]}
+                      >
+                        {data.rainfall.description}
+                      </Text>
+                    ))}
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[styles.tableHeader, styles.tableHeaderColumn]}
+                    >
+                      Cloud cover
+                    </Text>
+                    <Text style={[styles.tableHeader, styles.tableUnitsColumn]}>
+                      desc
+                    </Text>
+                    {forecast.forecasts.map((data) => (
+                      <Text
+                        key={data.forecast_id}
+                        style={[styles.tableCell, { fontSize: 6 }]}
+                      >
+                        {data.cloud_cover}
+                      </Text>
+                    ))}
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableHeaderColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      Max temperature
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableUnitsColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      {docUnits.temperature}
+                    </Text>
+                    {forecast.forecasts.map((data) => (
+                      <Text
+                        key={data.forecast_id}
+                        style={[
+                          styles.tableCell,
+                          styles.tableCellMerge,
+                          bgColor(
+                            data.temperature.max,
+                            "temperature_maximum",
+                            docColored
+                          ),
+                        ]}
+                      >
+                        {convertValue(
+                          "temperature",
+                          docUnits,
+                          data.temperature.max
+                        )}
+                      </Text>
+                    ))}
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableHeaderColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      Mean temperature
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableUnitsColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      {docUnits.temperature}
+                    </Text>
+                    {forecast.forecasts.map((data) => (
+                      <Text
+                        key={data.forecast_id}
+                        style={[
+                          styles.tableCell,
+                          styles.tableCellMerge,
+                          bgColor(
+                            data.temperature.mean,
+                            "temperature_mean",
+                            docColored
+                          ),
+                        ]}
+                      >
+                        {convertValue(
+                          "temperature",
+                          docUnits,
+                          data.temperature.mean
+                        )}
+                      </Text>
+                    ))}
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[styles.tableHeader, styles.tableHeaderColumn]}
+                    >
+                      Min temperature
+                    </Text>
+                    <Text style={[styles.tableHeader, styles.tableUnitsColumn]}>
+                      {docUnits.temperature}
+                    </Text>
+                    {forecast.forecasts.map((data) => (
+                      <Text
+                        key={data.forecast_id}
+                        style={[
+                          styles.tableCell,
+                          bgColor(
+                            data.temperature.min,
+                            "temperature_minimum",
+                            docColored
+                          ),
+                        ]}
+                      >
+                        {convertValue(
+                          "temperature",
+                          docUnits,
+                          data.temperature.min
+                        )}
+                      </Text>
+                    ))}
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableHeaderColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      Wind speed
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableHeader,
+                        styles.tableUnitsColumn,
+                        styles.tableHeaderMerge,
+                      ]}
+                    >
+                      {docUnits.windSpeed}
+                    </Text>
+                    {forecast.forecasts.map((data) => (
+                      <Text
+                        key={data.forecast_id}
+                        style={[
+                          styles.tableCell,
+                          styles.tableCellMerge,
+                          bgColor(data.wind.speed, "wind", docColored),
+                        ]}
+                      >
+                        {convertValue("wind", docUnits, data.wind.speed)}
+                      </Text>
+                    ))}
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[styles.tableHeader, styles.tableHeaderColumn]}
+                    >
+                      Wind direction
+                    </Text>
+                    <Text style={[styles.tableHeader, styles.tableUnitsColumn]}>
+                      {docUnits.windDirection}
+                    </Text>
+                    {forecast.forecasts.map((data) => (
+                      <View key={data.forecast_id} style={styles.tableCell}>
+                        {docUnits.windDirection === "arrow" ? (
+                          (() => {
+                            switch (data.wind.direction) {
+                              case "N":
+                                return (
+                                  <NIconPDF style={styles.tableDirectionIcon} />
+                                );
+                              case "NNE":
+                                return (
+                                  <NNEIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                );
+                              case "NE":
+                                return (
+                                  <NEIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // Northeast
+                              case "ENE":
+                                return (
+                                  <ENEIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // East-Northeast
+                              case "E":
+                                return (
+                                  <EIconPDF style={styles.tableDirectionIcon} />
+                                ); // East
+                              case "ESE":
+                                return (
+                                  <ESEIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // East-Southeast
+                              case "SE":
+                                return (
+                                  <SEIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // Southeast
+                              case "SSE":
+                                return (
+                                  <SSEIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // South-Southeast
+                              case "S":
+                                return (
+                                  <SIconPDF style={styles.tableDirectionIcon} />
+                                ); // South
+                              case "SSW":
+                                return (
+                                  <SSWIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // South-Southwest
+                              case "SW":
+                                return (
+                                  <SWIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // Southwest
+                              case "WSW":
+                                return (
+                                  <WSWIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // West-Southwest
+                              case "W":
+                                return (
+                                  <WIconPDF style={styles.tableDirectionIcon} />
+                                ); // West
+                              case "WNW":
+                                return (
+                                  <WNWIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // West-Northwest
+                              case "NW":
+                                return (
+                                  <NWIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // Northwest
+                              case "NNW":
+                                return (
+                                  <NNWIconPDF
+                                    style={styles.tableDirectionIcon}
+                                  />
+                                ); // North-Northwest
+                              default:
+                                return null;
+                            }
+                          })()
+                        ) : (
+                          <Text>{data.wind.direction}</Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+
+                  <View style={styles.tableRow}>
+                    <Text
+                      style={[styles.tableHeader, styles.tableHeaderColumn]}
+                    >
+                      Humidity
+                    </Text>
+                    <Text style={[styles.tableHeader, styles.tableUnitsColumn]}>
+                      %
+                    </Text>
+                    {forecast.forecasts.map((data) => (
+                      <Text
+                        key={data.forecast_id}
+                        style={[
+                          styles.tableCell,
+                          bgColor(data.humidity, "humidity", docColored),
+                        ]}
+                      >
+                        {data.humidity}
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            </View>
+          ))}
+
         <View style={styles.tableFooter}>
           <Text>Forecast data is based on GFS by NOAA</Text>
         </View>
+
+        <Text
+          style={styles.footer}
+          render={({ pageNumber, totalPages }) =>
+            `${pageNumber} / ${totalPages}`
+          }
+          fixed
+        />
       </Page>
     </Document>
   );

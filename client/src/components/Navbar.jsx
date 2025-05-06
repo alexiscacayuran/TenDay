@@ -59,7 +59,7 @@ db.version(1).stores({
 });
 
 const Navbar = ({
-  accessToken,
+  arcgisToken,
   map,
   markerLayer,
   location,
@@ -71,6 +71,7 @@ const Navbar = ({
   scale,
   setScale,
   setIsLocationReady,
+  selectedPolygon,
 }) => {
   const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
@@ -102,6 +103,7 @@ const Navbar = ({
 
     setOpenAbout(inOpen);
   };
+
   return (
     <Box>
       <AppBar
@@ -111,30 +113,19 @@ const Navbar = ({
         color="transparent"
       >
         <Toolbar className="app-bar">
-          {/* <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            sx={{
-              mr: 2,
-              color: "primaryvar(--joy-palette-primary-500, #0B6BCB)",
-            }}
-          >
-            <MenuIcon />
-          </IconButton> */}
           <Box sx={{ mr: 4, flexGrow: 0, pt: "0.3em" }}>
             <img src={Logo} alt="10-Day Forecast Logo" height="40" />
           </Box>
           <Box sx={{ flexGrow: 1 }}>
             <Geosearch
-              accessToken={accessToken}
+              arcgisToken={arcgisToken}
               setLocation={setLocation}
               map={map}
               location={location}
               setOpen={setOpen}
               open={open}
               setIsLocationReady={setIsLocationReady}
+              selectedPolygon={selectedPolygon}
             />
           </Box>
           <Stack
@@ -231,13 +222,16 @@ const Navbar = ({
                     size="sm"
                     variant="outlined"
                     value={units.temperature}
-                    exclusive
                     onChange={(e, value) =>
                       value && setUnits({ ...units, temperature: value })
                     }
                   >
-                    <Button value="°C">°C</Button>
-                    <Button value="°F">°F</Button>
+                    <Button value="°C" sx={{ width: 120 }}>
+                      °C
+                    </Button>
+                    <Button value="°F" sx={{ width: 120 }}>
+                      °F
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 
@@ -253,13 +247,17 @@ const Navbar = ({
                     size="sm"
                     variant="outlined"
                     value={units.rainfall}
-                    exclusive
+                    exclusive="true"
                     onChange={(e, value) =>
                       value && setUnits({ ...units, rainfall: value })
                     }
                   >
-                    <Button value="mm/24h">mm/24h</Button>
-                    <Button value="in/24h">in/24h</Button>
+                    <Button value="mm/day" sx={{ width: 120 }}>
+                      mm/day
+                    </Button>
+                    <Button value="in/day" sx={{ width: 120 }}>
+                      in/day
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 
@@ -275,14 +273,20 @@ const Navbar = ({
                     size="sm"
                     variant="outlined"
                     value={units.windSpeed}
-                    exclusive
+                    exclusive="true"
                     onChange={(e, value) =>
                       value && setUnits({ ...units, windSpeed: value })
                     }
                   >
-                    <Button value="m/s">m/s</Button>
-                    <Button value="km/h">km/h</Button>
-                    <Button value="kt">knot</Button>
+                    <Button value="m/s" sx={{ width: 80 }}>
+                      m/s
+                    </Button>
+                    <Button value="km/h" sx={{ width: 80 }}>
+                      km/h
+                    </Button>
+                    <Button value="kt" sx={{ width: 80 }}>
+                      knot
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 
@@ -298,13 +302,17 @@ const Navbar = ({
                     size="sm"
                     variant="outlined"
                     value={units.windDirection}
-                    exclusive
+                    exclusive="true"
                     onChange={(e, value) =>
                       value && setUnits({ ...units, windDirection: value })
                     }
                   >
-                    <Button value="arrow">arrow</Button>
-                    <Button value="desc">description</Button>
+                    <Button value="arrow" sx={{ width: 120 }}>
+                      arrow
+                    </Button>
+                    <Button value="desc" sx={{ width: 120 }}>
+                      description
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 
@@ -325,7 +333,7 @@ const Navbar = ({
                         ? "imperial"
                         : undefined
                     }
-                    exclusive
+                    exclusive="true"
                     onChange={(e, value) => {
                       if (value === "metric") {
                         setScale({ metric: true, imperial: false });
@@ -334,8 +342,12 @@ const Navbar = ({
                       }
                     }}
                   >
-                    <Button value="metric">km</Button>
-                    <Button value="imperial">mi</Button>
+                    <Button value="metric" sx={{ width: 120 }}>
+                      km
+                    </Button>
+                    <Button value="imperial" sx={{ width: 120 }}>
+                      mi
+                    </Button>
                   </ToggleButtonGroup>
                 </FormControl>
 

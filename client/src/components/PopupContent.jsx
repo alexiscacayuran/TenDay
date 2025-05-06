@@ -98,7 +98,6 @@ const PopupContent = React.memo(
     loading,
     units,
     setUnits,
-    setIsPolygonHighlighted,
   }) => {
     return !forecastRetrieval ? (
       <Card
@@ -108,12 +107,18 @@ const PopupContent = React.memo(
       >
         <Stack>
           <Typography level="title-lg">
-            <Skeleton loading={loading}>
+            <Skeleton
+              loading={loading}
+              sx={{ borderRadius: "md", opacity: 0.5 }}
+            >
               {loading ? "Quezon City, Metro Manila" : "Oops, sorry..."}
             </Skeleton>
           </Typography>
           <Typography level="body-sm">
-            <Skeleton loading={loading}>
+            <Skeleton
+              loading={loading}
+              sx={{ borderRadius: "md", opacity: 0.5 }}
+            >
               {loading ? "Friday, February 14, 2024" : " "}
             </Skeleton>
           </Typography>
@@ -136,12 +141,25 @@ const PopupContent = React.memo(
               OVERLAY_CONFIG[overlay].icon
             )}
             {loading ? (
-              <Skeleton variant="rectangular" width={40} height={30} />
+              <Skeleton
+                variant="rectangular"
+                width={100}
+                height={30}
+                sx={{ borderRadius: "md" }}
+              />
             ) : (
               <Typography color="primary.softColor" level="body-sm">
                 No municipal level forecast available
               </Typography>
             )}
+            {loading ? (
+              <Skeleton
+                variant="rectangular"
+                width={106}
+                height={30}
+                sx={{ borderRadius: "md", ml: "auto" }}
+              />
+            ) : null}
           </CardContent>
         </CardOverflow>
       </Card>
@@ -153,18 +171,10 @@ const PopupContent = React.memo(
       >
         <Stack>
           <Typography level="title-lg">
-            <Skeleton loading={loading}>
-              {loading
-                ? "Quezon City, Metro Manila"
-                : forecast.municity + ", " + forecast.province}
-            </Skeleton>
+            {forecast.municity + ", " + forecast.province}
           </Typography>
           <Typography level="body-sm">
-            <Skeleton loading={loading}>
-              {loading
-                ? "Friday, February 14, 2024"
-                : format(forecast.forecast.date, "EEEE, MMMM  d")}
-            </Skeleton>
+            {format(forecast.forecast.date, "EEEE, MMMM  d")}
           </Typography>
 
           <IconButton
@@ -182,11 +192,8 @@ const PopupContent = React.memo(
             orientation="horizontal"
             sx={{ alignItems: "center", p: "5px 0" }}
           >
-            {loading ? (
-              <Skeleton variant="circular" width={34} height={34} />
-            ) : (
-              OVERLAY_CONFIG[overlay].icon
-            )}
+            {OVERLAY_CONFIG[overlay].icon}
+
             {(() => {
               const config = OVERLAY_CONFIG[overlay];
               if (!config) return null;
@@ -211,150 +218,121 @@ const PopupContent = React.memo(
                         color: "var(--joy-palette-primary-700, #12467B)",
                       }}
                     >
-                      <Skeleton loading={loading}>
-                        {loading ? "Ave. Temperature" : config.title}
-                      </Skeleton>
+                      {loading ? "Ave. Temperature" : config.title}
                     </Typography>
                     <Typography
                       color="primary.softColor"
                       level={overlay === "cloud" ? "h4" : "h3"}
                     >
-                      <Skeleton loading={loading}>
-                        {loading ? (
-                          "28°C"
-                        ) : (
-                          <>
-                            <ForecastValue
-                              value={config.getValue(forecast.forecast)}
-                              overlay={overlay}
-                              units={units}
-                            />
-                            &nbsp;
-                            <ToggleUnits
-                              context="popup"
-                              overlay={overlay}
-                              units={units}
-                              setUnits={setUnits}
-                            />
-                            &nbsp;
-                            {overlay === "wind" && (
-                              <>
-                                &nbsp;
-                                {(() => {
-                                  const direction = config.getDirection(
-                                    forecast.forecast
-                                  );
+                      {loading ? (
+                        "28°C"
+                      ) : (
+                        <>
+                          <ForecastValue
+                            value={config.getValue(forecast.forecast)}
+                            overlay={overlay}
+                            units={units}
+                          />
+                          &nbsp;
+                          <ToggleUnits
+                            context="popup"
+                            overlay={overlay}
+                            units={units}
+                            setUnits={setUnits}
+                          />
+                          &nbsp;
+                          {overlay === "wind" && (
+                            <>
+                              &nbsp;
+                              {(() => {
+                                const direction = config.getDirection(
+                                  forecast.forecast
+                                );
 
-                                  const renderDirection = (
-                                    IconComponent,
-                                    direction
-                                  ) => (
-                                    <>
-                                      <IconComponent
-                                        sx={{
-                                          height: "auto",
-                                          width: "15px !important",
-                                        }}
-                                      />
-                                      &nbsp;
-                                      <Typography
-                                        level="h4"
-                                        sx={{ color: "primary.softColor" }}
-                                        component="span"
-                                      >
-                                        {direction}
-                                      </Typography>
-                                    </>
-                                  );
+                                const renderDirection = (
+                                  IconComponent,
+                                  direction
+                                ) => (
+                                  <>
+                                    <IconComponent
+                                      sx={{
+                                        height: "auto",
+                                        width: "15px !important",
+                                      }}
+                                    />
+                                    &nbsp;
+                                    <Typography
+                                      level="body-lg"
+                                      sx={{ color: "gray" }}
+                                      component="span"
+                                    >
+                                      {direction}
+                                    </Typography>
+                                  </>
+                                );
 
-                                  switch (direction) {
-                                    case "N":
-                                      return renderDirection(NIcon, direction);
-                                    case "NNE":
-                                      return renderDirection(
-                                        NNEIcon,
-                                        direction
-                                      );
-                                    case "NE":
-                                      return renderDirection(NEIcon, direction);
-                                    case "ENE":
-                                      return renderDirection(
-                                        ENEIcon,
-                                        direction
-                                      );
-                                    case "E":
-                                      return renderDirection(EIcon, direction);
-                                    case "ESE":
-                                      return renderDirection(
-                                        ESEIcon,
-                                        direction
-                                      );
-                                    case "SE":
-                                      return renderDirection(SEIcon, direction);
-                                    case "SSE":
-                                      return renderDirection(
-                                        SSEIcon,
-                                        direction
-                                      );
-                                    case "S":
-                                      return renderDirection(SIcon, direction);
-                                    case "SSW":
-                                      return renderDirection(
-                                        SSWIcon,
-                                        direction
-                                      );
-                                    case "SW":
-                                      return renderDirection(SWIcon, direction);
-                                    case "WSW":
-                                      return renderDirection(
-                                        WSWIcon,
-                                        direction
-                                      );
-                                    case "W":
-                                      return renderDirection(WIcon, direction);
-                                    case "WNW":
-                                      return renderDirection(
-                                        WNWIcon,
-                                        direction
-                                      );
-                                    case "NW":
-                                      return renderDirection(NWIcon, direction);
-                                    case "NNW":
-                                      return renderDirection(
-                                        NNWIcon,
-                                        direction
-                                      );
-                                    default:
-                                      return null;
-                                  }
-                                })()}
-                              </>
-                            )}
-                          </>
-                        )}
-                      </Skeleton>
+                                switch (direction) {
+                                  case "N":
+                                    return renderDirection(NIcon, direction);
+                                  case "NNE":
+                                    return renderDirection(NNEIcon, direction);
+                                  case "NE":
+                                    return renderDirection(NEIcon, direction);
+                                  case "ENE":
+                                    return renderDirection(ENEIcon, direction);
+                                  case "E":
+                                    return renderDirection(EIcon, direction);
+                                  case "ESE":
+                                    return renderDirection(ESEIcon, direction);
+                                  case "SE":
+                                    return renderDirection(SEIcon, direction);
+                                  case "SSE":
+                                    return renderDirection(SSEIcon, direction);
+                                  case "S":
+                                    return renderDirection(SIcon, direction);
+                                  case "SSW":
+                                    return renderDirection(SSWIcon, direction);
+                                  case "SW":
+                                    return renderDirection(SWIcon, direction);
+                                  case "WSW":
+                                    return renderDirection(WSWIcon, direction);
+                                  case "W":
+                                    return renderDirection(WIcon, direction);
+                                  case "WNW":
+                                    return renderDirection(WNWIcon, direction);
+                                  case "NW":
+                                    return renderDirection(NWIcon, direction);
+                                  case "NNW":
+                                    return renderDirection(NNWIcon, direction);
+                                  default:
+                                    return null;
+                                }
+                              })()}
+                            </>
+                          )}
+                        </>
+                      )}
                     </Typography>
                   </Stack>
                 </Box>
               );
             })()}
-            {!loading && (
-              <Button
-                variant="solid"
-                size="sm"
-                color="primary"
-                aria-label="See Forecast"
-                sx={{ ml: "auto", alignSelf: "center", fontWeight: 600 }}
-                endDecorator={<ExpandMoreIcon />}
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent map interaction when button is clicked
-                  markerRef.current.closePopup();
-                  setOpen(true);
-                }}
-              >
-                Forecast
-              </Button>
-            )}
+
+            <Button
+              variant="solid"
+              size="sm"
+              color="primary"
+              aria-label="See Forecast"
+              sx={{ ml: "auto", alignSelf: "center", fontWeight: 600 }}
+              endDecorator={<ExpandMoreIcon />}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent map interaction when button is clicked
+                markerRef.current.closePopup();
+                setOpen(true);
+              }}
+            >
+              Forecast
+            </Button>
           </CardContent>
         </CardOverflow>
       </Card>
