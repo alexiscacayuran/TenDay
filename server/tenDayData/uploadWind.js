@@ -430,7 +430,4 @@ ${messagePlain}
 
   console.log(messageDecorated);
 };
-<<<<<<< HEAD
 */}
-=======
->>>>>>> main
