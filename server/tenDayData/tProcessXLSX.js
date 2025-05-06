@@ -13,7 +13,6 @@ const s3 = new S3Client({
 });
 
 export const uploadForecastXLSX = async (year, month, day) => {
-<<<<<<< HEAD
   const SOURCE_PATH = '\\\\10.10.3.118\\climps\\10_Day\\Data';
   const BUCKET_NAME = 'tendayforecast';
 
@@ -95,7 +94,6 @@ ${summary}
 `);
 
   return summary;
-=======
   const BUCKET_NAME = 'tendayforecast';
 
   const monthIndex = parseInt(month, 10) - 1;
@@ -159,5 +157,4 @@ ${summary}
   const messagePlain = `Upload completed for ${year}-${monthStr}-${dayStr} in ${durationFormatted} (HH:MM:SS)`;
   console.log(messagePlain);
   return messagePlain;
->>>>>>> main
 };
