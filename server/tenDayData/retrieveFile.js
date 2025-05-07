@@ -1,18 +1,10 @@
 import moment from 'moment';
-import { S3Client, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
+import s3 from '../aws.js';
+import { ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const bucket = 'tendayforecast';
 
-const s3 = new S3Client({
-  region: process.env.AWS_R,
-  credentials: {
-    accessKeyId: process.env.AWS_AKI,
-    secretAccessKey: process.env.AWS_SAK,
-  },
-});
-
-// Define the function to generate file keys
 const getFileKeyForType = (date, fileType, isMasked, vector, specDate) => {
   const fileTypeUpper = fileType.toUpperCase();
   let fileKey = '';

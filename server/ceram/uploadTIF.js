@@ -1,15 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-
-const s3 = new S3Client({
-  region: process.env.AWS_R,
-  credentials: {
-    accessKeyId: process.env.AWS_AKI,
-    secretAccessKey: process.env.AWS_SAK,
-  },
-  maxAttempts: 3,
-});
+import s3 from '../aws.js';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 const SOURCE_DIR = '\\\\172.17.17.37\\iaas-climgrid\\Climpact_Output\\2_tiff';
 const BUCKET_NAME = 'ceram';

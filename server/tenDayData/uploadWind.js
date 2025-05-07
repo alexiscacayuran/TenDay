@@ -1,20 +1,12 @@
 import fs from 'fs-extra';
 import path from 'path';
 import moment from 'moment';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import s3 from '../aws.js';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import gdal from 'gdal-async';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import chalk from 'chalk';
-
-const s3 = new S3Client({
-  region: process.env.AWS_R,
-  credentials: {
-    accessKeyId: process.env.AWS_AKI,
-    secretAccessKey: process.env.AWS_SAK,
-  },
-  maxAttempts: 3,
-});
 
 const TEMP_DIR = './tif'; // Temporary directory for TIF files
 
@@ -204,7 +196,8 @@ export const uploadForecastWind = async (year, month, day) => {
             Body: fileContent,
             ContentType: 'application/octet-stream',
           }));
-          console.log(`${mergedFileName}.tif uploaded to S3`);
+          log(chalk.bgGreenBright(`${mergedFileName}.tif uploaded to S3`));
+
         } catch (err) {
           console.error(`Error uploading ${mergedFileName}.tif to S3: ${err}`);
         }

@@ -1,16 +1,8 @@
 import fs from 'fs-extra';
 import path from 'path';
 import moment from 'moment';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-
-const s3 = new S3Client({
-  region: process.env.AWS_R,
-  credentials: {
-    accessKeyId: process.env.AWS_AKI,
-    secretAccessKey: process.env.AWS_SAK,
-  },
-  maxAttempts: 3,
-});
+import s3 from '../aws.js';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 export const uploadForecastXLSX = async (year, month, day) => {
   const SOURCE_PATH = '\\\\10.10.3.118\\climps\\10_Day\\Data';
