@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { createClient } from 'redis';
+import Redis from 'ioredis';
 
 const { Pool } = pg;
 
@@ -7,9 +8,14 @@ const { Pool } = pg;
 const pool = new Pool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    host: 'localhost',
+    //host: process.env.DB_HOST,
+    host: process.env.AWS_PORT,
     port: process.env.DB_PORT,
-    database: process.env.DB_NAMENEW,
+    //database: process.env.DB_NAMENEW,
+    database: process.env.DB_NAME,
+    max: 100,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
 });
 
 // Redis configuration
@@ -22,4 +28,9 @@ redisClient.on('error', (err) => console.error('Redis connection error:', err));
 
 await redisClient.connect();
 
-export { pool, redisClient };
+const ioredis = new Redis({
+    host: process.env.REDIS_HOST,
+    port: 6379,
+  });
+
+  export { pool, redisClient, ioredis };
