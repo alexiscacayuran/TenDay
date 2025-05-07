@@ -40,10 +40,10 @@ const GeoSearch = ({
     municity: "",
     province: "",
   });
+
   const _query = query({
     url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/3",
   });
-
   _query.token(arcgisToken);
 
   const executeQuery = (result) => {

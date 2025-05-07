@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
+import L from "leaflet";
 import axios from "axios";
 import { Select, Option } from "@mui/joy";
 import { geocodeService } from "esri-leaflet-geocoder";
+import { query } from "esri-leaflet";
 
 const MunicitySelector = ({
   map,
@@ -14,6 +16,43 @@ const MunicitySelector = ({
   const [municities, setMunicities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState("");
+
+  const _query = query({
+    url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/3",
+  });
+  _query.token(arcgisToken);
+
+  const executeQuery = (result) => {
+    console.log(result);
+    _query.nearby(result.latlng, 1);
+
+    _query.run(function (error, featureCollection, response) {
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      if (selectedPolygon.current) {
+        map.removeLayer(selectedPolygon.current);
+      }
+
+      const feature = featureCollection.features[0];
+
+      const selectedMunicity = L.geoJSON(feature, {
+        style: {
+          color: "#3E7BFF",
+          weight: 3,
+          opacity: 1,
+          fillColor: "#3E7BFF",
+          fillOpacity: 0.3,
+          interactive: false,
+        },
+      });
+
+      selectedMunicity.addTo(map);
+      selectedPolygon.current = selectedMunicity;
+    });
+  };
 
   useEffect(() => {
     if (!forecast?.province) return;
@@ -72,6 +111,7 @@ const MunicitySelector = ({
             province: result.properties.Subregion,
           });
 
+          executeQuery(result);
           map.flyTo(result.latlng, 12, { duration: 0.75, easeLinearity: 0.01 });
         }
       });

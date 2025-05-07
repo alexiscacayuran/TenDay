@@ -326,7 +326,7 @@ const ForecastContainer = ({
     backgroundColor: "common.white",
     width: "900px",
     maxWidth: "900px",
-    minWidth: "900px",
+
     tableLayout: "fixed",
 
     "& thead > tr > th": {
@@ -507,16 +507,29 @@ const ForecastContainer = ({
                               className="today-chip"
                               sx={{
                                 position: "absolute",
-                                transform: "translate(-100px, -32px)",
+                                transform: "translate(-92px, -30px)",
                                 fontWeight: "bold",
-                                backgroundColor: "primary.100",
+                                backgroundColor:
+                                  hoveredColumn === index + 1
+                                    ? "primary.300"
+                                    : "primary.100",
                                 color: "primary.700",
-                                padding: "0 14px",
+                                padding: "0 10px",
+                                fontSize: "0.85em",
                               }}
                             >
                               TODAY
                             </Chip>
-                          ) : null}
+                          ) : // <Box
+                          //   className="rounded-tab"
+                          //   sx={{
+                          //     position: "absolute",
+                          //     transform: "translate(-100px, -30px)",
+                          //   }}
+                          // >
+                          //   TODAY
+                          // </Box>
+                          null}
                           <Typography level="title-sm">
                             {format(data.date, "EEE d")}
                           </Typography>
