@@ -1,77 +1,103 @@
 import fs from 'fs-extra';
 import path from 'path';
 import moment from 'moment';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import s3 from '../aws.js';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import gdal from 'gdal-async';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import chalk from 'chalk';
 
-const s3 = new S3Client({
-  region: process.env.AWS_R,
-  credentials: {
-    accessKeyId: process.env.AWS_AKI,
-    secretAccessKey: process.env.AWS_SAK,
-  },
-  maxAttempts: 3,
-});
+const TEMP_DIR = './tif'; // Temporary directory for TIF files
 
-const geojsonPath = "C:\\Users\\gabri\\10_DAY_FORECAST\\TanawPH\\server\\tenDayData\\country_lowres_dissolved.geojson"; // GeoJSON for clipping
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
+// Construct a path relative to this file's location
+const geojsonPath = join(__dirname, 'country_lowres_dissolved.geojson');
+
+const log = console.log;
+
+// Function to delete temporary files
 const deleteTempFiles = async () => {
-  const TEMP_DIR = path.join('.', 'tif');
   try {
     if (fs.existsSync(TEMP_DIR)) {
       const files = await fs.readdir(TEMP_DIR);
       await Promise.all(files.map((file) => fs.unlink(path.join(TEMP_DIR, file))));
-      console.log("🧹 Deleted all temp files from ./tif.");
-    } else {
-      console.log("No ./tif directory found, skipping temp cleanup.");
+      console.log("Deleted all temp files.");
     }
   } catch (error) {
-    console.error("❌ Error deleting temp files:", error);
+    console.error("Error deleting temp files:", error);
   }
 };
 
-const maskTif = async (targetFilePath, tifFileName) => {
+// Function to compress and clip a GeoTIFF file
+const maskTif = async (targetFilePath, outputFileName) => {
   if (!fs.existsSync(targetFilePath)) {
     console.log(`File ${targetFilePath} not found`);
     return null;
   }
 
+  const originalFileName = path.basename(targetFilePath);
+
   try {
-    gdal.config.set('GDAL_PAM_ENABLED', 'NO');
+    gdal.config.set("GDAL_PAM_ENABLED", "NO");
 
     const tif = await gdal.openAsync(targetFilePath);
-    if (!fs.existsSync('./tif')) fs.mkdirSync('./tif');
 
-    const tifCompressedPath = `./tif/${tifFileName}.tif`;
-    const tifCompressed = await gdal.warpAsync(
-      tifCompressedPath,
-      null,
-      [tif],
-      ['-co', 'COMPRESS=LZW']
-    );
-    tif.close(); // ✅ Close source file
-    console.log(`Compressed TIF saved to: ${tifCompressedPath}`);
+    // Ensure temp directory exists
+    if (!fs.existsSync(TEMP_DIR)) {
+      fs.mkdirSync(TEMP_DIR);
+    }
 
-    const maskedPath = `./tif/${tifFileName}_masked.tif`;
+    const cogPath = path.join(TEMP_DIR, `${outputFileName}.tif`);
 
-    const tifMasked = await gdal.warpAsync(
+    // Translate to COG
+    const cog = await gdal.translateAsync(cogPath, tif, [
+      "-co", "TILED=YES",
+      "-co", "COPY_SRC_OVERVIEWS=YES",
+      "-co", "COMPRESS=DEFLATE",
+    ]);
+
+    await cog.buildOverviewsAsync("AVERAGE", [2, 4, 8, 16, 32]);
+
+    log(chalk.bgRedBright(`${originalFileName}`) + '→ COG saved to:' + chalk.bgRedBright(`${cogPath}`));
+
+    const maskedPath = path.join(TEMP_DIR, `${outputFileName}_masked.tif`);
+
+    // Clip the COG
+    await gdal.warpAsync(
       maskedPath,
       null,
-      [tifCompressed],
-      ['-cutline', geojsonPath, '-crop_to_cutline', '-co', 'COMPRESS=LZW']
+      [cog],
+      [
+        "-cutline", geojsonPath,
+        "-crop_to_cutline",
+        "-co", "TILED=YES",
+        "-co", "COPY_SRC_OVERVIEWS=YES",
+        "-co", "COMPRESS=DEFLATE",
+      ]
     );
 
-    tifCompressed.close(); // ✅ Close compressed file
-    tifMasked.close(); // ✅ Close masked file
+    log( 'COG clipped successfully: ' + chalk.yellow(`${maskedPath}`));
 
-    console.log(`TIF clipped successfully: ${maskedPath}`);
-    return maskedPath;
+    // Build overviews on the clipped (masked) file
+    const maskedDataset = await gdal.openAsync(maskedPath, 'r+');
+    await maskedDataset.buildOverviewsAsync("AVERAGE", [2, 4, 8, 16, 32]);
+    maskedDataset.close();
+    // Close datasets
+    cog.close();
+    tif.close();
+
+    return { cogPath, maskedPath };
   } catch (error) {
-    console.error('Error processing file.', error);
-    return null;
+    console.error("Error processing file.", error);
   }
+
+  return null;
 };
 
+// Main function to process and upload forecast TIF files
 export const uploadForecastTIF = async (year, month, day) => {
   const SOURCE_PATH = '\\\\10.10.3.118\\climps\\10_Day\\Data';
   const BUCKET_NAME = 'tendayforecast';
@@ -85,7 +111,6 @@ export const uploadForecastTIF = async (year, month, day) => {
 
     if (!fs.existsSync(dayPath)) {
       console.error(`Day folder not found: ${dayPath}`);
-      console.timeEnd('Upload Time');
       return;
     }
 
@@ -97,126 +122,87 @@ export const uploadForecastTIF = async (year, month, day) => {
         console.log(`Files in ${folderPath}:`, files);
 
         const resCFiles = files.filter(file => file.endsWith('_res_C.tif'));
-        console.log(`Found _res_C.tif files:`, resCFiles);
+        const resFiles = files.filter(file => file.endsWith('_res.tif'));
 
-        if (resCFiles.length > 0) {
-          for (const resCFile of resCFiles) {
-            const match = resCFile.match(/(MAX|MIN|MEAN|RH|TCC|TP|WS)(\d+)_res_C\.tif/);
+        const processFiles = async (fileList, suffix) => {
+          for (const resFile of fileList) {
+            const match = resFile.match(/(MAX|MIN|MEAN|RH|TCC|TP|WS)(\d+)_res(?:_C)?\.tif/);
             if (!match) continue;
 
-            const folderName = match[1];
+            const folderNameMap = {
+              MAX: 'TMAX',
+              MIN: 'TMIN',
+              MEAN: 'TMEAN',
+            };
+            const folderNameRaw = match[1];
+            const folderName = folderNameMap[folderNameRaw] || folderNameRaw;
+            
             const num = parseInt(match[2], 10);
             const newDate = moment(`${year}-${monthNumber}-${day}`, 'YYYY-MM-DD')
               .add(num - 1, 'days')
               .format('YYYYMMDD');
 
-            const newFileName = `${folderName}_${newDate}.tif`;
-            const s3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${newFileName}`;
-            const fileContent = fs.readFileSync(path.join(folderPath, resCFile));
+            const newFileName = `${folderName}_${newDate}`;
+            const s3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folderName}/${newFileName}.tif`;
 
-            const params = new PutObjectCommand({
-              Bucket: BUCKET_NAME,
-              Key: s3Key,
-              Body: fileContent,
-              ContentType: 'application/octet-stream',
-            });
+            const filePath = path.join(folderPath, resFile);
 
-            try {
-              await s3.send(params);
-              console.log(`${resCFile} uploaded as ${newFileName} to S3`);
-            } catch (err) {
-              console.error(`Error uploading ${resCFile} to S3: ${err}`);
-            }
+            const result = await maskTif(filePath, newFileName);
 
-            const clipFileName = `${folderName}_${newDate}_masked.tif`;
-            const clipFilePath = await maskTif(path.join(folderPath, resCFile), `${folderName}_${newDate}`);
+            if (result) {
+              const { cogPath, maskedPath } = result;
 
-            if (clipFilePath && fs.existsSync(clipFilePath)) {
-              const clipFileContent = fs.readFileSync(clipFilePath);
-              const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${clipFileName}`;
-
-              const clipParams = new PutObjectCommand({
-                Bucket: BUCKET_NAME,
-                Key: clipS3Key,
-                Body: clipFileContent,
-                ContentType: 'application/octet-stream',
-              });
-
-              try {
-                await s3.send(clipParams);
-                console.log(`${clipFileName} uploaded to S3`);
-              } catch (err) {
-                console.error(`Error uploading ${clipFileName} to S3: ${err}`);
-              }
-            } else {
-              console.log(`Clipped file ${clipFileName} not found.`);
-            }
-          }
-        } else {
-          console.log('No _res_C.tif files found.');
-
-          const resFiles = files.filter(file => file.endsWith('_res.tif'));
-          console.log(`Found _res.tif files:`, resFiles);
-
-          if (resFiles.length > 0) {
-            for (const resFile of resFiles) {
-              const match = resFile.match(/(MAX|MIN|MEAN|RH|TCC|TP|WS)(\d+)_res\.tif/);
-              if (!match) continue;
-
-              const folderName = match[1];
-              const num = parseInt(match[2], 10);
-              const newDate = moment(`${year}-${monthNumber}-${day}`, 'YYYY-MM-DD')
-                .add(num - 1, 'days')
-                .format('YYYYMMDD');
-
-              const newFileName = `${folderName}_${newDate}.tif`;
-              const s3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${newFileName}`;
-              const fileContent = fs.readFileSync(path.join(folderPath, resFile));
-
-              const params = new PutObjectCommand({
-                Bucket: BUCKET_NAME,
-                Key: s3Key,
-                Body: fileContent,
-                ContentType: 'application/octet-stream',
-              });
-
-              try {
-                await s3.send(params);
-                console.log(`${resFile} uploaded as ${newFileName} to S3`);
-              } catch (err) {
-                console.error(`Error uploading ${resFile} to S3: ${err}`);
+              if (fs.existsSync(cogPath)) {
+                const cogFileContent = fs.readFileSync(cogPath);
+                try {
+                  await s3.send(new PutObjectCommand({
+                    Bucket: BUCKET_NAME,
+                    Key: s3Key,
+                    Body: cogFileContent,
+                    ContentType: 'application/octet-stream',
+                  }));
+                  console.log(`${newFileName}.tif (COG) uploaded to S3`);
+                } catch (err) {
+                  console.error(`Error uploading ${newFileName}.tif (COG) to S3: ${err}`);
+                }
               }
 
-              const clipFileName = `${folderName}_${newDate}_masked.tif`;
-              const clipFilePath = await maskTif(path.join(folderPath, resFile), `${folderName}_${newDate}`);
-
-              if (clipFilePath && fs.existsSync(clipFilePath)) {
-                const clipFileContent = fs.readFileSync(clipFilePath);
-                const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folder}/${clipFileName}`;
-
-                const clipParams = new PutObjectCommand({
-                  Bucket: BUCKET_NAME,
-                  Key: clipS3Key,
-                  Body: clipFileContent,
-                  ContentType: 'application/octet-stream',
-                });
+              if (fs.existsSync(maskedPath)) {
+                const clipFileContent = fs.readFileSync(maskedPath);
+                const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folderName}/${newFileName}_masked.tif`;
 
                 try {
-                  await s3.send(clipParams);
-                  console.log(`${clipFileName} uploaded to S3`);
+                  await s3.send(new PutObjectCommand({
+                    Bucket: BUCKET_NAME,
+                    Key: clipS3Key,
+                    Body: clipFileContent,
+                    ContentType: 'application/octet-stream',
+                  }));
+                  console.log(`${newFileName}_masked.tif uploaded to S3`);
                 } catch (err) {
-                  console.error(`Error uploading ${clipFileName} to S3: ${err}`);
+                  console.error(`Error uploading ${newFileName}_masked.tif to S3: ${err}`);
                 }
               } else {
-                console.log(`Clipped file ${clipFileName} not found.`);
+                console.log(`Clipped file ${newFileName}_masked.tif not found.`);
               }
             }
           }
+        };
+
+        if (resCFiles.length > 0) {
+          await processFiles(resCFiles, '_res_C.tif');
+        } else if (resFiles.length > 0) {
+          await processFiles(resFiles, '_res.tif');
+        } else {
+          console.log('No _res_C.tif or _res.tif files found.');
         }
       } else {
         console.log(`Folder not found: ${folder} in ${dayPath}`);
       }
     }
+
+    // Cleanup after processing all folders
+    await deleteTempFiles();
 
     const endTime = Date.now();
     const duration = endTime - startTime;
@@ -231,11 +217,7 @@ export const uploadForecastTIF = async (year, month, day) => {
 ${messagePlain}
 👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍
 `;
-
     console.log(messageDecorated);
-
-    await deleteTempFiles(); // Clean up
-
     return messagePlain;
   };
 

@@ -1,6 +1,5 @@
-import pg from "pg";
-import Redis from "ioredis";
 import moment from "moment";
+<<<<<<< HEAD
 
 const { Pool } = pg;
 // PostgreSQL Connection
@@ -22,6 +21,9 @@ const redis = new Redis({
   host: process.env.REDIS_HOST,
   port: 6379,
 });
+=======
+import { pool, ioredis as redis } from '../db.js';
+>>>>>>> main
 
 const formatNumber = (value, roundToInt = false) => {
   if (value === null || value === undefined) return "NULL";

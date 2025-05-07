@@ -241,6 +241,26 @@ const processCSV = async (csvPath, year, month, day, fileName, userId) => {
                 }
                 municityProvinceMap[row.municity].push(row.province);
 
+                const requiredFields = [
+                    row.CLOUDCOVER,
+                    row.RELHUMIDIT,
+                    row.RAINFALLDE,
+                    row.RAINFALLTO,
+                    row.TEMPMEAN,
+                    row.TEMPMIN,
+                    row.TEMPMAX,
+                ];
+                
+                const hasMissingValue = requiredFields.some(
+                    (value) => value === undefined || value === null || value.toString().trim() === ''
+                );
+                
+                if (hasMissingValue) {
+                    console.log(`Skipping municity ${row.municity} (${row.province}) due to missing data.`);
+                    skippedCities.push(`${row.municity} (${row.province})`);
+                    return;
+                }                
+
                 batch.data.push({
                     municity: row.municity,
                     province: row.province,
