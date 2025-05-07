@@ -5,11 +5,12 @@ import moment from "moment";
 const { Pool } = pg;
 // PostgreSQL Connection
 const pool = new Pool({
-  host: '13.228.79.63',
-  //host: 'localhost',
-  user: 'postgres',
-  password: '2019-Cs-100404',
-  database: 'ten_day',
+  //host: '13.228.79.63',
+  host: "localhost",
+  user: "postgres",
+  //password: '2019-Cs-100404',
+  password: "admin",
+  database: "ten_day",
   port: 5432,
   max: 100,
   idleTimeoutMillis: 30000,

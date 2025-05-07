@@ -47,6 +47,7 @@ const GeoSearch = ({
   _query.token(arcgisToken);
 
   const executeQuery = (result) => {
+    console.log(result);
     _query.nearby(result.latlng, 1);
 
     _query.run(function (error, featureCollection, response) {

@@ -11,7 +11,7 @@ const darken = (color) => {
 const overlayList = [
   {
     name: "temperature_mean",
-    pathName: "MEAN",
+    pathName: "TMEAN",
     scale: [
       darken("#0031FF"),
       darken("#0061FF"),
@@ -42,7 +42,7 @@ const overlayList = [
   },
   {
     name: "temperature_minimum",
-    pathName: "MIN",
+    pathName: "TMIN",
     scale: [
       darken("#0031FF"),
       darken("#0061FF"),
@@ -73,7 +73,7 @@ const overlayList = [
   },
   {
     name: "temperature_maximum",
-    pathName: "MAX",
+    pathName: "TMAX",
     scale: [
       darken("#0031FF"),
       darken("#0061FF"),
@@ -168,14 +168,15 @@ const overlayList = [
     units: "mm/24h",
     height: "320px",
   },
+
   {
     name: "cloud",
     pathName: "TCC",
     scale: [
-      "SteelBlue",
-      "lightsteelblue",
-      chroma("linen").darken(0.2),
-      "whitesmoke",
+      darken("SteelBlue"),
+      darken("lightsteelblue"),
+      darken(chroma("linen").darken(0.1)),
+      darken("whitesmoke"),
     ],
     domain: chroma.limits([0, 100], "e", 10),
     mode: "lab",
