@@ -10,8 +10,8 @@ const Issuance = ({ startDate }) => {
     <Box
       sx={{
         position: "absolute",
-        bottom: 50,
-        left: 15,
+        top: 60,
+        right: 60,
         zIndex: 1000,
         userSelect: "none",
       }}
@@ -21,7 +21,7 @@ const Issuance = ({ startDate }) => {
         spacing={0}
         sx={{
           justifyContent: "center",
-          alignItems: "left",
+          alignItems: "flex-end",
         }}
       >
         <Typography

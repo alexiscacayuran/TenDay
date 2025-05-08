@@ -15,8 +15,8 @@ import humidityRoutes from "./controller/humidity.js";
 import usersRouter from "./controller/users.js";
 import authenticate from "./middleware/authorization.js";
 import getTokenRoute from "./API/serverToken.js";
-import archiver from 'archiver';
-import moment from 'moment';
+import archiver from "archiver";
+import moment from "moment";
 
 import authRoutes from "./API/token.js";
 
@@ -24,18 +24,20 @@ import pieChart from "./route/pieChart.js";
 import barChart from "./route/barChart.js";
 
 // //Background job
- import "./backgroundJob/cleanUpDB.js"; 
- import './backgroundJob/cleanUpS3.js'; 
+import "./backgroundJob/cleanUpDB.js";
+import "./backgroundJob/cleanUpS3.js";
 
 //API tenday (internal)
-import { uploadForecastData } from './tenDayData/uploadTenDay.js';
-import { uploadForecastTIF } from './tenDayData/tProcessTIF.js';
-import { uploadForecastXLSX } from './tenDayData/tProcessXLSX.js';
-import { retrieveForecastFile, streamForecastFile } from './tenDayData/retrieveFile.js';
-
+import { uploadForecastData } from "./tenDayData/uploadTenDay.js";
+import { uploadForecastTIF } from "./tenDayData/tProcessTIF.js";
+import { uploadForecastXLSX } from "./tenDayData/tProcessXLSX.js";
+import {
+  retrieveForecastFile,
+  streamForecastFile,
+} from "./tenDayData/retrieveFile.js";
 
 //import { processWindFiles } from "./tenDayData/uploadWind.js";
-import { uploadForecastWind } from './tenDayData/uploadWind.js';
+import { uploadForecastWind } from "./tenDayData/uploadWind.js";
 
 //API tenday (external)
 import getFullForecast from "./tenDayData/getFullForecast.js";
@@ -56,20 +58,20 @@ import seasonalDataRegional from "./seasonalData/seasonalRegional.js"; // Import
 
 //API
 
-import tokenRoutes from './API/tokenRoutes.js';
-import seasonalRoutes from './API/seasonalRoutes.js';
+import tokenRoutes from "./API/tokenRoutes.js";
+import seasonalRoutes from "./API/seasonalRoutes.js";
 
 //Admin
-import apiOrg from './admin/apiOrg.js';
+import apiOrg from "./admin/apiOrg.js";
 
 //CERAM
-import { uploadCeramCSV } from './ceram/uploadCSV.js';
+import { uploadCeramCSV } from "./ceram/uploadCSV.js";
 
 //Extemes
-import { uploadTIF } from './ceram/uploadTIF.js';
+import { uploadTIF } from "./ceram/uploadTIF.js";
 
 //Health Check
-import { checkWebsiteStatus } from './backgroundJob/healthCheck.js'; 
+import { checkWebsiteStatus } from "./backgroundJob/healthCheck.js";
 
 const app = express();
 const port = 5000;
@@ -195,31 +197,55 @@ app.get("/uploadForecastTIF", authenticate, async (req, res) => {
   }
 });
 
-app.get('/uploadForecastXLSX', authenticate, async (req, res) => {
+app.get("/uploadForecastXLSX", authenticate, async (req, res) => {
   const { year, month, day } = req.query;
 
   if (!year || !month || !day) {
-    return res.status(400).send('Error: Missing required parameters (year, month, day)');
+    return res
+      .status(400)
+      .send("Error: Missing required parameters (year, month, day)");
   }
 
   try {
     const result = await uploadForecastXLSX(year, month, day);
     return res.status(200).send(result);
   } catch (error) {
-    console.error('❌ Error processing files:', error);
-    return res.status(500).send('Error processing files');
+    console.error("❌ Error processing files:", error);
+    return res.status(500).send("Error processing files");
   }
 });
 
-app.get('/retrievefile', async (req, res) => {
-  const { year, month, day, file, offset, masked, vector, specyear, specmonth, specday } = req.query;
+app.get("/retrievefile", async (req, res) => {
+  const {
+    year,
+    month,
+    day,
+    file,
+    offset,
+    masked,
+    specyear,
+    specmonth,
+    specday,
+  } = req.query;
 
   if (!year || !month || !day || !file) {
-    return res.status(400).send('Error: Missing required parameters (year, month, day, file)');
+    return res
+      .status(400)
+      .send("Error: Missing required parameters (year, month, day, file)");
   }
 
   try {
-    const result = await retrieveForecastFile(year, month, day, file, offset, masked, vector, specyear, specmonth, specday);
+    const result = await retrieveForecastFile(
+      year,
+      month,
+      day,
+      file,
+      offset,
+      masked,
+      specyear,
+      specmonth,
+      specday
+    );
 
     // If only one file to download, redirect to presigned URL
     if (result.length === 1) {
@@ -227,13 +253,19 @@ app.get('/retrievefile', async (req, res) => {
     }
 
     // Prepare filename based on fileType + specDate if available
-    const zipDate = specyear && specmonth && specday ? `${specyear}${specmonth}${specday}` : moment(`${year}-${month}-${day}`).format('YYYYMMDD');
+    const zipDate =
+      specyear && specmonth && specday
+        ? `${specyear}${specmonth}${specday}`
+        : moment(`${year}-${month}-${day}`).format("YYYYMMDD");
     const zipFilename = `${file.toUpperCase()}_${zipDate}.zip`;
 
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${zipFilename}"`
+    );
 
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    const archive = archiver("zip", { zlib: { level: 9 } });
     archive.pipe(res);
 
     for (const file of result) {
@@ -243,13 +275,12 @@ app.get('/retrievefile', async (req, res) => {
 
     archive.finalize();
   } catch (error) {
-    console.error('❌ Error retrieving files:', error);
+    console.error("❌ Error retrieving files:", error);
     if (!res.headersSent) {
       res.status(500).send(`Error retrieving files: ${error.message}`);
     }
   }
 });
-
 
 // Route for uploading Seasonal Data
 app.get("/seasonal-date", authenticate, async (req, res) => {
@@ -339,7 +370,7 @@ app.get("/uploadForecastWind", authenticate, async (req, res) => {
   // Check if the required parameters are present
   if (!year || !month || !day) {
     return res.status(400).json({
-      error: "Missing required parameters (year, month, day)"
+      error: "Missing required parameters (year, month, day)",
     });
   }
 
@@ -348,17 +379,16 @@ app.get("/uploadForecastWind", authenticate, async (req, res) => {
     const result = await uploadForecastWind(year, month, day);
     return res.status(200).json({
       message: "Successfully processed and uploaded forecast wind",
-      data: result
+      data: result,
     });
   } catch (error) {
     console.error("❌ Error processing files:", error);
     return res.status(500).json({
       error: "Error processing files",
-      details: error.message
+      details: error.message,
     });
   }
 });
-
 
 // Endpoint to Process TIF files (Seasonal)
 app.get("/seasonalprocess", async (req, res) => {
@@ -383,40 +413,39 @@ app.use("/api", seasonalRoutes);
 app.use("/seasonal-reg", seasonalDataRegional);
 
 //Admin
-app.use('/api', apiOrg);
+app.use("/api", apiOrg);
 
 //CERAM
-app.get('/uploadCeramCSV', async (req, res) => {
+app.get("/uploadCeramCSV", async (req, res) => {
   try {
     const result = await uploadCeramCSV();
     res.json({ message: result });
   } catch (error) {
-    console.error('Error during CSV upload:', error);
-    res.status(500).json({ error: 'Failed to upload CSV files' });
+    console.error("Error during CSV upload:", error);
+    res.status(500).json({ error: "Failed to upload CSV files" });
   }
 });
 
 //CERAM
-app.get('/uploadExtremesTIF', async (req, res) => {
+app.get("/uploadExtremesTIF", async (req, res) => {
   try {
     const result = await uploadTIF();
     res.json({ message: result });
   } catch (error) {
-    console.error('Error during TIF upload:', error);
-    res.status(500).json({ error: 'Failed to upload TIF files' });
+    console.error("Error during TIF upload:", error);
+    res.status(500).json({ error: "Failed to upload TIF files" });
   }
 });
 
 //HEALTH CHECK
-app.get('/health', async (req, res) => {
-  const isActive = await checkWebsiteStatus('http://13.228.79.63:8080/');
+app.get("/health", async (req, res) => {
+  const isActive = await checkWebsiteStatus("http://13.228.79.63:8080/");
   res.status(isActive ? 200 : 503).json({
-    status: isActive ? 'ACTIVE' : 'OFFLINE',
+    status: isActive ? "ACTIVE" : "OFFLINE",
   });
 });
 
-
 // Start the server
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, "0.0.0.0", () => {
   console.log(`Server listening on ${port}`);
 });

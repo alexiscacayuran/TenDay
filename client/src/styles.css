@@ -12,11 +12,14 @@
   height: 100vh;
 }
 
-/*required map size*/
 .leaflet-container {
   height: 100vh;
   width: 100%;
   background-color: #696969 !important;
+}
+
+.leaflet-container a {
+  color: none;
 }
 
 .leaflet-control {
@@ -223,7 +226,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 999; /* Ensures the legend stays on top */
+  z-index: 1200;
   user-select: none;
 }
 

@@ -11,6 +11,9 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
   const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
   const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
 
+  map.createPane("activeFeaturePane");
+  map.getPane("activeFeaturePane").style.zIndex = 500;
+
   useEffect(() => {
     if (!arcgisToken) return;
 
@@ -80,7 +83,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
         color: "white",
         weight: 2.5,
         opacity: 0.5,
-        fillOpacity: 0.3,
+        fillOpacity: 0.2,
         weight: 3,
         stroke: true,
       }),
@@ -89,7 +92,8 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
           mouseover: () => {
             setProvinceId(feature.properties.ID.substring(0, 4));
             layer.setStyle({
-              fillColor: "#3E7BFF",
+              fillColor: "white",
+              fillOpacity: 0.4,
             });
           },
 
@@ -97,6 +101,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
             setProvinceId(null);
             layer.setStyle({
               fillColor: "white",
+              fillOpacity: 0.2,
             });
           },
 
@@ -115,6 +120,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
                 fillColor: "#3E7BFF",
                 fillOpacity: 0.3,
                 interactive: false,
+                pane: "activeFeaturePane",
               },
             });
 

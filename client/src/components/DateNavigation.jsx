@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTheme } from "@mui/joy/styles";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
 import Button from "@mui/joy/Button";
@@ -9,12 +10,13 @@ import { format, addDays, subDays } from "date-fns";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import ToggleButtonGroup from "@mui/joy/ToggleButtonGroup";
+import { Slide } from "@mui/material";
 
 function generateDateRange(startDate, range) {
   return Array.from({ length: range }, (_, i) => addDays(startDate, i));
 }
 
-const DateNavigation = ({ initialDate, range, setDate, date }) => {
+const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
   const [localDate, setlocalDate] = useState(new Date());
   const [dateRange] = useState(generateDateRange(initialDate, range));
 
@@ -54,16 +56,15 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
   };
 
   return (
-    <div>
+    <Slide direction="up" in={!open} mountOnEnter unmountOnExit>
       <Box
         sx={{
+          display: "flex",
+          justifyContent: "center",
           position: "fixed",
           bottom: 20,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "100%", // Optional width adjustment
-          maxWidth: 1100, // Optional max width
-          zIndex: 999,
+          width: "100%",
+          zIndex: "1200",
         }}
       >
         <ToggleButtonGroup
@@ -119,7 +120,7 @@ const DateNavigation = ({ initialDate, range, setDate, date }) => {
           </IconButton>
         </ToggleButtonGroup>
       </Box>
-    </div>
+    </Slide>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Fragment, useRef } from "react";
+import { useTheme } from "@mui/joy/styles";
 import axios from "axios";
 import { format } from "date-fns";
 
@@ -103,6 +104,8 @@ const ForecastContainer = ({
   const [docExtendForecast, setDocExtendForecast] = useState(false);
   const [selectedMunicities, setSelectedMunicities] = useState([]);
 
+  const theme = useTheme();
+
   useEffect(() => {
     setDocUnits(units);
   }, [units]);
@@ -152,7 +155,7 @@ const ForecastContainer = ({
       );
 
       if (currentColumnIndex !== -1) {
-        setActiveColumn(currentColumnIndex + 3); // Offset for first 2 columns
+        //setActiveColumn(currentColumnIndex + 3); // Offset for first 2 columns
         setTodayColumn(currentColumnIndex + 3);
       }
     }
@@ -351,7 +354,7 @@ const ForecastContainer = ({
     },
 
     "& th:first-of-type": {
-      width: "15%",
+      width: "13%",
       textAlign: "right",
     },
     "& th:nth-of-type(2)": { width: "7%" },
@@ -451,7 +454,7 @@ const ForecastContainer = ({
           bottom: 20,
           left: 0,
           width: "100%",
-          zIndex: 800,
+          zIndex: 1200,
           userSelect: "none",
         }}
       >

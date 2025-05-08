@@ -112,7 +112,7 @@ const Map = () => {
 
   const displayMap = useMemo(
     () => (
-      <Box sx={{ maxHeight: "100vh" }}>
+      <>
         <Navbar
           arcgisToken={arcgisToken}
           map={map}
@@ -139,6 +139,7 @@ const Map = () => {
           ref={setMap} // Set map instance to external state
           paddingTopLeft={[2, 2]}
         >
+          <ZoomLevel setZoomLevel={setZoomLevel} />
           {isLocationReady ? (
             <ForecastPopup
               location={location}
@@ -159,7 +160,37 @@ const Map = () => {
             nautic={false}
             key={`${scale.metric}-${scale.imperial}`} // Rerender on scale change
           />
-          <ZoomLevel setZoomLevel={setZoomLevel} />
+
+          <ForecastContainer
+            serverToken={serverToken}
+            map={map}
+            open={open}
+            setOpen={setOpen}
+            location={location}
+            setLocation={setLocation}
+            markerLayer={markerLayer}
+            overlay={overlay}
+            setOverlay={setOverlay}
+            setIsMenuOpen={setIsMenuOpen}
+            temp={temp}
+            setTemp={setTemp}
+            setActiveTooltip={setActiveTooltip}
+            units={units}
+            setUnits={setUnits}
+            date={date}
+            setDate={setDate}
+            isDiscrete={isDiscrete}
+            arcgisToken={arcgisToken}
+            selectedPolygon={selectedPolygon}
+          />
+
+          <Legend
+            overlay={overlay}
+            isDiscrete={isDiscrete}
+            units={units}
+            setUnits={setUnits}
+          />
+
           <LayerGroup ref={markerLayer} />
           <LayerGroup ref={overlayLayer} />
           {dateReady && (
@@ -206,45 +237,16 @@ const Map = () => {
           setIsLayerClipped={setIsLayerClipped}
         />
 
-        <Legend
-          overlay={overlay}
-          isDiscrete={isDiscrete}
-          units={units}
-          setUnits={setUnits}
-        />
-
         {dateReady && !open && (
           <DateNavigation
             initialDate={new Date(startDate.current.latest_date)}
             range={10}
             setDate={setDate}
             date={date}
+            open={open}
           />
         )}
-
-        <ForecastContainer
-          serverToken={serverToken}
-          map={map}
-          open={open}
-          setOpen={setOpen}
-          location={location}
-          setLocation={setLocation}
-          markerLayer={markerLayer}
-          overlay={overlay}
-          setOverlay={setOverlay}
-          setIsMenuOpen={setIsMenuOpen}
-          temp={temp}
-          setTemp={setTemp}
-          setActiveTooltip={setActiveTooltip}
-          units={units}
-          setUnits={setUnits}
-          date={date}
-          setDate={setDate}
-          isDiscrete={isDiscrete}
-          arcgisToken={arcgisToken}
-          selectedPolygon={selectedPolygon}
-        />
-      </Box>
+      </>
     ),
 
     [

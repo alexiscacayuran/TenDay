@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-
+import { useTheme } from "@mui/joy/styles";
 import Geosearch from "./Geosearch";
-
 import { AppBar, Toolbar } from "@mui/material";
 import {
   Box,
@@ -18,14 +17,13 @@ import {
 
 import Avatar from "@mui/joy/Avatar";
 import AvatarGroup from "@mui/joy/AvatarGroup";
-
 import Card from "@mui/joy/Card";
 import CardContent from "@mui/joy/CardContent";
 import CardActions from "@mui/joy/CardActions";
+
 import FavoriteBorder from "@mui/icons-material/FavoriteBorder";
 
 import Logo from "../assets/logo/logo-rgb.png";
-
 import {
   TanawPHLogo,
   GIZLogo,
@@ -76,6 +74,7 @@ const Navbar = ({
   const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openAbout, setOpenAbout] = useState(false);
+  const theme = useTheme();
 
   const clearCache = async () => {
     await Promise.all([db.scalars.clear(), db.vectors.clear()]);
@@ -105,7 +104,11 @@ const Navbar = ({
   };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        minWidth: "100vw",
+      }}
+    >
       <AppBar
         position="fixed"
         className="glass"
@@ -136,6 +139,18 @@ const Navbar = ({
               alignItems: "center",
             }}
           >
+            <Button
+              color="inherit"
+              variant="plain"
+              sx={{ paddingInline: "0.25rem" }}
+            >
+              <Typography
+                level="title-md"
+                sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
+              >
+                API
+              </Typography>
+            </Button>
             <IconButton color="inherit">
               <FontAwesomeIcon
                 icon={faGear}
