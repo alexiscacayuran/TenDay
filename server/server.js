@@ -212,14 +212,14 @@ app.get('/uploadForecastXLSX', authenticate, async (req, res) => {
 });
 
 app.get('/retrievefile', async (req, res) => {
-  const { year, month, day, file, offset, masked, vector, specyear, specmonth, specday } = req.query;
+  const { year, month, day, file, offset, masked, specyear, specmonth, specday } = req.query;
 
   if (!year || !month || !day || !file) {
     return res.status(400).send('Error: Missing required parameters (year, month, day, file)');
   }
 
   try {
-    const result = await retrieveForecastFile(year, month, day, file, offset, masked, vector, specyear, specmonth, specday);
+    const result = await retrieveForecastFile(year, month, day, file, offset, masked, specyear, specmonth, specday);
 
     // If only one file to download, redirect to presigned URL
     if (result.length === 1) {

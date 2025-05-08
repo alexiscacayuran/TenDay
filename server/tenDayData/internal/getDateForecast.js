@@ -1,10 +1,16 @@
 import express from "express";
 import { pool, redisClient } from "../../db.js"; // Import Redis connection
+import { logApiRequest } from "../../middleware/logMiddleware.js";
 
 const router = express.Router();
 
+
 router.get("/", async (req, res) => {
   const { municity, province, date } = req.query;
+  const token = req.headers["token"];
+
+     // ✅ Log API request
+     const requestNo = await logApiRequest(req, 4);
 
   if (!municity || !province || !date) {
     return res

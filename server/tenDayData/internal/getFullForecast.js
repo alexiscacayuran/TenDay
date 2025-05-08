@@ -21,7 +21,7 @@ router.get("/", authenticateToken, async (req, res) => {
     }
 
     // Log API request
-    const requestId = await logApiRequest(req);
+    const requestId = await logApiRequest(req,2);
     if (!requestId) {
       return res.status(500).json({ error: "Failed to log API request" });
     }
