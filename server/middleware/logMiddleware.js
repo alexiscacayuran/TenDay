@@ -2,7 +2,7 @@ import { pool } from "../db.js"; // Import DB connection
 
 export const logApiRequest = async (req, api_id) => {
   const { originalUrl: endpoint, method, body, query, headers } = req;
-  const token = headers["token"]; // Extract token
+  const token = headers["token"]; 
 
   try {
     // Fetch API ID and token ID from database
