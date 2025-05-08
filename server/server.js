@@ -212,22 +212,22 @@ app.get('/uploadForecastXLSX', authenticate, async (req, res) => {
 });
 
 app.get('/retrievefile', async (req, res) => {
-  const { year, month, day, file, offset, masked, specyear, specmonth, specday } = req.query;
+  const { year, month, day, file, offset, masked, target } = req.query;
 
   if (!year || !month || !day || !file) {
     return res.status(400).send('Error: Missing required parameters (year, month, day, file)');
   }
 
   try {
-    const result = await retrieveForecastFile(year, month, day, file, offset, masked, specyear, specmonth, specday);
+    const result = await retrieveForecastFile(year, month, day, file, offset, masked, target);
 
     // If only one file to download, redirect to presigned URL
     if (result.length === 1) {
       return res.redirect(result[0].url);
     }
 
-    // Prepare filename based on fileType + specDate if available
-    const zipDate = specyear && specmonth && specday ? `${specyear}${specmonth}${specday}` : moment(`${year}-${month}-${day}`).format('YYYYMMDD');
+    // Prepare filename based on fileType + target date
+    const zipDate = target || moment(`${year}-${month}-${day}`).format('YYYYMMDD');
     const zipFilename = `${file.toUpperCase()}_${zipDate}.zip`;
 
     res.setHeader('Content-Type', 'application/zip');

@@ -21,15 +21,18 @@ const getFileKeyForType = (date, fileType, isMasked, specDate) => {
   return fileKey;
 };
 
-export const retrieveForecastFile = async (year, month, day, fileType, offset, masked, specyear, specmonth, specday) => {
+export const retrieveForecastFile = async (
+  year,
+  month,
+  day,
+  fileType,
+  offset,
+  masked,
+  target // new merged date in YYYYMMDD format
+) => {
   const baseDate = moment(`${year}-${month}-${day}`, 'YYYY-MM-DD');
   const folderName = baseDate.format('YYYYMMDD');
   const isMasked = masked === '1' || masked === 'true';
-
-  let specDate;
-  if (specyear && specmonth && specday) {
-    specDate = moment(`${specyear}-${specmonth}-${specday}`, 'YYYY-MM-DD').format('YYYYMMDD');
-  }
 
   const typeMap = {
     MEAN: 'TMEAN',
@@ -38,6 +41,12 @@ export const retrieveForecastFile = async (year, month, day, fileType, offset, m
   };
   const mappedType = typeMap[fileType.toUpperCase()] || fileType.toUpperCase();
 
+  let specDate;
+  if (target && /^\d{8}$/.test(target)) {
+    specDate = target;
+  }
+
+  // 📦 With offset
   if (offset) {
     const offsetDate = baseDate.clone().add(parseInt(offset) - 1, 'days').format('YYYYMMDD');
     const filePath = getFileKeyForType(offsetDate, fileType, isMasked, specDate);
@@ -51,6 +60,7 @@ export const retrieveForecastFile = async (year, month, day, fileType, offset, m
     }];
   }
 
+  // 🗂 Specific target date
   if (specDate) {
     const filePath = getFileKeyForType(folderName, fileType, isMasked, specDate);
     const fileKey = `${folderName}/${mappedType}/${filePath}`;
@@ -63,10 +73,10 @@ export const retrieveForecastFile = async (year, month, day, fileType, offset, m
     }];
   }
 
-  const folderPath = (() => {
-    if (mappedType === 'XLSX') return `${folderName}/XLSX/`;
-    return `${folderName}/${mappedType}/`;
-  })();
+  // 📂 Default folder listing
+  const folderPath = mappedType === 'XLSX'
+    ? `${folderName}/XLSX/`
+    : `${folderName}/${mappedType}/`;
 
   console.log(`Checking S3 folder: ${folderPath}`);
 
