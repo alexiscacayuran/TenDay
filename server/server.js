@@ -127,19 +127,19 @@ app.use("/api/humidity", humidityRoutes);
 app.use("/users", usersRouter);
 
 // Route for fetching current forecast for a certain municities
-app.use("/", getCurrentForecast);
+app.use("/api/v1", getCurrentForecast);
 
 // Route for fetching current forecast
 app.use("/", getCurrentAllForecast);
 
 // Route for fetching current date
-app.use("/date", getDateForecast);
+app.use("/api/v1", getDateForecast);
 
 // Route for fetching full forecast
-app.use("/full", getFullForecast);
+app.use("/api/v1", getFullForecast);
 
 // Route for getting the latest date
-app.use("/valid", getValidDate);
+app.use("/api/v1", getValidDate);
 
 // Route for fetching current date - internal
 app.use("/dateinternal", getDateForecastInternal);
