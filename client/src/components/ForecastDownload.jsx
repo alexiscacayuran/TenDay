@@ -20,27 +20,34 @@ const ForecastDownload = ({
   selectedMunicities,
 }) => {
   const [forecastExtended, setForecastExtend] = useState([]);
+  const [fetchLoading, setFetchLoading] = useState(true);
+
+  const fetchForecastExtend = async () => {
+    const forecasts = await Promise.all(
+      selectedMunicities.map(async (municity) => {
+        const response = await axios.get("/fullInternal", {
+          params: {
+            municity: municity,
+            province: forecast.province,
+          },
+          headers: {
+            token: serverToken,
+          },
+        });
+        return response.data;
+      })
+    );
+    setForecastExtend(forecasts);
+  };
 
   useEffect(() => {
-    const fetchForecastExtend = async () => {
-      const forecasts = await Promise.all(
-        selectedMunicities.map(async (municity) => {
-          const response = await axios.get("/fullInternal", {
-            params: {
-              municity: municity,
-              province: forecast.province,
-            },
-            headers: {
-              token: serverToken,
-            },
-          });
-          return response.data;
-        })
-      );
-      setForecastExtend(forecasts);
+    const fetch = async () => {
+      setFetchLoading(true);
+      await fetchForecastExtend();
+      setFetchLoading(false);
     };
 
-    fetchForecastExtend();
+    fetch();
   }, [selectedMunicities]);
 
   const downloadButton = () => {
@@ -62,7 +69,7 @@ const ForecastDownload = ({
           >
             {({ blob, url, loading, error }) => (
               <Button
-                loading={loading}
+                loading={fetchLoading}
                 sx={{
                   flexGrow: 1,
                   width: "-webkit-fill-available",

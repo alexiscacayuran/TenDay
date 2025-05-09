@@ -11,10 +11,17 @@ const MunicitiesSelector = ({
   setDocExtendForecast,
 }) => {
   const [municities, setMunicities] = useState([]);
+  const [localSelected, setLocalSelected] = useState([]);
   const action = React.useRef(null);
 
+  console.log(localSelected);
   const handleChange = (event, newValue) => {
-    setSelectedMunicities(newValue);
+    setLocalSelected(newValue);
+  };
+
+  const handleClose = (event, newValue) => {
+    console.log("Close triggered");
+    setSelectedMunicities(localSelected);
   };
 
   useEffect(() => {
@@ -46,8 +53,9 @@ const MunicitiesSelector = ({
       <Select
         placeholder={municities.length > 0 ? "ex. " + municities[0] : ""}
         multiple
+        onClose={handleClose}
         onChange={handleChange}
-        value={selectedMunicities}
+        value={localSelected}
         renderValue={(selectedMunicities) => (
           <Box
             sx={{
@@ -84,6 +92,7 @@ const MunicitiesSelector = ({
                 event.stopPropagation();
               }}
               onClick={() => {
+                setLocalSelected([]);
                 setSelectedMunicities([]);
                 setDocExtendForecast(false);
                 action.current?.focusVisible();

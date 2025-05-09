@@ -10,7 +10,6 @@ import DateNavigation from "./DateNavigation";
 import Navbar from "./Navbar";
 import ForecastContainer from "./ForecastContainer";
 import LayerMenu from "./LayerMenu";
-import Box from "@mui/joy/Box";
 import WeatherLayer from "./WeatherLayer";
 import Legend from "./Legend";
 import ZoomLevel from "./ZoomLevel";
@@ -18,13 +17,16 @@ import ScaleNautic from "react-leaflet-nauticsale";
 import ForecastPopup from "./ForecastPopup";
 import Issuance from "./Issuance";
 
+import Stack from "@mui/joy/Stack";
+import Box from "@mui/joy/Box";
+
 const Map = () => {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+  }, []);
+
   const [arcgisToken, setArcgisToken] = useState(null);
   const [serverToken, setServerToken] = useState(null);
-
-  useEffect(() => {
-    // Fetch token from server
-  }, []);
 
   useEffect(() => {
     const fetchServerToken = async () => {
@@ -35,6 +37,7 @@ const Map = () => {
         console.error("Error fetching server token:", error);
       }
     };
+    fetchServerToken();
 
     const fetchArcgisToken = async () => {
       try {
@@ -44,7 +47,7 @@ const Map = () => {
         console.error("Error fetching Arcgis token:", error);
       }
     };
-    fetchServerToken();
+
     fetchArcgisToken();
   }, []);
 
@@ -161,36 +164,6 @@ const Map = () => {
             key={`${scale.metric}-${scale.imperial}`} // Rerender on scale change
           />
 
-          <ForecastContainer
-            serverToken={serverToken}
-            map={map}
-            open={open}
-            setOpen={setOpen}
-            location={location}
-            setLocation={setLocation}
-            markerLayer={markerLayer}
-            overlay={overlay}
-            setOverlay={setOverlay}
-            setIsMenuOpen={setIsMenuOpen}
-            temp={temp}
-            setTemp={setTemp}
-            setActiveTooltip={setActiveTooltip}
-            units={units}
-            setUnits={setUnits}
-            date={date}
-            setDate={setDate}
-            isDiscrete={isDiscrete}
-            arcgisToken={arcgisToken}
-            selectedPolygon={selectedPolygon}
-          />
-
-          <Legend
-            overlay={overlay}
-            isDiscrete={isDiscrete}
-            units={units}
-            setUnits={setUnits}
-          />
-
           <LayerGroup ref={markerLayer} />
           <LayerGroup ref={overlayLayer} />
           {dateReady && (
@@ -216,6 +189,72 @@ const Map = () => {
             selectedPolygon={selectedPolygon}
           />
         </MapContainer>
+        <Stack
+          spacing={2}
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            position: "absolute",
+            bottom: 20,
+            zIndex: 1200,
+            width: "100%",
+            px: 2,
+            pointerEvents: "none", //Let clicks pass through by default
+          }}
+        >
+          <Box sx={{ width: "100px" }}></Box>
+          <Stack
+            direction="column"
+            sx={{
+              alignItems: "center",
+              justifyContent: "flex-end",
+              position: "relative",
+              width: "100%",
+              height: "auto",
+            }}
+          >
+            {dateReady && (
+              <DateNavigation
+                initialDate={new Date(startDate.current.latest_date)}
+                range={10}
+                setDate={setDate}
+                date={date}
+                open={open}
+              />
+            )}
+            <ForecastContainer
+              serverToken={serverToken}
+              map={map}
+              open={open}
+              setOpen={setOpen}
+              location={location}
+              setLocation={setLocation}
+              markerLayer={markerLayer}
+              overlay={overlay}
+              setOverlay={setOverlay}
+              setIsMenuOpen={setIsMenuOpen}
+              temp={temp}
+              setTemp={setTemp}
+              setActiveTooltip={setActiveTooltip}
+              units={units}
+              setUnits={setUnits}
+              date={date}
+              setDate={setDate}
+              isDiscrete={isDiscrete}
+              arcgisToken={arcgisToken}
+              selectedPolygon={selectedPolygon}
+              interactive={false}
+            />
+          </Stack>
+
+          <Legend
+            overlay={overlay}
+            isDiscrete={isDiscrete}
+            units={units}
+            setUnits={setUnits}
+          />
+        </Stack>
 
         {dateReady && <Issuance startDate={startDate} />}
 
@@ -236,16 +275,6 @@ const Map = () => {
           isLayerClipped={isLayerClipped}
           setIsLayerClipped={setIsLayerClipped}
         />
-
-        {dateReady && !open && (
-          <DateNavigation
-            initialDate={new Date(startDate.current.latest_date)}
-            range={10}
-            setDate={setDate}
-            date={date}
-            open={open}
-          />
-        )}
       </>
     ),
 

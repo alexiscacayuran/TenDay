@@ -61,10 +61,9 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
         sx={{
           display: "flex",
           justifyContent: "center",
-          position: "fixed",
-          bottom: 20,
+          pointerEvents: "auto",
+          position: "absolute",
           width: "100%",
-          zIndex: "1200",
         }}
       >
         <ToggleButtonGroup

@@ -144,27 +144,27 @@ const LayerMenu = ({
             position: "relative",
           }}
         >
-          {/* Temp Button Group Sheet (Slide + Smoother) */}
-          <motion.div
-            initial={{ y: -15 }}
-            animate={{
-              y: isMenuOpen ? 0 : -15,
-            }}
-            transition={{
-              duration: 0.4,
-              ease: [0.33, 1, 0.68, 1], // More natural easing curve
+          <Sheet
+            className="glass"
+            color="primary"
+            variant="soft"
+            sx={{
+              borderRadius: "md",
+              display: "inline-flex",
+              gap: 2,
+              p: 0.5,
+              position: "absolute",
             }}
           >
-            <Sheet
-              className="glass"
-              color="primary"
-              variant="soft"
-              sx={{
-                borderRadius: "md",
-                display: "inline-flex",
-                gap: 2,
-                p: 0.5,
-                position: "absolute",
+            {/* Temp Button Group Sheet (Slide + Smoother) */}
+            <motion.div
+              initial={{ y: 15 }}
+              animate={{
+                y: 0,
+              }}
+              transition={{
+                duration: 0.4,
+                ease: [0.33, 1, 0.68, 1], // More natural easing curve
               }}
             >
               <ToggleButtonGroup
@@ -216,30 +216,18 @@ const LayerMenu = ({
                   </Tooltip>
                 ))}
               </ToggleButtonGroup>
-            </Sheet>
-          </motion.div>
+            </motion.div>
+          </Sheet>
         </motion.div>
 
-        {/* LayerOptionMenu with Slide Up/Down (Super Smooth!) */}
-        <motion.div
-          initial={{ y: 20 }}
-          animate={{
-            y: isMenuOpen ? 0 : 10,
-          }}
-          transition={{
-            duration: 0.5,
-            ease: [0.33, 1, 0.68, 1], // Bezier easing for smoother feel
-          }}
-        >
-          <LayerOptionMenu
-            setIsDiscrete={setIsDiscrete}
-            isDiscrete={isDiscrete}
-            setIsAnimHidden={setIsAnimHidden}
-            isAnimHidden={isAnimHidden}
-            setIsLayerClipped={setIsLayerClipped}
-            isLayerClipped={isLayerClipped}
-          />
-        </motion.div>
+        <LayerOptionMenu
+          setIsDiscrete={setIsDiscrete}
+          isDiscrete={isDiscrete}
+          setIsAnimHidden={setIsAnimHidden}
+          isAnimHidden={isAnimHidden}
+          setIsLayerClipped={setIsLayerClipped}
+          isLayerClipped={isLayerClipped}
+        />
       </Box>
     </>
   );

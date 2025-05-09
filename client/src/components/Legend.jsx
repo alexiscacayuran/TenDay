@@ -29,7 +29,7 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
   const overlayData = getColorScale(); // Call once per render
 
   return (
-    <div className="glass legend-container">
+    <div className="glass legend-container" style={{ pointerEvents: "auto" }}>
       <div className="legend-units-container">
         <span>
           <ToggleUnits

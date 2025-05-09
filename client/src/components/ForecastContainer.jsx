@@ -24,7 +24,6 @@ import {
   Option,
   Chip,
   Switch,
-  AspectRatio,
 } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -175,19 +174,6 @@ const ForecastContainer = ({
       }
     }
   }, [forecast, date]);
-
-  useEffect(() => {
-    // When open is true, disable body scroll
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = ""; // Re-enable scroll when closed
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
 
   useEffect(() => {
     if (isInitial.current) {
@@ -450,12 +436,10 @@ const ForecastContainer = ({
         sx={{
           display: "flex",
           justifyContent: "center",
-          position: "fixed",
-          bottom: 20,
-          left: 0,
-          width: "100%",
-          zIndex: 1200,
           userSelect: "none",
+          pointerEvents: "auto",
+          position: "absolute",
+          width: "100%",
         }}
       >
         <Sheet
