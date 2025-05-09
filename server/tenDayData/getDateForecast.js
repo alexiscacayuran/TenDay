@@ -6,46 +6,92 @@ import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", authenticateToken, async (req, res) => {
+router.get("/date", authenticateToken(4), async (req, res) => {
   const { municity, province, date } = req.query;
   const token = req.headers["token"];
 
+  const baseFooter = {
+    version: "1.0",
+    timestamp: new Date().toLocaleString("en-PH", {
+      timeZone: "Asia/Manila",
+    }).replace(",", ""),
+    method: "GET",
+    current_page: 1,
+    per_page: 10,
+    total_count: 0,
+    total_pages: 0,
+  };
+
   if (!municity || !province || !date) {
-    return res.status(400).json({ error: "municity, province, and date are required" });
+    return res.status(400).json({
+      metadata: {
+        api: "Forecast by Date",
+        forecast: "10-day Forecast",
+      },
+      data: [],
+      footer: {
+        ...baseFooter,
+        status_code: 400,
+        description: "Missing query parameters: municity, province, and date are required",
+      },
+    });
   }
 
   try {
-    // ✅ Fetch API ID from `api_tokens` table
     const tokenResult = await pool.query(
       `SELECT api_ids FROM api_tokens WHERE token = $1 LIMIT 1`,
       [token]
     );
 
     if (tokenResult.rows.length === 0) {
-      return res.status(401).json({ error: "Unauthorized: Invalid token" });
+      return res.status(401).json({
+        metadata: {
+          api: "Forecast by Date",
+          forecast: "10-day Forecast",
+        },
+        data: [],
+        footer: {
+          ...baseFooter,
+          status_code: 401,
+          description: "Unauthorized: Invalid token",
+        },
+      });
     }
 
     const { api_ids } = tokenResult.rows[0];
 
-    // ✅ Ensure API ID array contains "4"
     if (!api_ids.includes(4)) {
-      console.log("❌ Unauthorized API ID:", api_ids);
-      return res.status(403).json({ error: "Forbidden: Unauthorized API ID" });
+      return res.status(403).json({
+        metadata: {
+          api: "Forecast by Date",
+          forecast: "10-day Forecast",
+        },
+        data: [],
+        footer: {
+          ...baseFooter,
+          status_code: 403,
+          description: "Forbidden: Unauthorized API ID",
+        },
+      });
     }
 
-    // ✅ Log API request
+    // Log individual request number (not tied to Redis counter)
     const requestNo = await logApiRequest(req, 4);
 
-    const cacheKey = `dateForecast:${municity}:${province}:${date}`;
-
-    // Check Redis cache
+    const cacheKey = `dateForecast:${token}:${municity}:${province}:${date}`;
     const cachedData = await redisClient.get(cacheKey);
+
     if (cachedData) {
       console.log(chalk.bgGray.black(" Cache hit ") + " " + chalk.bgGreen.black(" Returning data from Redis "));
-      return res.json(JSON.parse(cachedData));
+      const response = JSON.parse(cachedData);
+      response.metadata.request_no = requestNo;
+      response.footer.timestamp = new Date().toLocaleString("en-PH", {
+        timeZone: "Asia/Manila",
+      }).replace(",", ""); // Dynamically update timestamp
+      return res.json(response);
     }
+    
 
-    // Query PostgreSQL if not cached
     const query = `
       SELECT 
         m.id AS location_id, 
@@ -81,14 +127,24 @@ router.get("/", authenticateToken, async (req, res) => {
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: "No data found" });
+      return res.status(404).json({
+        metadata: {
+          request_no: requestNo,
+          api: "Forecast by Date",
+          forecast: "10-day Forecast",
+        },
+        data: [],
+        footer: {
+          ...baseFooter,
+          status_code: 204,
+          description: "No forecast data found",
+        },
+      });
     }
 
     const issuanceDate = result.rows[0].issuance_date.toLocaleString("en-PH").split(", ")[0];
 
     const data = result.rows.map((row) => ({
-      location_id: row.location_id,
-      date_id: row.date_id,
       date: row.date.toLocaleString("en-PH").split(", ")[0],
       rainfall: row.rainfall,
       total_rainfall: row.total_rainfall,
@@ -103,7 +159,7 @@ router.get("/", authenticateToken, async (req, res) => {
 
     const response = {
       metadata: {
-        request_no: requestNo, 
+        request_no: requestNo,
         api: "Forecast by Date",
         forecast: "10-day Forecast",
       },
@@ -116,26 +172,31 @@ router.get("/", authenticateToken, async (req, res) => {
         ...data,
       ],
       footer: {
-        version: "1.0",
+        ...baseFooter,
         total_count: data.length,
         total_pages: 1,
-        current_page: 1,
-        per_page: 10,
-        timestamp: new Date().toLocaleString("en-PH"),
-        method: "GET",
         status_code: 200,
         description: "OK",
       },
     };
 
-    // Store result in Redis cache for 1 hour
     await redisClient.set(cacheKey, JSON.stringify(response), "EX", 3600);
-
     console.log("❌ Cache miss - Fetching from database");
     res.json(response);
   } catch (error) {
     console.error("Error executing query", error.stack);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({
+      metadata: {
+        api: "Forecast by Date",
+        forecast: "10-day Forecast",
+      },
+      data: [],
+      footer: {
+        ...baseFooter,
+        status_code: 500,
+        description: "Internal Server Error",
+      },
+    });
   }
 });
 

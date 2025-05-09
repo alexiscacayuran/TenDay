@@ -3,7 +3,7 @@ import { pool } from "../db.js"; // Removed redisClient
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/valid", async (req, res) => {
   try {
     // ✅ Query latest date from DB (Make sure it's in Manila Time)
     const dateQuery = `SELECT MAX(start_date) as latest_date FROM date`;
