@@ -133,25 +133,42 @@ router.get("/current", authenticateToken(1), async (req, res) => {
 
     for (const entry of result.rows) {
       const key = `forecast:${entry.location_id}:${entry.date_id}`;
-      const forecastData = {
-        date: new Date(entry.date).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' }),
-        ...(municity ? {} : { municity: entry.municity }),
-        ...(province ? {} : { province: entry.province }),
-        rainfall: entry.rainfall,
-        total_rainfall: entry.total_rainfall,
-        cloud_cover: entry.cloud_cover,
-        mean: entry.mean,
-        min: entry.min,
-        max: entry.max,
-        humidity: entry.humidity,
-        speed: entry.speed,
-        direction: entry.direction,
-      };
-      await redisClient.hSet(key, forecastData);
-      await redisClient.expire(key, 86400);
-
-      forecast.push(forecastData);
-    }
+    
+      // Check if data exists in cache first
+      const cachedData = await redisClient.hGetAll(key);
+    
+      if (cachedData && Object.keys(cachedData).length > 0) {
+        console.log(`🟢 Cache Hit for key: ${key}`);
+        forecast.push({
+          ...cachedData,
+        });
+      } else {
+        console.log(`🔴 Cache Miss for key: ${key}`);
+        const forecastData = {
+          date: new Date(entry.date).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' }),
+          ...(municity ? {} : { municity: entry.municity }),
+          ...(province ? {} : { province: entry.province }),
+          rainfall_desc: entry.rainfall,
+          rainfall_total: entry.total_rainfall,
+          cloud_cover: entry.cloud_cover,
+          tmean: entry.mean,
+          tmin: entry.min,
+          tmax: entry.max,
+          humidity: entry.humidity,
+          wind_speed: entry.speed,
+          wind_direction: entry.direction,
+        };
+    
+        // Set to cache for future hits
+        await redisClient.hSet(key, forecastData);
+        await redisClient.expire(key, 86400);
+    
+        forecast.push({
+          source: "db",
+          ...forecastData,
+        });
+      }
+    }    
 
     return res.status(200).json({
       metadata: { request_no, ...metadata },
