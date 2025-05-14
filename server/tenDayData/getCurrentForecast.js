@@ -5,34 +5,58 @@ import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-router.get("/current", authenticateToken, async (req, res) => {
+router.get("/current", authenticateToken(1), async (req, res) => {
   const { municity, province, page = 1, limit = 10 } = req.query;
   const per_page = parseInt(limit);
-  const today = new Date().toLocaleDateString('en-US', { timeZone: 'Asia/Manila' });
+  const today = new Date().toLocaleDateString("en-PH", { timeZone: "Asia/Manila" });
   const offset = (parseInt(page) - 1) * per_page;
-  const cacheKey = `current:${municity || "all"}:${province || "all"}:${today}:page:${page}`;
 
-  console.log("🔍 Token from Middleware:", req.user);
+  const timestamp = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila' }).replace(',', '');
 
-  const { api_ids } = req.user; // Extract api_ids array from decoded token
-  console.log("✅ API IDs from Token:", api_ids);
+  const metadata = {
+    api: "Current Forecast",
+    forecast: "10-day Forecast",
+  };
 
-  // ✅ Check if ANY api_id in the token is 0 or 1
-  const isAuthorized = api_ids.some(id => id === 0 || id === 1);
-  if (!isAuthorized) {
-    console.log("❌ Unauthorized API IDs:", api_ids);
-    return res.status(403).json({ error: "Forbidden: Unauthorized API ID" });
-  }
+  const defaultMisc = {
+    version: "1.0",
+    timestamp,
+    method: req.method,
+    status_code: 200,
+    description: "OK",
+    current_page: parseInt(page),
+    per_page,
+    total_count: 0,
+    total_pages: 0,
+  };
 
   try {
-    const request_no = await logApiRequest(req, 1);
-    if (!request_no) {
-      return res.status(403).json({ error: "Invalid API token" });
+    const { api_ids } = req.user || {};
+    const isAuthorized = api_ids?.some((id) => id === 0 || id === 1);
+
+    if (!isAuthorized) {
+      return res.status(403).json({
+        metadata,
+        forecast: [],
+        misc: {
+          ...defaultMisc,
+          status_code: 403,
+          description: "Forbidden: Unauthorized API ID"
+        }
+      });
     }
 
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return res.json(JSON.parse(cachedData));
+    const request_no = await logApiRequest(req, 1);
+    if (!request_no) {
+      return res.status(401).json({
+        metadata,
+        forecast: [],
+        misc: {
+          ...defaultMisc,
+          status_code: 401,
+          description: "Unauthorized: Invalid or expired token"
+        }
+      });
     }
 
     let query = `
@@ -80,66 +104,77 @@ router.get("/current", authenticateToken, async (req, res) => {
     values.push(per_page, offset);
 
     const result = await pool.query(query, values);
-    const total_count = result.rows[0]?.total_count || 0;
-    const total_pages = Math.ceil(total_count / per_page);
 
-    const issuance_date = result.rows.length > 0
-      ? new Date(result.rows[0].start_date).toLocaleDateString('en-US', { timeZone: 'Asia/Manila' })
-      : today;
-
-    let metadata = {
-      request_no,
-      api: "Current Forecast",
-      forecast: "10-day Forecast",
-    };
-
-    let misc = {
-      version: "1.0",
-      total_count,
-      total_pages,
-      current_page: parseInt(page),
-      per_page,
-      timestamp: new Date().toLocaleString('en-CA', { timeZone: 'Asia/Manila' }).replace(',', ''),
-      method: req.method,
-      status_code: 200,
-      description: "OK",
-    };
-
-    let headerData = {};
-    if (municity || province) {
-      headerData = { municity, province, issuance_date };
-    } else {
-      headerData = { issuance_date };
+    // 🧩 Add this block to handle no results
+    if (result.rows.length === 0) {
+      const request_no = await logApiRequest(req, 1);
+      return res.status(204).json({
+        metadata: { request_no, ...metadata },
+        forecast: [],
+        misc: {
+          ...defaultMisc,
+          status_code: 200,
+          description: "No current forecast data found",
+        },
+      });
     }
 
-    const responseData = result.rows.map(entry => ({
-      location_id: entry.location_id,
-      date_id: entry.date_id,
-      date: new Date(entry.date).toLocaleDateString('en-US', { timeZone: 'Asia/Manila' }),
-      ...(municity ? {} : { municity: entry.municity }),
-      ...(province ? {} : { province: entry.province }),
-      rainfall: entry.rainfall,
-      total_rainfall: entry.total_rainfall,
-      cloud_cover: entry.cloud_cover,
-      mean: entry.mean,
-      min: entry.min,
-      max: entry.max,
-      humidity: entry.humidity,
-      speed: entry.speed,
-      direction: entry.direction,
-    }));
+    const total_count = result.rows[0]?.total_count || 0;
+    const total_pages = Math.ceil(total_count / per_page);
+    const issuance_date = result.rows.length > 0
+      ? new Date(result.rows[0].start_date).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' })
+      : today;
 
-    const finalResponse = {
-      metadata,
-      forecast: [headerData, ...responseData],
-      misc
-    };
+    const headerData = municity || province
+      ? { municity, province, issuance_date }
+      : { issuance_date };
 
-    await redisClient.set(cacheKey, JSON.stringify(finalResponse), { EX: 864000 });
-    return res.json(finalResponse);
+    const forecast = [];
+
+    for (const entry of result.rows) {
+      const key = `forecast:${entry.location_id}:${entry.date_id}`;
+      const forecastData = {
+        date: new Date(entry.date).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' }),
+        ...(municity ? {} : { municity: entry.municity }),
+        ...(province ? {} : { province: entry.province }),
+        rainfall: entry.rainfall,
+        total_rainfall: entry.total_rainfall,
+        cloud_cover: entry.cloud_cover,
+        mean: entry.mean,
+        min: entry.min,
+        max: entry.max,
+        humidity: entry.humidity,
+        speed: entry.speed,
+        direction: entry.direction,
+      };
+      await redisClient.hSet(key, forecastData);
+      await redisClient.expire(key, 86400);
+
+      forecast.push(forecastData);
+    }
+
+    return res.status(200).json({
+      metadata: { request_no, ...metadata },
+      forecast: [headerData, ...forecast],
+      misc: {
+        ...defaultMisc,
+        total_count,
+        total_pages,
+        status_code: 200,
+        description: "OK"
+      }
+    });
   } catch (error) {
     console.error("❌ Error executing query:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({
+      metadata,
+      forecast: [],
+      misc: {
+        ...defaultMisc,
+        status_code: 500,
+        description: "Internal Server Error"
+      }
+    });
   }
 });
 

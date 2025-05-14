@@ -129,19 +129,19 @@ app.use("/api/humidity", humidityRoutes);
 app.use("/users", usersRouter);
 
 // Route for fetching current forecast for a certain municities
-app.use("/", getCurrentForecast);
+app.use("/api/v1", getCurrentForecast);
 
 // Route for fetching current forecast
 app.use("/", getCurrentAllForecast);
 
 // Route for fetching current date
-app.use("/date", getDateForecast);
+app.use("/api/v1", getDateForecast);
 
 // Route for fetching full forecast
-app.use("/full", getFullForecast);
+app.use("/api/v1", getFullForecast);
 
 // Route for getting the latest date
-app.use("/valid", getValidDate);
+app.use("/api/v1", getValidDate);
 
 // Route for fetching current date - internal
 app.use("/dateinternal", getDateForecastInternal);
@@ -216,17 +216,7 @@ app.get("/uploadForecastXLSX", authenticate, async (req, res) => {
 });
 
 app.get("/retrievefile", async (req, res) => {
-  const {
-    year,
-    month,
-    day,
-    file,
-    offset,
-    masked,
-    specyear,
-    specmonth,
-    specday,
-  } = req.query;
+  const { year, month, day, file, offset, masked, target } = req.query;
 
   if (!year || !month || !day || !file) {
     return res
@@ -242,9 +232,7 @@ app.get("/retrievefile", async (req, res) => {
       file,
       offset,
       masked,
-      specyear,
-      specmonth,
-      specday
+      target
     );
 
     // If only one file to download, redirect to presigned URL
@@ -252,11 +240,9 @@ app.get("/retrievefile", async (req, res) => {
       return res.redirect(result[0].url);
     }
 
-    // Prepare filename based on fileType + specDate if available
+    // Prepare filename based on fileType + target date
     const zipDate =
-      specyear && specmonth && specday
-        ? `${specyear}${specmonth}${specday}`
-        : moment(`${year}-${month}-${day}`).format("YYYYMMDD");
+      target || moment(`${year}-${month}-${day}`).format("YYYYMMDD");
     const zipFilename = `${file.toUpperCase()}_${zipDate}.zip`;
 
     res.setHeader("Content-Type", "application/zip");
