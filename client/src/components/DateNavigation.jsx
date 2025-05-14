@@ -157,7 +157,6 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
                 sx={{
                   minWidth: 64,
                   flexShrink: 0,
-                  ...(index !== 0 && { marginLeft: "5px" }),
                 }}
               >
                 <Stack direction="column" spacing={0} alignItems="center">
