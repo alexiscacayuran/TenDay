@@ -23,17 +23,17 @@ router.get("/apiBar", async (req, res) => {
     // Query to fetch data
     let query = `
 SELECT
-  l.api_id,
-  a.name AS api_name,
-  COUNT(*) FILTER (WHERE DATE(l.request_time) = CURRENT_DATE) AS daily_count,
-  COUNT(*) FILTER (WHERE DATE_TRUNC('week', l.request_time) = DATE_TRUNC('week', CURRENT_DATE)) AS weekly_count,
+  l.api_id, 
+  a.name AS api_name, 
+  COUNT(*) FILTER (WHERE DATE(l.request_time) = CURRENT_DATE) AS daily_count,  
+  COUNT(*) FILTER (WHERE DATE_TRUNC('week', l.request_time) = DATE_TRUNC('week', CURRENT_DATE)) AS weekly_count,  
   COUNT(*) FILTER (WHERE DATE_TRUNC('month', l.request_time) = DATE_TRUNC('month', CURRENT_DATE)) AS monthly_count,
-  COUNT(*) AS all_time_count
+  COUNT(*) AS all_time_count 
 FROM api_logs l
-INNER JOIN api a ON a.id = l.api_id
-GROUP BY l.api_id, a.name
-HAVING a.name <> '10-Day Forecast'
-ORDER BY a.name ASC;
+INNER JOIN api a ON a.id = l.api_id  
+WHERE l.organization <> '10-Day Forecast' 
+GROUP BY l.api_id, a.name  
+ORDER BY a.name ASC; 
     `;
 
     // Apply pagination if page and limit are provided

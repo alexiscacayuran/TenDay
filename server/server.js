@@ -147,7 +147,7 @@ app.use("/api/v1", getValidDate);
 app.use("/dateinternal", getDateForecastInternal);
 
 // Route for fetching full date - internal
-app.use("/fullinternal", getFullForecastInternal);
+app.use("/fullInternal", getFullForecastInternal);
 
 // Route for fetching municities - internal
 app.use("/municitiesInternal", getMunicities);

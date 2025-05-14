@@ -146,15 +146,15 @@ router.get("/date", authenticateToken(4), async (req, res) => {
 
     const data = result.rows.map((row) => ({
       date: row.date.toLocaleString("en-PH").split(", ")[0],
-      rainfall: row.rainfall,
-      total_rainfall: row.total_rainfall,
+      rainfall_desc: row.rainfall,
+      rainfall_total: row.total_rainfall,
       cloud_cover: row.cloud_cover,
-      mean: row.mean,
-      min: row.min,
-      max: row.max,
+      tmean: row.mean,
+      tmin: row.min,
+      tmax: row.max,
       humidity: row.humidity,
-      speed: row.speed,
-      direction: row.direction,
+      wind_speed: row.speed,
+      wind_direction: row.direction,
     }));
 
     const response = {

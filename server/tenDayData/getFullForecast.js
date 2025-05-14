@@ -126,15 +126,15 @@ router.get("/full", authenticateToken(2), async (req, res) => {
       },
       ...result.rows.map((f) => ({
         date: f.date.toLocaleString("en-PH").split(", ")[0],
-        rainfall: f.rainfall,
-        total_rainfall: f.total_rainfall,
+        rainfall_desc: f.rainfall,
+        rainfall_total: f.total_rainfall,
         cloud_cover: f.cloud_cover,
-        mean: f.mean,
-        min: f.min,
-        max: f.max,
+        tmean: f.mean,
+        tmin: f.min,
+        tmax: f.max,
         humidity: f.humidity,
-        speed: f.speed,
-        direction: f.direction,
+        wind_speed: f.speed,
+        wind_direction: f.direction,
       })),
     ];
 

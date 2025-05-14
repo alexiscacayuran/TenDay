@@ -5,7 +5,7 @@ import { logApiRequest } from "../../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", authenticateToken, async (req, res) => {
+router.get("/", authenticateToken(2), async (req, res) => {
   try {
     // Validate API ID
     const tokenResult = await pool.query(
