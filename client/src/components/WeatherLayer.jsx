@@ -156,7 +156,7 @@ const WeatherLayer = ({
       }
 
       const georaster = await parseGeoraster(_buffer);
-      console.log("Georaster", georaster);
+      //console.log("Georaster", georaster);
       colorScale.current = getColorScale(overlay, isDiscrete);
 
       let scalarLayer = new GeorasterLayer({
@@ -170,7 +170,7 @@ const WeatherLayer = ({
         updateWhenIdle: true,
         caching: true,
       });
-      console.log("scalarLayer", scalarLayer);
+      //console.log("scalarLayer", scalarLayer);
 
       if (scalarLayerRef.current) {
         overlayLayer.current.removeLayer(scalarLayerRef.current);

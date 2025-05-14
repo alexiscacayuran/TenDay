@@ -129,7 +129,10 @@ const ImgWrapper = ({ Icon, Title, ...props }) => (
 );
 
 const SvgWrapper = ({ Icon, ...props }) => (
-  <SvgIcon {...props} style={{ width: "20px" }}>
+  <SvgIcon
+    {...props}
+    style={{ width: "20px", fontSize: "1rem", boxSizing: "border-box" }}
+  >
     <Icon />
   </SvgIcon>
 );

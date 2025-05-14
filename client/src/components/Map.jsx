@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup } from "react-leaflet";
+import { CssVarsProvider } from "@mui/joy/styles";
+import theme from "../theme";
+import useResponsiveCheck from "../hooks/useResponsiveCheck";
+
 import L from "leaflet";
 import axios from "axios";
 import MapControl from "./MapControl";
@@ -189,72 +193,83 @@ const Map = () => {
             selectedPolygon={selectedPolygon}
           />
         </MapContainer>
-        <Stack
-          spacing={2}
-          direction="row"
-          sx={{
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            position: "absolute",
-            bottom: 20,
-            zIndex: 1200,
-            width: "100%",
-            px: 2,
-            pointerEvents: "none", //Let clicks pass through by default
-          }}
-        >
-          <Box sx={{ width: "100px" }}></Box>
+        <CssVarsProvider theme={theme}>
           <Stack
-            direction="column"
+            spacing={2}
+            direction="row"
             sx={{
-              alignItems: "center",
-              justifyContent: "flex-end",
-              position: "relative",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              position: "absolute",
+              bottom: 20,
+              zIndex: 1200,
               width: "100%",
-              height: "auto",
+              px: 1,
+              pointerEvents: "none", //Let clicks pass through by default
             }}
           >
-            {dateReady && (
-              <DateNavigation
-                initialDate={new Date(startDate.current.latest_date)}
-                range={10}
-                setDate={setDate}
-                date={date}
+            <Box
+              sx={{
+                minWidth: "100px",
+
+                flexShrink: 0,
+              }}
+            ></Box>
+            <Stack
+              direction="column"
+              sx={{
+                alignItems: "center",
+                justifyContent: "flex-end",
+                position: "relative",
+                width: "calc(100% - 180px)",
+                height: "auto",
+                [theme.breakpoints.down("laptop")]: {
+                  width: "100%",
+                },
+              }}
+            >
+              {dateReady && (
+                <DateNavigation
+                  initialDate={new Date(startDate.current.latest_date)}
+                  range={10}
+                  setDate={setDate}
+                  date={date}
+                  open={open}
+                />
+              )}
+              <ForecastContainer
+                serverToken={serverToken}
+                map={map}
                 open={open}
+                setOpen={setOpen}
+                location={location}
+                setLocation={setLocation}
+                markerLayer={markerLayer}
+                overlay={overlay}
+                setOverlay={setOverlay}
+                setIsMenuOpen={setIsMenuOpen}
+                temp={temp}
+                setTemp={setTemp}
+                setActiveTooltip={setActiveTooltip}
+                units={units}
+                setUnits={setUnits}
+                date={date}
+                setDate={setDate}
+                isDiscrete={isDiscrete}
+                arcgisToken={arcgisToken}
+                selectedPolygon={selectedPolygon}
+                interactive={false}
               />
-            )}
-            <ForecastContainer
-              serverToken={serverToken}
-              map={map}
-              open={open}
-              setOpen={setOpen}
-              location={location}
-              setLocation={setLocation}
-              markerLayer={markerLayer}
+            </Stack>
+
+            <Legend
               overlay={overlay}
-              setOverlay={setOverlay}
-              setIsMenuOpen={setIsMenuOpen}
-              temp={temp}
-              setTemp={setTemp}
-              setActiveTooltip={setActiveTooltip}
+              isDiscrete={isDiscrete}
               units={units}
               setUnits={setUnits}
-              date={date}
-              setDate={setDate}
-              isDiscrete={isDiscrete}
-              arcgisToken={arcgisToken}
-              selectedPolygon={selectedPolygon}
-              interactive={false}
             />
           </Stack>
-
-          <Legend
-            overlay={overlay}
-            isDiscrete={isDiscrete}
-            units={units}
-            setUnits={setUnits}
-          />
-        </Stack>
+        </CssVarsProvider>
 
         {dateReady && <Issuance startDate={startDate} />}
 

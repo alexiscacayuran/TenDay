@@ -1,8 +1,9 @@
 import React, { useState, useEffect, Fragment, useRef } from "react";
-import { useTheme } from "@mui/joy/styles";
+// import { useTheme } from "@mui/joy/styles";
 import axios from "axios";
 import { format } from "date-fns";
-
+import { CssVarsProvider } from "@mui/joy/styles";
+import theme from "../theme";
 import { Slide } from "@mui/material";
 import {
   Box,
@@ -102,8 +103,6 @@ const ForecastContainer = ({
   const [docColored, setDocColored] = useState(true);
   const [docExtendForecast, setDocExtendForecast] = useState(false);
   const [selectedMunicities, setSelectedMunicities] = useState([]);
-
-  const theme = useTheme();
 
   useEffect(() => {
     setDocUnits(units);
@@ -305,19 +304,8 @@ const ForecastContainer = ({
   };
 
   const config = {
-    "--highlightColor": "#007FFF",
-    "--borderStyle": "3px solid var(--highlightColor)",
-    "--cellHeight": "20px",
-    "--hoverColor": "#EDF5FD",
-    "--hoverBorderStyle": "3px solid var(--hoverColor)",
-    "--transpBorderStyle": "3px solid transparent",
-
-    backgroundColor: "common.white",
-    width: "900px",
-    maxWidth: "900px",
-
     tableLayout: "fixed",
-
+    width: "100%",
     "& thead > tr > th": {
       bgcolor: "primary.softBg",
     },
@@ -330,32 +318,35 @@ const ForecastContainer = ({
       bgcolor: "common.white",
     },
 
-    "& thead > tr th:last-of-type": {
-      borderTopRightRadius: 0,
-    },
-
     "& td, & th": {
-      height: "var(--cellHeight)",
+      height: "var(--TableCell-height)",
       boxSizing: "border-box",
     },
 
-    "& th:first-of-type": {
-      width: "13%",
+    // first header column
+    "& th:nth-of-type(1)": {
+      position: "sticky",
+      left: 0,
+      width: "var(--Table-firstColumnWidth)",
       textAlign: "right",
     },
-    "& th:nth-of-type(2)": { width: "7%" },
 
-    "& thead th:nth-of-type(n+3)": {
-      textAlign: "center",
-      width: "6%",
-    },
-    "& td:nth-of-type(n+1)": {
-      textAlign: "center",
-      width: "6%",
+    // second header column
+    "& th:nth-of-type(2)": {
+      position: "sticky",
+      width: "var(--Table-secondColumnWidth)",
+      left: "var(--Table-firstColumnWidth)",
+      textAlign: "left",
     },
 
-    "& tbody tr:last-of-type > th:first-of-type": {
-      borderBottomLeftRadius: "var(--unstable_actionRadius)",
+    // body column width
+    "& th:nth-of-type(n+3)": {
+      width: "var(--Table-bodyColumnWidth)",
+    },
+
+    //body column alignment
+    "& thead th:nth-of-type(n+3), & td:nth-of-type(n+1)": {
+      textAlign: "center",
     },
 
     "& tbody tr > th:first-of-type, & tbody tr > th:nth-of-type(2)": {
@@ -366,31 +357,44 @@ const ForecastContainer = ({
       height: "50px",
     },
 
+    // table border adjustments
+    "& thead tr:first-of-type > td:first-of-type": {
+      borderTopLeftRadius: "6px",
+    },
+
+    "& tbody tr:last-of-type > th:first-of-type": {
+      borderBottomLeftRadius: "var(--unstable_actionRadius)",
+    },
+
+    "& thead > tr th:last-of-type": {
+      borderTopRightRadius: 0,
+    },
+
     "& thead tr > th": {
-      borderTop: "var(--transpBorderStyle)",
+      borderTop: "var(--TableColumn-transp)",
     },
     "& tbody tr:last-of-type > td": {
-      borderBottom: "var(--transpBorderStyle)",
+      borderBottom: "var(--TableColumn-transp)",
     },
 
     ...(activeColumn !== null && {
       [`& thead tr > th:nth-of-type(${activeColumn})`]: {
-        borderTop: "var(--borderStyle)",
-        borderLeft: "var(--borderStyle)",
-        borderRight: "var(--borderStyle)",
+        borderTop: "var(--TableColumn-activeBorder)",
+        borderLeft: "var(--TableColumn-activeBorder)",
+        borderRight: "var(--TableColumn-activeBorder)",
         bgcolor:
           hoveredColumn === activeColumn - 1 ? "primary.300" : "primary.100",
       },
       [`& tbody tr:not(:last-of-type) > td:nth-of-type(${activeColumn - 2})`]: {
-        borderLeft: "var(--borderStyle)",
-        borderRight: "var(--borderStyle)",
+        borderLeft: "var(--TableColumn-activeBorder)",
+        borderRight: "var(--TableColumn-activeBorder)",
         bgcolor:
           hoveredColumn === activeColumn - 1 ? "primary.softHoverBg" : "none",
       },
       [`& tbody tr:last-of-type > td:nth-of-type(${activeColumn - 2})`]: {
-        borderLeft: "var(--borderStyle)",
-        borderRight: "var(--borderStyle)",
-        borderBottom: "var(--borderStyle)",
+        borderLeft: "var(--TableColumn-activeBorder)",
+        borderRight: "var(--TableColumn-activeBorder)",
+        borderBottom: "var(--TableColumn-activeBorder)",
         bgcolor:
           hoveredColumn === activeColumn - 1 ? "primary.softHoverBg" : "none",
       },
@@ -401,58 +405,63 @@ const ForecastContainer = ({
         bgcolor: "primary.300",
         borderTop:
           hoveredColumn === activeColumn - 1
-            ? "var(--borderStyle)"
-            : "var(--transpBorderStyle)",
+            ? "var(--TableColumn-activeBorder)"
+            : "var(--TableColumn-transp)",
         borderLeft:
-          hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+          hoveredColumn === activeColumn - 1
+            ? "var(--TableColumn-activeBorder)"
+            : "none",
         borderRight:
-          hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+          hoveredColumn === activeColumn - 1
+            ? "var(--TableColumn-activeBorder)"
+            : "none",
       },
       [`& tbody tr:not(:last-of-type) > td:nth-of-type(${hoveredColumn - 1})`]:
         {
           bgcolor: "primary.softHoverBg",
           borderLeft:
-            hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+            hoveredColumn === activeColumn - 1
+              ? "var(--TableColumn-activeBorder)"
+              : "none",
           borderRight:
-            hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+            hoveredColumn === activeColumn - 1
+              ? "var(--TableColumn-activeBorder)"
+              : "none",
         },
       [`& tbody tr:last-of-type > td:nth-of-type(${hoveredColumn - 1})`]: {
         bgcolor: "primary.softHoverBg",
         borderBottom:
           hoveredColumn === activeColumn - 1
-            ? "var(--borderStyle)"
-            : "var(--transpBorderStyle)",
+            ? "var(--TableColumn-activeBorder)"
+            : "var(--TableColumn-transp)",
         borderLeft:
-          hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+          hoveredColumn === activeColumn - 1
+            ? "var(--TableColumn-activeBorder)"
+            : "none",
         borderRight:
-          hoveredColumn === activeColumn - 1 ? "var(--borderStyle)" : "none",
+          hoveredColumn === activeColumn - 1
+            ? "var(--TableColumn-activeBorder)"
+            : "none",
       },
     }),
   };
 
   return (
-    <Slide direction="up" in={open} mountOnEnter unmountOnExit>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          userSelect: "none",
-          pointerEvents: "auto",
-          position: "absolute",
-          width: "100%",
-        }}
-      >
+    <CssVarsProvider theme={theme}>
+      <Slide direction="up" in={open} mountOnEnter unmountOnExit>
         <Sheet
           className="glass"
           sx={{
-            position: "relative",
-            borderRadius: "sm",
-            boxShadow: "lg",
-            display: "flex",
-            flexDirection: "column",
+            userSelect: "none",
+            pointerEvents: "auto",
+            borderRadius: "6px",
             alignItems: "center",
             justifyContent: "center",
-            width: "min-content",
+            width: "100%",
+            maxWidth: "min-content",
+            scrollbarWidth: "none",
+            "&::-webkit-scrollbar": { display: "none" },
+            flexGrow: 0,
           }}
         >
           <Stack
@@ -465,139 +474,170 @@ const ForecastContainer = ({
           >
             {forecast ? (
               <>
-                <Table
-                  color="neutral"
-                  variant="plain"
-                  size="sm"
-                  borderAxis="none"
-                  sx={config}
+                <Sheet
+                  sx={{
+                    // scrollbarWidth: "none",
+                    // "&::-webkit-scrollbar": { display: "none" },
+                    borderRadius: "6px",
+                    "--TableCell-height": "20px",
+                    "--TableColumn-activeBorder":
+                      "3px solid var(--joy-palette-primary-500, #0B6BCB)",
+                    "--TableColumn-hoverBackground":
+                      "3px solid var(--joy-palette-primary-100, #E3EFFB)",
+                    "--TableColumn-transp": "3px solid transparent",
+                    "--Table-firstColumnWidth": "150px",
+                    "--Table-secondColumnWidth": "80px",
+                    "--Table-lastColumnWidth": "0px",
+                    "--Table-headerColumnWidth": "230px",
+                    "--Table-bodyColumnWidth": "68px",
+
+                    background: `linear-gradient(to right, ${theme.vars.palette.background.surface} 30%, rgba(255, 255, 255, 0)),
+                      linear-gradient(to right, rgba(255, 255, 255, 0), ${theme.vars.palette.background.surface} 70%) 0 100%,
+                      radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)),
+                      radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)) 0 100%`,
+
+                    backgroundSize:
+                      "40px calc(100% - var(--TableCell-height)), 40px calc(100% - var(--TableCell-height)), 14px calc(100% - var(--TableCell-height)), 14px calc(100% - var(--TableCell-height))",
+                    backgroundRepeat: "no-repeat",
+                    backgroundAttachment: "local, local, scroll, scroll",
+
+                    backgroundPosition: `
+                      var(--Table-headerColumnWidth) var(--TableCell-height),
+                      calc(100% - var(--Table-lastColumnWidth)) var(--TableCell-height),
+                      var(--Table-headerColumnWidth) var(--TableCell-height),
+                      calc(100% - var(--Table-lastColumnWidth)) var(--TableCell-height)
+                    `,
+                    backgroundColor: "background.surface",
+                    overflow: "auto",
+                  }}
                 >
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <th></th>
-                      {forecast.forecasts.map((data, index) => (
-                        <th
-                          key={index}
-                          onMouseEnter={() => handleMouseEnter(index + 2)}
-                          onMouseLeave={handleMouseLeave}
-                          onClick={() => {
-                            setActiveColumn(index + 3); // Adjust for first 2 columns
-                            setDate(data.date); // ✅ Set the date using setDate
-                          }}
-                        >
-                          {todayColumn === index + 2 ? (
-                            <Chip
-                              color="primary"
-                              size="sm"
-                              variant="plain"
-                              className="today-chip"
-                              sx={{
-                                position: "absolute",
-                                transform: "translate(-92px, -30px)",
-                                fontWeight: "bold",
-                                backgroundColor:
-                                  hoveredColumn === index + 1
-                                    ? "primary.300"
-                                    : "primary.100",
-                                color: "primary.700",
-                                padding: "0 10px",
-                                fontSize: "0.85em",
-                              }}
+                  <Table
+                    color="neutral"
+                    variant="plain"
+                    size="sm"
+                    borderAxis="none"
+                    sx={config}
+                  >
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th></th>
+                        {forecast.forecasts.map((data, index) => (
+                          <th
+                            key={index}
+                            onMouseEnter={() => handleMouseEnter(index + 2)}
+                            onMouseLeave={handleMouseLeave}
+                            onClick={() => {
+                              setActiveColumn(index + 3); // Adjust for first 2 columns
+                              setDate(data.date); // ✅ Set the date using setDate
+                            }}
+                          >
+                            {todayColumn === index + 3 ? (
+                              <Chip
+                                color="primary"
+                                size="sm"
+                                variant="plain"
+                                className="today-chip"
+                                sx={{
+                                  tableLayout: "fixed",
+                                  position: "absolute",
+                                  transform: "translate(-25px, -30px)",
+                                  fontWeight: "bold",
+                                  backgroundColor:
+                                    hoveredColumn === index + 2
+                                      ? "primary.300"
+                                      : "primary.100",
+                                  color: "primary.700",
+                                  padding: "0 10px",
+                                  fontSize: "0.85em",
+                                }}
+                              >
+                                TODAY
+                              </Chip>
+                            ) : null}
+                            <Typography
+                              level="title-sm"
+                              sx={{ fontWeight: 700 }}
                             >
-                              TODAY
-                            </Chip>
-                          ) : // <Box
-                          //   className="rounded-tab"
-                          //   sx={{
-                          //     position: "absolute",
-                          //     transform: "translate(-100px, -30px)",
-                          //   }}
-                          // >
-                          //   TODAY
-                          // </Box>
-                          null}
-                          <Typography level="title-sm">
-                            {format(data.date, "EEE d")}
-                          </Typography>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <th></th>
-                      <th></th>
-                      {forecast.forecasts.map((data, index) => (
-                        <td
-                          key={index}
-                          onMouseEnter={() => handleMouseEnter(index + 2)}
-                          onMouseLeave={handleMouseLeave}
-                          onClick={() => {
-                            setActiveColumn(index + 3); // Adjust for first 2 columns
-                            setDate(data.date); // ✅ Set the date using setDate
-                          }}
-                        >
-                          {renderWeatherIcon(data)}
-                        </td>
-                      ))}
-                    </tr>
-                    <ForecastTable
-                      forecast={forecast}
-                      overlay={overlay}
-                      setOverlay={setOverlay}
-                      setIsMenuOpen={setIsMenuOpen}
-                      temp={temp}
-                      setTemp={setTemp}
-                      setActiveTooltip={setActiveTooltip}
-                      units={units}
-                      setUnits={setUnits}
-                      setActiveColumn={setActiveColumn}
-                      setDate={setDate}
-                      handleMouseEnter={handleMouseEnter}
-                      handleMouseLeave={handleMouseLeave}
-                      hoveredColumn={hoveredColumn}
-                      isDiscrete={isDiscrete}
-                    />
-                    <tr>
-                      <th>
-                        <Typography>Wind direction</Typography>
-                      </th>
-                      <th>
-                        <ToggleUnits
-                          color="neutral"
-                          size="sm"
-                          variant="plain"
-                          sx={{ fontSize: "0.8rem", minHeight: 0 }}
-                          context="container"
-                          overlay="wind_direction"
-                          units={units}
-                          setUnits={setUnits}
-                        />
-                      </th>
-                      {forecast.forecasts.map((data, index) => (
-                        <td
-                          key={index}
-                          onMouseEnter={() => handleMouseEnter(index + 2)}
-                          onMouseLeave={handleMouseLeave}
-                          onClick={() => {
-                            setActiveColumn(index + 3); // Adjust for first 2 columns
-                            setDate(data.date); // ✅ Set the date using setDate
-                          }}
-                          style={{ minHeight: "28px" }}
-                        >
-                          {units.windDirection === "arrow" ? (
-                            renderWindIcon(data)
-                          ) : (
-                            <Typography sx={{ my: 0.65 }}>
-                              {data.wind.direction}
+                              {format(data.date, "EEE d")}
                             </Typography>
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </Table>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <th></th>
+                        <th></th>
+                        {forecast.forecasts.map((data, index) => (
+                          <td
+                            key={index}
+                            onMouseEnter={() => handleMouseEnter(index + 2)}
+                            onMouseLeave={handleMouseLeave}
+                            onClick={() => {
+                              setActiveColumn(index + 3); // Adjust for first 2 columns
+                              setDate(data.date); // ✅ Set the date using setDate
+                            }}
+                          >
+                            {renderWeatherIcon(data)}
+                          </td>
+                        ))}
+                      </tr>
+                      <ForecastTable
+                        forecast={forecast}
+                        overlay={overlay}
+                        setOverlay={setOverlay}
+                        setIsMenuOpen={setIsMenuOpen}
+                        temp={temp}
+                        setTemp={setTemp}
+                        setActiveTooltip={setActiveTooltip}
+                        units={units}
+                        setUnits={setUnits}
+                        setActiveColumn={setActiveColumn}
+                        setDate={setDate}
+                        handleMouseEnter={handleMouseEnter}
+                        handleMouseLeave={handleMouseLeave}
+                        hoveredColumn={hoveredColumn}
+                        isDiscrete={isDiscrete}
+                      />
+                      <tr>
+                        <th>
+                          <Typography>Wind direction</Typography>
+                        </th>
+                        <th>
+                          <ToggleUnits
+                            color="neutral"
+                            size="sm"
+                            variant="plain"
+                            sx={{ fontSize: "0.8rem", minHeight: 0 }}
+                            context="container"
+                            overlay="wind_direction"
+                            units={units}
+                            setUnits={setUnits}
+                          />
+                        </th>
+                        {forecast.forecasts.map((data, index) => (
+                          <td
+                            key={index}
+                            onMouseEnter={() => handleMouseEnter(index + 2)}
+                            onMouseLeave={handleMouseLeave}
+                            onClick={() => {
+                              setActiveColumn(index + 3); // Adjust for first 2 columns
+                              setDate(data.date); // ✅ Set the date using setDate
+                            }}
+                            style={{ minHeight: "28px" }}
+                          >
+                            {units.windDirection === "arrow" ? (
+                              renderWindIcon(data)
+                            ) : (
+                              <Typography>{data.wind.direction}</Typography>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </Table>
+                </Sheet>
                 <Box
                   sx={{
                     p: 1,
@@ -1059,7 +1099,7 @@ const ForecastContainer = ({
                             width: "40%",
                           }}
                         >
-                          <Typography level="h3" component="div">
+                          <Typography level="h4" component="div">
                             Oops, sorry...
                           </Typography>
                           <Typography level="body-sm" component="div">
@@ -1110,8 +1150,8 @@ const ForecastContainer = ({
             )}
           </Stack>
         </Sheet>
-      </Box>
-    </Slide>
+      </Slide>
+    </CssVarsProvider>
   );
 };
 

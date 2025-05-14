@@ -44,7 +44,7 @@ import {
 
 const OVERLAY_CONFIG = {
   temperature_mean: {
-    title: "Ave Temperature",
+    title: "Mean Temperature",
     icon: <TMeanIcon style={{ fontSize: "1.5rem" }} />,
     getValue: (data) => data.temperature.mean,
   },
@@ -218,11 +218,12 @@ const PopupContent = React.memo(
                         color: "var(--joy-palette-primary-700, #12467B)",
                       }}
                     >
-                      {loading ? "Ave. Temperature" : config.title}
+                      {loading ? "Mean Temp" : config.title}
                     </Typography>
                     <Typography
                       color="primary.softColor"
                       level={overlay === "cloud" ? "h4" : "h3"}
+                      sx={{ fontSize: overlay === "cloud" && "1rem" }}
                     >
                       {loading ? (
                         "28°C"

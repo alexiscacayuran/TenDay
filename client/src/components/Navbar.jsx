@@ -480,11 +480,11 @@ const Navbar = ({
                     other socio-economic sectors.
                   </Typography>
                   <Typography level="body-md" sx={{ mt: 2 }}>
-                    It could serve as inputs/basis to formulate local climate
+                    This could serve as inputs/basis to formulate local climate
                     advisory for farmers, fisherfolks and disaster preparedness.
                   </Typography>
 
-                  <Typography level="body-sm" sx={{ mt: 2 }}>
+                  <Typography level="body-md" sx={{ mt: 2 }}>
                     This app is being updated every Monday, Wednesday, and
                     Friday, PST by the Climate Monitoring and Prediction Section
                     (CLIMPS) under the Climatology and Agrometeorology Division

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { useTheme } from "@mui/joy/styles";
+import React, { useEffect, useState, useRef } from "react";
+import { CssVarsProvider, useTheme } from "@mui/joy/styles";
+import theme from "../theme";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
 import Button from "@mui/joy/Button";
-import ButtonGroup from "@mui/joy/ButtonGroup";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import { format, addDays, subDays } from "date-fns";
@@ -11,6 +11,7 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import ToggleButtonGroup from "@mui/joy/ToggleButtonGroup";
 import { Slide } from "@mui/material";
+import useResponsiveCheck from "../hooks/useResponsiveCheck";
 
 function generateDateRange(startDate, range) {
   return Array.from({ length: range }, (_, i) => addDays(startDate, i));
@@ -19,40 +20,81 @@ function generateDateRange(startDate, range) {
 const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
   const [localDate, setlocalDate] = useState(new Date());
   const [dateRange] = useState(generateDateRange(initialDate, range));
+  const isTablet = useResponsiveCheck("laptop"); // viewport below or equal laptop screen
+  const scrollContainerRef = useRef(null);
+  const buttonRefs = useRef([]);
+
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
 
   useEffect(() => {
-    setlocalDate(date);
+    setlocalDate(new Date(date));
   }, [date]);
+
+  useEffect(() => {
+    const activeIndex = dateRange.findIndex(
+      (d) => format(d, "yyyy-MM-dd") === format(localDate, "yyyy-MM-dd")
+    );
+    if (buttonRefs.current[activeIndex]) {
+      buttonRefs.current[activeIndex].scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [localDate, isTablet]);
 
   const handleDateSelect = (date) => {
     setDate(date.toLocaleString("en-PH").split(", ")[0]);
   };
 
   const handlePreviousDate = () => {
-    const previousDate = subDays(localDate, 1)
-      .toLocaleString("en-PH")
-      .split(", ")[0];
+    const previous = subDays(localDate, 1);
+    const prevStr = previous.toLocaleString("en-PH").split(", ")[0];
     if (
       dateRange.some(
-        (date) =>
-          format(date, "yyyy-MM-dd") === format(previousDate, "yyyy-MM-dd")
+        (d) => format(d, "yyyy-MM-dd") === format(previous, "yyyy-MM-dd")
       )
     ) {
-      setDate(previousDate);
+      setDate(prevStr);
     }
   };
 
   const handleNextDate = () => {
-    const nextDate = addDays(localDate, 1)
-      .toLocaleString("en-PH")
-      .split(", ")[0];
+    const next = addDays(localDate, 1);
+    const nextStr = next.toLocaleString("en-PH").split(", ")[0];
     if (
       dateRange.some(
-        (date) => format(date, "yyyy-MM-dd") === format(nextDate, "yyyy-MM-dd")
+        (d) => format(d, "yyyy-MM-dd") === format(next, "yyyy-MM-dd")
       )
     ) {
-      setDate(nextDate);
+      setDate(nextStr);
     }
+  };
+
+  // Mouse events for panning
+  const handleMouseDown = (e) => {
+    if (!isTablet) return; // Only on tablet
+    isDragging.current = true;
+    dragStartX.current = e.clientX;
+    scrollStartX.current = scrollContainerRef.current.scrollLeft;
+    scrollContainerRef.current.style.cursor = "grabbing";
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    const dx = e.clientX - dragStartX.current;
+    scrollContainerRef.current.scrollLeft = scrollStartX.current - dx;
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    scrollContainerRef.current.style.cursor = "grab";
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging.current) handleMouseUp();
   };
 
   return (
@@ -63,18 +105,17 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
           justifyContent: "center",
           pointerEvents: "auto",
           position: "absolute",
-          width: "100%",
+          zIndex: 1200,
+          height: "40px",
         }}
       >
         <ToggleButtonGroup
           size="md"
           variant="solid"
           color="neutral"
-          aria-label="soft button group"
           value={format(localDate, "yyyy-MM-dd")}
           sx={{
-            width: "100%",
-            justifyContent: "center",
+            display: "flex",
             gap: "5px",
             "--ButtonGroup-separatorColor": "transparent",
           }}
@@ -88,26 +129,43 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
           >
             <NavigateBeforeIcon />
           </IconButton>
-          {dateRange.map((date, index) => (
-            <Button
-              key={index}
-              value={format(date, "yyyy-MM-dd")}
-              color="neutral"
-              variant="solid"
-              onClick={() => handleDateSelect(date)}
-            >
-              <Stack
-                direction="column"
-                spacing={0}
+
+          <Box
+            ref={scrollContainerRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            sx={{
+              display: "flex",
+              overflowX: "auto",
+              whiteSpace: "nowrap",
+              maxWidth: isTablet ? "60vw" : "none",
+              cursor: isTablet ? "grab" : "default",
+              "&::-webkit-scrollbar": { display: "none" },
+              "-ms-overflow-style": "none",
+              "scrollbar-width": "none",
+              scrollBehavior: "smooth",
+            }}
+          >
+            {dateRange.map((date, index) => (
+              <Button
+                key={index}
+                ref={(el) => (buttonRefs.current[index] = el)}
+                value={format(date, "yyyy-MM-dd")}
+                onClick={() => handleDateSelect(date)}
                 sx={{
-                  justifyContent: "center",
-                  alignItems: "center",
+                  minWidth: 64,
+                  flexShrink: 0,
                 }}
               >
-                {format(date, "EEE M/d")}
-              </Stack>
-            </Button>
-          ))}
+                <Stack direction="column" spacing={0} alignItems="center">
+                  {format(date, "EEE M/d")}
+                </Stack>
+              </Button>
+            ))}
+          </Box>
+
           <IconButton
             onClick={handleNextDate}
             disabled={
