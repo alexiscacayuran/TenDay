@@ -74,7 +74,6 @@ const Navbar = ({
   const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openAbout, setOpenAbout] = useState(false);
-  const theme = useTheme();
 
   const clearCache = async () => {
     await Promise.all([db.scalars.clear(), db.vectors.clear()]);

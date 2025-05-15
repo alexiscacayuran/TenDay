@@ -126,8 +126,12 @@ const PopupContent = React.memo(
           <IconButton
             variant="plain"
             color="inherit"
-            size="sm"
-            sx={{ position: "absolute", top: "0.875rem", right: "0.5rem" }}
+            sx={{
+              position: "absolute",
+              top: "0.875rem",
+              right: "0.5rem",
+              fontSize: "1.25rem",
+            }}
             onClick={handlePopupClose}
           >
             <CloseIcon />
@@ -181,7 +185,12 @@ const PopupContent = React.memo(
             variant="plain"
             color="inherit"
             size="sm"
-            sx={{ position: "absolute", top: "0.875rem", right: "0.5rem" }}
+            sx={{
+              position: "absolute",
+              top: "0.875rem",
+              right: "0.5rem",
+              fontSize: "1.25rem",
+            }}
             onClick={handlePopupClose}
           >
             <CloseIcon />

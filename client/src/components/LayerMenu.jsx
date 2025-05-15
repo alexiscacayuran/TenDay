@@ -49,10 +49,18 @@ const LayerMenu = ({
     {
       title: "Maximum",
       value: "temperature_maximum",
-      icon: <TMaxIcon />,
+      icon: <TMaxIcon sx={{ fontSize: "1.5rem" }} />,
     },
-    { title: "Mean", value: "temperature_mean", icon: <TMeanIcon /> },
-    { title: "Minimum", value: "temperature_minimum", icon: <TMinIcon /> },
+    {
+      title: "Mean",
+      value: "temperature_mean",
+      icon: <TMeanIcon sx={{ fontSize: "1.5rem" }} />,
+    },
+    {
+      title: "Minimum",
+      value: "temperature_minimum",
+      icon: <TMinIcon sx={{ fontSize: "1.5rem" }} />,
+    },
   ];
 
   useEffect(() => {
@@ -78,7 +86,6 @@ const LayerMenu = ({
             color="neutral"
             variant="solid"
             spacing={0.5}
-            sx={{}}
             value={localOverlay}
             onChange={(event, value) => {
               if (value) {

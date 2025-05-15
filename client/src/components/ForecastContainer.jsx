@@ -347,6 +347,7 @@ const ForecastContainer = ({
     //body column alignment
     "& thead th:nth-of-type(n+3), & td:nth-of-type(n+1)": {
       textAlign: "center",
+      cursor: "pointer",
     },
 
     "& tbody tr > th:first-of-type, & tbody tr > th:nth-of-type(2)": {
@@ -666,6 +667,7 @@ const ForecastContainer = ({
                       >
                         <DownloadIcon
                           sx={{
+                            fontSize: "1.5rem",
                             color: "var(--joy-palette-neutral-700, #32383E)",
                           }}
                         />
@@ -984,6 +986,7 @@ const ForecastContainer = ({
                       color="inherit"
                       variant="outlined"
                       aria-label="close"
+                      sx={{ fontSize: "1.5rem" }}
                       onClick={() => {
                         markerLayer.current.eachLayer((layer) => {
                           if (layer.getLatLng().equals(location.latLng)) {
@@ -1003,14 +1006,25 @@ const ForecastContainer = ({
                   </Stack>
 
                   <Box sx={{ pr: 1 }}>
-                    <Typography level="body-xs" sx={{ mb: 2 }}>
-                      {"LAT " +
-                        location.latLng.lat.toFixed(4) +
-                        "  " +
-                        "LONG " +
-                        location.latLng.lng.toFixed(4)}
-                    </Typography>
-
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{
+                        justifyContent: "flex-start",
+                        alignItems: "flex-start",
+                        mb: 2,
+                      }}
+                    >
+                      <Typography
+                        level="body-xs"
+                        sx={{ me: "auto", minWidth: "60px" }}
+                      >
+                        {"LAT: " + location.latLng.lat.toFixed(4)}
+                      </Typography>
+                      <Typography level="body-xs" sx={{}}>
+                        {"LONG: " + location.latLng.lng.toFixed(4)}
+                      </Typography>
+                    </Stack>
                     <MunicitySelector
                       map={map}
                       arcgisToken={arcgisToken}

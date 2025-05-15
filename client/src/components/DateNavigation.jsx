@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
-import { CssVarsProvider, useTheme } from "@mui/joy/styles";
-import theme from "../theme";
+import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
+import useMediaQuery from "@mui/material/useMediaQuery";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
 import Button from "@mui/joy/Button";
@@ -18,6 +18,7 @@ function generateDateRange(startDate, range) {
 }
 
 const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
+  const theme = useTheme();
   const [localDate, setlocalDate] = useState(new Date());
   const [dateRange] = useState(generateDateRange(initialDate, range));
   const isTablet = useResponsiveCheck("laptop"); // viewport below or equal laptop screen
@@ -27,6 +28,7 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
   const scrollStartX = useRef(0);
+  const wasDragging = useRef(false); // ✅ flag to detect drag gesture
 
   useEffect(() => {
     setlocalDate(new Date(date));
@@ -77,6 +79,7 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
   const handleMouseDown = (e) => {
     if (!isTablet) return; // Only on tablet
     isDragging.current = true;
+    wasDragging.current = false;
     dragStartX.current = e.clientX;
     scrollStartX.current = scrollContainerRef.current.scrollLeft;
     scrollContainerRef.current.style.cursor = "grabbing";
@@ -85,6 +88,9 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
   const handleMouseMove = (e) => {
     if (!isDragging.current) return;
     const dx = e.clientX - dragStartX.current;
+    if (Math.abs(dx) > 5) {
+      wasDragging.current = true;
+    }
     scrollContainerRef.current.scrollLeft = scrollStartX.current - dx;
   };
 
@@ -136,16 +142,31 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
+            // sx={{
+            //   display: "flex",
+            //   overflowX: "auto",
+            //   whiteSpace: "nowrap",
+            //   maxWidth: isTablet ? "60vw" : "none",
+            //   cursor: isTablet ? "grab" : "default",
+            //   "&::-webkit-scrollbar": { display: "none" },
+            //   "-ms-overflow-style": "none",
+            //   "scrollbar-width": "none",
+            //   scrollBehavior: "auto",
+            // }}
             sx={{
               display: "flex",
               overflowX: "auto",
               whiteSpace: "nowrap",
-              maxWidth: isTablet ? "60vw" : "none",
-              cursor: isTablet ? "grab" : "default",
+
+              [theme.breakpoints.down("lg")]: {
+                maxWidth: "60vw",
+                cursor: "grab",
+              },
+
               "&::-webkit-scrollbar": { display: "none" },
               "-ms-overflow-style": "none",
               "scrollbar-width": "none",
-              scrollBehavior: "smooth",
+              scrollBehavior: "auto",
             }}
           >
             {dateRange.map((date, index) => (
@@ -153,7 +174,13 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
                 key={index}
                 ref={(el) => (buttonRefs.current[index] = el)}
                 value={format(date, "yyyy-MM-dd")}
-                onClick={() => handleDateSelect(date)}
+                onClick={(e) => {
+                  if (wasDragging.current) {
+                    e.preventDefault(); // ✅ block accidental click
+                    return;
+                  }
+                  handleDateSelect(date);
+                }}
                 sx={{
                   minWidth: 64,
                   flexShrink: 0,

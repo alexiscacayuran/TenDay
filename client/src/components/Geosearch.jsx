@@ -70,6 +70,7 @@ const GeoSearch = ({
           fillColor: "#3E7BFF",
           fillOpacity: 0.3,
           interactive: false,
+          pane: "activeFeaturePane",
         },
       });
 

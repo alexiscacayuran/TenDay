@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup } from "react-leaflet";
-import { CssVarsProvider } from "@mui/joy/styles";
-import theme from "../theme";
-import useResponsiveCheck from "../hooks/useResponsiveCheck";
+// import { CssVarsProvider } from "@mui/joy/styles";
+import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
 
 import L from "leaflet";
 import axios from "axios";
@@ -24,7 +23,10 @@ import Issuance from "./Issuance";
 import Stack from "@mui/joy/Stack";
 import Box from "@mui/joy/Box";
 
+// console.log("defaultBg", theme.vars.palette.AppBar.defaultBg);
+
 const Map = () => {
+  const theme = useTheme();
   useEffect(() => {
     document.body.style.overflow = "hidden";
   }, []);
@@ -102,7 +104,7 @@ const Map = () => {
     // Function to fetch data from the API
     const fetchDate = async () => {
       try {
-        const response = await axios.get("/valid");
+        const response = await axios.get("/api/v1/valid");
         startDate.current = response.data; // Store the fetched data
         const currentDate = new Date();
         const endDate = new Date(startDate.current.latest_date);
@@ -193,83 +195,83 @@ const Map = () => {
             selectedPolygon={selectedPolygon}
           />
         </MapContainer>
-        <CssVarsProvider theme={theme}>
-          <Stack
-            spacing={2}
-            direction="row"
+
+        <Stack
+          spacing={2}
+          direction="row"
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            position: "absolute",
+            bottom: 20,
+            zIndex: 1200,
+            width: "100%",
+            px: 1,
+            pointerEvents: "none", //Let clicks pass through by default
+          }}
+        >
+          <Box
             sx={{
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              position: "absolute",
-              bottom: 20,
-              zIndex: 1200,
-              width: "100%",
-              px: 1,
-              pointerEvents: "none", //Let clicks pass through by default
+              minWidth: "100px",
+
+              flexShrink: 0,
+            }}
+          ></Box>
+          <Stack
+            direction="column"
+            sx={{
+              alignItems: "center",
+              justifyContent: "flex-end",
+              position: "relative",
+              width: "calc(100% - 180px)",
+              height: "auto",
+              // [theme.breakpoints.down("lg")]: {
+              //   width: "100%",
+              // },
             }}
           >
-            <Box
-              sx={{
-                minWidth: "100px",
-
-                flexShrink: 0,
-              }}
-            ></Box>
-            <Stack
-              direction="column"
-              sx={{
-                alignItems: "center",
-                justifyContent: "flex-end",
-                position: "relative",
-                width: "calc(100% - 180px)",
-                height: "auto",
-                [theme.breakpoints.down("laptop")]: {
-                  width: "100%",
-                },
-              }}
-            >
-              {dateReady && (
-                <DateNavigation
-                  initialDate={new Date(startDate.current.latest_date)}
-                  range={10}
-                  setDate={setDate}
-                  date={date}
-                  open={open}
-                />
-              )}
-              <ForecastContainer
-                serverToken={serverToken}
-                map={map}
-                open={open}
-                setOpen={setOpen}
-                location={location}
-                setLocation={setLocation}
-                markerLayer={markerLayer}
-                overlay={overlay}
-                setOverlay={setOverlay}
-                setIsMenuOpen={setIsMenuOpen}
-                temp={temp}
-                setTemp={setTemp}
-                setActiveTooltip={setActiveTooltip}
-                units={units}
-                setUnits={setUnits}
-                date={date}
+            {dateReady && (
+              <DateNavigation
+                initialDate={new Date(startDate.current.latest_date)}
+                range={10}
                 setDate={setDate}
-                isDiscrete={isDiscrete}
-                arcgisToken={arcgisToken}
-                selectedPolygon={selectedPolygon}
-                interactive={false}
+                date={date}
+                open={open}
               />
-            </Stack>
-
-            <Legend
+            )}
+            <ForecastContainer
+              serverToken={serverToken}
+              map={map}
+              open={open}
+              setOpen={setOpen}
+              location={location}
+              setLocation={setLocation}
+              markerLayer={markerLayer}
               overlay={overlay}
-              isDiscrete={isDiscrete}
+              setOverlay={setOverlay}
+              setIsMenuOpen={setIsMenuOpen}
+              temp={temp}
+              setTemp={setTemp}
+              setActiveTooltip={setActiveTooltip}
               units={units}
               setUnits={setUnits}
+              date={date}
+              setDate={setDate}
+              isDiscrete={isDiscrete}
+              arcgisToken={arcgisToken}
+              selectedPolygon={selectedPolygon}
+              interactive={false}
             />
           </Stack>
-        </CssVarsProvider>
+
+          <Legend
+            overlay={overlay}
+            isDiscrete={isDiscrete}
+            units={units}
+            setUnits={setUnits}
+          />
+        </Stack>
+        {/* </CssVarsProvider> */}
 
         {dateReady && <Issuance startDate={startDate} />}
 

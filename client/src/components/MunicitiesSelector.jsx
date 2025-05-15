@@ -28,7 +28,7 @@ const MunicitiesSelector = ({
     if (!forecast?.province) return;
     const fetchMunicities = async () => {
       try {
-        const response = await axios.get("./municitiesInternal", {
+        const response = await axios.get("/municitiesInternal", {
           params: {
             province: forecast.province,
           },
