@@ -986,7 +986,6 @@ const ForecastContainer = ({
                       color="inherit"
                       variant="outlined"
                       aria-label="close"
-                      sx={{ fontSize: "1.5rem" }}
                       onClick={() => {
                         markerLayer.current.eachLayer((layer) => {
                           if (layer.getLatLng().equals(location.latLng)) {
@@ -999,6 +998,7 @@ const ForecastContainer = ({
                     >
                       <CloseIcon
                         sx={{
+                          fontSize: "1.5rem",
                           color: "var(--joy-palette-neutral-700, #32383E)",
                         }}
                       />

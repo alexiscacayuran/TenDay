@@ -189,11 +189,15 @@ const PopupContent = React.memo(
               position: "absolute",
               top: "0.875rem",
               right: "0.5rem",
-              fontSize: "1.25rem",
             }}
             onClick={handlePopupClose}
           >
-            <CloseIcon />
+            <CloseIcon
+              sx={{
+                fontSize: "1.5rem",
+                color: "var(--joy-palette-neutral-700, #32383E)",
+              }}
+            />
           </IconButton>
         </Stack>
         <CardOverflow color="primary" variant="soft">

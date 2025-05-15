@@ -133,7 +133,11 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
               format(dateRange[0], "yyyy-MM-dd")
             }
           >
-            <NavigateBeforeIcon />
+            <NavigateBeforeIcon
+              sx={{
+                fontSize: "1.5rem",
+              }}
+            />
           </IconButton>
 
           <Box
@@ -200,7 +204,11 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
               format(dateRange[dateRange.length - 1], "yyyy-MM-dd")
             }
           >
-            <NavigateNextIcon />
+            <NavigateNextIcon
+              sx={{
+                fontSize: "1.5rem",
+              }}
+            />
           </IconButton>
         </ToggleButtonGroup>
       </Box>
