@@ -21,7 +21,7 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
   const theme = useTheme();
   const [localDate, setlocalDate] = useState(new Date());
   const [dateRange] = useState(generateDateRange(initialDate, range));
-  const isTablet = useResponsiveCheck("laptop"); // viewport below or equal laptop screen
+  const isTablet = useResponsiveCheck("lg"); // viewport below or equal laptop screen
   const scrollContainerRef = useRef(null);
   const buttonRefs = useRef([]);
 
