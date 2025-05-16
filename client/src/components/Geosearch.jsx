@@ -252,15 +252,15 @@ const GeoSearch = ({
           sx={{ width: "200px", "--Input-radius": "14px" }}
           onChange={handleInputChange}
         />
-        <Button
+        <IconButton
           size="sm"
           color="neutral"
           variant="solid"
           onClick={handleLocate}
           sx={{ borderRadius: "20px" }}
         >
-          <MyLocationIcon />
-        </Button>
+          <MyLocationIcon sx={{ fontSize: "1.25rem" }} />
+        </IconButton>
       </Stack>
 
       {suggestions.length > 0 ? (
@@ -298,8 +298,8 @@ const GeoSearch = ({
                       >
                         <IconButton
                           aria-label="See Full Forecast"
-                          size="sm"
                           color="primary"
+                          sx={{ fontSize: "1.5rem" }}
                           onClick={() => {
                             setInput(
                               suggestion.text.split(", ")[0] +

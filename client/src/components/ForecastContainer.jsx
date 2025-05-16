@@ -61,7 +61,6 @@ import {
   NNWIcon,
   NoResultImage,
 } from "./CustomIcons";
-import NoResult from "../assets/images/no-result.png";
 
 import ForecastTable from "./ForecastTable";
 import ToggleUnits from "./ToggleUnits";
@@ -1040,127 +1039,130 @@ const ForecastContainer = ({
                 </Box>
               </>
             ) : (
-              <>
-                <Box
+              <Box
+                sx={{
+                  width: "1138px",
+                  height: "256px",
+                  bgcolor: "common.white",
+                  borderRadius: "6px",
+                  boxSizing: "border-box",
+                }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={0}
                   sx={{
-                    width: "1128px",
-                    height: "260px",
-                    bgcolor: "common.white",
-                    borderRadius: "sm",
-                    p: 1,
+                    justifyContent: "flex-end",
+                    alignItems: "flex-start",
                   }}
                 >
-                  <Stack
-                    direction="row"
-                    spacing={0}
+                  <IconButton
+                    size="sm"
+                    color="inherit"
+                    variant="outlined"
+                    aria-label="close"
                     sx={{
-                      justifyContent: "flex-end",
-                      alignItems: "flex-start",
+                      position: "absolute",
+                      top: "0.5rem",
+                      right: "0.5rem",
+                    }}
+                    onClick={() => {
+                      markerLayer.current.eachLayer((layer) => {
+                        if (layer.getLatLng().equals(location.latLng)) {
+                          layer.openPopup();
+                        }
+                      });
+
+                      setOpen(false);
                     }}
                   >
-                    <IconButton
-                      size="sm"
-                      color="inherit"
-                      variant="outlined"
-                      aria-label="close"
-                      onClick={() => {
-                        markerLayer.current.eachLayer((layer) => {
-                          if (layer.getLatLng().equals(location.latLng)) {
-                            layer.openPopup();
-                          }
-                        });
-
-                        setOpen(false);
-                      }}
-                    >
-                      <CloseIcon
-                        sx={{
-                          color: "var(--joy-palette-neutral-700, #32383E)",
-                        }}
-                      />
-                    </IconButton>
-                  </Stack>
-
-                  <Stack
-                    sx={{
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Box
+                    <CloseIcon
                       sx={{
-                        display: "flex",
-                        justifyContent: "flex-start",
-                        position: "relative",
-                        bottom: 30,
+                        fontSize: "1.5rem",
+                        color: "var(--joy-palette-neutral-700, #32383E)",
+                      }}
+                    />
+                  </IconButton>
+                </Stack>
+
+                <Stack
+                  sx={{
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-start",
+                      position: "relative",
+                    }}
+                  >
+                    <Stack
+                      direction="row"
+                      spacing={4}
+                      sx={{
+                        justifyContent: "center",
+                        alignItems: "center",
                       }}
                     >
+                      <NoResultImage />
                       <Stack
-                        direction="row"
-                        spacing={4}
+                        direction="column"
+                        spacing={2}
                         sx={{
                           justifyContent: "center",
-                          alignItems: "center",
+                          alignItems: "flex-start",
+                          width: "40%",
                         }}
                       >
-                        <NoResultImage />
+                        <Typography level="h4" component="div">
+                          Oops, sorry...
+                        </Typography>
+                        <Typography level="body-sm" component="div">
+                          No municipal level forecast available. If you believe
+                          this is a mistake, please submit a report.
+                        </Typography>
+
                         <Stack
-                          direction="column"
-                          spacing={2}
+                          direction="row"
+                          spacing={0.5}
                           sx={{
-                            justifyContent: "center",
-                            alignItems: "flex-start",
-                            width: "40%",
+                            alignSelf: "flex-end",
                           }}
                         >
-                          <Typography level="h4" component="div">
-                            Oops, sorry...
-                          </Typography>
-                          <Typography level="body-sm" component="div">
-                            No municipal level forecast available. If you
-                            believe this is a mistake, please submit a report.
-                          </Typography>
+                          <Button
+                            color="neutral"
+                            onClick={() => {
+                              markerLayer.current.eachLayer((layer) => {
+                                layer.remove();
+                              });
 
-                          <Stack
-                            direction="row"
-                            spacing={0.5}
-                            sx={{
-                              alignSelf: "flex-end",
+                              markerLayer.current = null;
+
+                              if (selectedPolygon.current) {
+                                map.removeLayer(selectedPolygon.current);
+                                selectedPolygon.current = null;
+                              }
+                              setOpen(false);
                             }}
+                            variant="plain"
                           >
-                            <Button
-                              color="neutral"
-                              onClick={() => {
-                                markerLayer.current.eachLayer((layer) => {
-                                  layer.remove();
-                                });
-
-                                markerLayer.current = null;
-
-                                if (selectedPolygon.current) {
-                                  map.removeLayer(selectedPolygon.current);
-                                  selectedPolygon.current = null;
-                                }
-                                setOpen(false);
-                              }}
-                              variant="plain"
-                            >
-                              Close
-                            </Button>
-                            <Button
-                              color="neutral"
-                              onClick={function () {}}
-                              variant="soft"
-                            >
-                              Report
-                            </Button>
-                          </Stack>
+                            Close
+                          </Button>
+                          <Button
+                            color="neutral"
+                            onClick={function () {}}
+                            variant="soft"
+                          >
+                            Report
+                          </Button>
                         </Stack>
                       </Stack>
-                    </Box>
-                  </Stack>
-                </Box>
-              </>
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Box>
             )}
           </Stack>
         </Sheet>

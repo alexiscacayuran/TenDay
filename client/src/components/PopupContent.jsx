@@ -128,9 +128,9 @@ const PopupContent = React.memo(
             color="inherit"
             sx={{
               position: "absolute",
-              top: "0.875rem",
+              top: "0.5rem",
               right: "0.5rem",
-              fontSize: "1.25rem",
+              fontSize: "1.5rem",
             }}
             onClick={handlePopupClose}
           >
@@ -187,7 +187,7 @@ const PopupContent = React.memo(
             size="sm"
             sx={{
               position: "absolute",
-              top: "0.875rem",
+              top: "0.5rem",
               right: "0.5rem",
             }}
             onClick={handlePopupClose}
