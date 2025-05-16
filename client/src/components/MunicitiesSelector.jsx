@@ -91,6 +91,7 @@ const MunicitiesSelector = ({
                 // don't open the popup when clicking on this button
                 event.stopPropagation();
               }}
+              sx={{ fontSize: "1.25rem" }}
               onClick={() => {
                 setLocalSelected([]);
                 setSelectedMunicities([]);

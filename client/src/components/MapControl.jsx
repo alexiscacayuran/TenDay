@@ -32,10 +32,15 @@ const CustomZoomControl = ({ map }) => {
           orientation="vertical"
           color="neutral"
           variant="soft"
-          sx={{ width: 35 }}
+          sx={{
+            width: 35,
+            gap: "5px",
+            "--ButtonGroup-separatorColor": "transparent",
+          }}
         >
           <Button
             className="glass"
+            sx={{ fontSize: "1.5rem" }}
             onClick={(e) => {
               e.stopPropagation();
               map.zoomIn();
@@ -45,6 +50,7 @@ const CustomZoomControl = ({ map }) => {
           </Button>
           <Button
             className="glass"
+            sx={{ fontSize: "1.5rem" }}
             onClick={(e) => {
               e.stopPropagation();
               map.zoomOut();

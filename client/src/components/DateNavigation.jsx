@@ -19,9 +19,10 @@ function generateDateRange(startDate, range) {
 
 const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
   const theme = useTheme();
+  const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
   const [localDate, setlocalDate] = useState(new Date());
   const [dateRange] = useState(generateDateRange(initialDate, range));
-  const isTablet = useResponsiveCheck("lg"); // viewport below or equal laptop screen
+  //const isTablet = useResponsiveCheck("lg"); // viewport below or equal laptop screen
   const scrollContainerRef = useRef(null);
   const buttonRefs = useRef([]);
 
