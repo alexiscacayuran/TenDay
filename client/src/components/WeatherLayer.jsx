@@ -161,7 +161,7 @@ const WeatherLayer = ({
 
       let scalarLayer = new GeorasterLayer({
         georaster: georaster,
-        resolution: 32,
+        resolution: 64,
         pixelValuesToColorFn: colorScaleFn,
         // keepBuffer: 100,
         pane: "tilePane",
