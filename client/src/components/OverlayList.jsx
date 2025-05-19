@@ -152,7 +152,7 @@ const overlayList = [
     name: "rainfall",
     pathName: "TP",
     scale: [
-      chroma("#BAB8B8").alpha(0),
+      "#696969",
       "#BAB8B8",
       "#00C5FF",
       "#6BFB90",

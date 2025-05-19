@@ -124,14 +124,20 @@ const ImgPDFWrapper = ({ src, style, ...props }) => (
 
 const ImgWrapper = ({ Icon, Title, ...props }) => (
   <Tooltip title={Title} color="primary" placement="bottom" variant="soft">
-    <img src={Icon} {...props} style={{ width: "30px" }}></img>
+    <img
+      draggable="false"
+      src={Icon}
+      {...props}
+      style={{ width: "30px" }}
+    ></img>
   </Tooltip>
 );
 
 const SvgWrapper = ({ Icon, ...props }) => (
   <SvgIcon
     {...props}
-    style={{ width: "20px", fontSize: "1rem", boxSizing: "border-box" }}
+    draggable="false"
+    sx={{ width: "20px", fontSize: "1rem", boxSizing: "border-box" }}
   >
     <Icon />
   </SvgIcon>

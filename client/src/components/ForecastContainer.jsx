@@ -3,8 +3,9 @@ import React, { useState, useEffect, Fragment, useRef } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { CssVarsProvider } from "@mui/joy/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import theme from "../theme";
-import { Slide } from "@mui/material";
+import { Slide, Fade } from "@mui/material";
 import {
   Box,
   Stack,
@@ -125,6 +126,72 @@ const ForecastContainer = ({
 
   const handleMouseLeave = () => {
     setHoveredColumn(null);
+  };
+
+  const scrollRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
+  const isClickValid = useRef(true);
+  const isTableCollapsed = useMediaQuery("(max-width:1295px)");
+  const [shadowLeft, setShadowLeft] = useState(false);
+  const [shadowRight, setShadowRight] = useState(isTableCollapsed);
+
+  const updateShadows = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    console.log(scrollLeft);
+    setShadowLeft(scrollLeft > 150);
+    setShadowRight(scrollLeft + clientWidth < scrollWidth - 5);
+  };
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleHorizontalWheelScroll = (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        container.scrollLeft += e.deltaY;
+        updateShadows(); // NEW: update shadow state
+      }
+    };
+
+    container.addEventListener("scroll", updateShadows);
+    container.addEventListener("wheel", handleHorizontalWheelScroll, {
+      passive: false,
+    });
+
+    updateShadows(); // Initial update on mount
+
+    return () =>
+      container.removeEventListener("wheel", handleHorizontalWheelScroll);
+  }, []);
+
+  // Drag handlers
+  const onDragStart = (e) => {
+    setIsDragging(true);
+    isClickValid.current = true;
+    dragStartX.current = e.clientX;
+    scrollStartX.current = scrollRef.current.scrollLeft;
+  };
+
+  const onDragMove = (e) => {
+    if (!isDragging) return;
+    const dx = dragStartX.current - e.clientX;
+    if (Math.abs(dx) > 5) isClickValid.current = false;
+    scrollRef.current.scrollLeft = scrollStartX.current + dx;
+
+    updateShadows(); // NEW: update on drag
+  };
+
+  const onDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  const onDragLeave = () => {
+    if (isDragging) setIsDragging(false);
   };
 
   // Get today's date
@@ -324,9 +391,10 @@ const ForecastContainer = ({
 
     // first header column
     "& th:nth-of-type(1)": {
-      position: "sticky",
+      // position: "sticky",
       left: 0,
       width: "var(--Table-firstColumnWidth)",
+      flexShrink: 1,
       textAlign: "right",
     },
 
@@ -334,7 +402,7 @@ const ForecastContainer = ({
     "& th:nth-of-type(2)": {
       position: "sticky",
       width: "var(--Table-secondColumnWidth)",
-      left: "var(--Table-firstColumnWidth)",
+      left: 0,
       textAlign: "left",
     },
 
@@ -474,175 +542,214 @@ const ForecastContainer = ({
           >
             {forecast ? (
               <>
-                <Sheet
+                <Box
                   sx={{
-                    // scrollbarWidth: "none",
-                    // "&::-webkit-scrollbar": { display: "none" },
-                    borderRadius: "6px",
-                    "--TableCell-height": "20px",
-                    "--TableColumn-activeBorder":
-                      "3px solid var(--joy-palette-primary-500, #0B6BCB)",
-                    "--TableColumn-hoverBackground":
-                      "3px solid var(--joy-palette-primary-100, #E3EFFB)",
-                    "--TableColumn-transp": "3px solid transparent",
-                    "--Table-firstColumnWidth": "150px",
-                    "--Table-secondColumnWidth": "80px",
-                    "--Table-lastColumnWidth": "0px",
-                    "--Table-headerColumnWidth": "230px",
-                    "--Table-bodyColumnWidth": "68px",
-
-                    background: `linear-gradient(to right, ${theme.vars.palette.background.surface} 30%, rgba(255, 255, 255, 0)),
-                      linear-gradient(to right, rgba(255, 255, 255, 0), ${theme.vars.palette.background.surface} 70%) 0 100%,
-                      radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)),
-                      radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0)) 0 100%`,
-
-                    backgroundSize:
-                      "40px calc(100% - var(--TableCell-height)), 40px calc(100% - var(--TableCell-height)), 14px calc(100% - var(--TableCell-height)), 14px calc(100% - var(--TableCell-height))",
-                    backgroundRepeat: "no-repeat",
-                    backgroundAttachment: "local, local, scroll, scroll",
-
-                    backgroundPosition: `
-                      var(--Table-headerColumnWidth) var(--TableCell-height),
-                      calc(100% - var(--Table-lastColumnWidth)) var(--TableCell-height),
-                      var(--Table-headerColumnWidth) var(--TableCell-height),
-                      calc(100% - var(--Table-lastColumnWidth)) var(--TableCell-height)
-                    `,
-                    backgroundColor: "background.surface",
-                    overflow: "auto",
+                    position: "relative",
+                    width: "100%",
+                    overflow: "hidden",
                   }}
                 >
-                  <Table
-                    color="neutral"
-                    variant="plain"
-                    size="sm"
-                    borderAxis="none"
-                    sx={config}
+                  <Sheet
+                    ref={scrollRef}
+                    onMouseDown={onDragStart}
+                    onMouseMove={onDragMove}
+                    onMouseUp={onDragEnd}
+                    onMouseLeave={onDragLeave}
+                    // onWheel={updateShadows}
+                    sx={{
+                      overflowX: "auto",
+                      overflowY: "visible",
+                      display: "block",
+                      whiteSpace: "nowrap",
+                      scrollbarWidth: "none",
+                      "&::-webkit-scrollbar": { display: "none" },
+                      cursor: isDragging ? "grabbing" : "grab",
+                      borderRadius: "6px",
+                      "--TableCell-height": "20px",
+                      "--TableColumn-activeBorder":
+                        "3px solid var(--joy-palette-primary-500, #0B6BCB)",
+                      "--TableColumn-hoverBackground":
+                        "3px solid var(--joy-palette-primary-100, #E3EFFB)",
+                      "--TableColumn-transp": "3px solid transparent",
+                      "--Table-firstColumnWidth": "150px",
+                      "--Table-secondColumnWidth": "80px",
+                      "--Table-lastColumnWidth": "0px",
+                      "--Table-headerColumnWidth": "230px",
+                      "--Table-bodyColumnWidth": "68px",
+                      backgroundColor: "background.surface",
+                    }}
                   >
-                    <thead>
-                      <tr>
-                        <th></th>
-                        <th></th>
-                        {forecast.forecasts.map((data, index) => (
-                          <th
-                            key={index}
-                            onMouseEnter={() => handleMouseEnter(index + 2)}
-                            onMouseLeave={handleMouseLeave}
-                            onClick={() => {
-                              setActiveColumn(index + 3); // Adjust for first 2 columns
-                              setDate(data.date); // ✅ Set the date using setDate
-                            }}
-                          >
-                            {todayColumn === index + 3 ? (
-                              <Chip
-                                color="primary"
-                                size="sm"
-                                variant="plain"
-                                className="today-chip"
-                                sx={{
-                                  tableLayout: "fixed",
-                                  position: "absolute",
-                                  transform: "translate(-25px, -30px)",
-                                  fontWeight: "bold",
-                                  backgroundColor:
-                                    hoveredColumn === index + 2
-                                      ? "primary.300"
-                                      : "primary.100",
-                                  color: "primary.700",
-                                  padding: "0 10px",
-                                  fontSize: "0.85em",
-                                }}
-                              >
-                                TODAY
-                              </Chip>
-                            ) : null}
-                            <Typography
-                              level="title-sm"
-                              sx={{ fontWeight: 700 }}
+                    <Table
+                      color="neutral"
+                      variant="plain"
+                      size="sm"
+                      borderAxis="none"
+                      sx={config}
+                    >
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          {forecast.forecasts.map((data, index) => (
+                            <th
+                              key={index}
+                              onMouseEnter={() => handleMouseEnter(index + 2)}
+                              onMouseLeave={handleMouseLeave}
+                              onClick={() => {
+                                setActiveColumn(index + 3); // Adjust for first 2 columns
+                                setDate(data.date); // ✅ Set the date using setDate
+                              }}
                             >
-                              {format(data.date, "EEE d")}
-                            </Typography>
+                              {todayColumn === index + 3 ? (
+                                <Chip
+                                  color="primary"
+                                  size="sm"
+                                  variant="plain"
+                                  className="today-chip"
+                                  sx={{
+                                    tableLayout: "fixed",
+                                    position: "absolute",
+                                    transform: "translate(-25px, -30px)",
+                                    fontWeight: "bold",
+                                    backgroundColor:
+                                      hoveredColumn === index + 2
+                                        ? "primary.300"
+                                        : "primary.100",
+                                    color: "primary.700",
+                                    padding: "0 10px",
+                                    fontSize: "0.85em",
+                                  }}
+                                >
+                                  TODAY
+                                </Chip>
+                              ) : null}
+                              <Typography
+                                level="title-sm"
+                                sx={{ fontWeight: 700 }}
+                              >
+                                {format(data.date, "EEE d")}
+                              </Typography>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th></th>
+                          <th></th>
+                          {forecast.forecasts.map((data, index) => (
+                            <td
+                              key={index}
+                              onMouseEnter={() => handleMouseEnter(index + 2)}
+                              onMouseLeave={handleMouseLeave}
+                              onClick={() => {
+                                if (isClickValid.current) {
+                                  setActiveColumn(index + 3);
+                                  setDate(data.date);
+                                }
+                              }}
+                            >
+                              {renderWeatherIcon(data)}
+                            </td>
+                          ))}
+                        </tr>
+                        <ForecastTable
+                          forecast={forecast}
+                          overlay={overlay}
+                          setOverlay={setOverlay}
+                          setIsMenuOpen={setIsMenuOpen}
+                          temp={temp}
+                          setTemp={setTemp}
+                          setActiveTooltip={setActiveTooltip}
+                          units={units}
+                          setUnits={setUnits}
+                          setActiveColumn={setActiveColumn}
+                          setDate={setDate}
+                          handleMouseEnter={handleMouseEnter}
+                          handleMouseLeave={handleMouseLeave}
+                          hoveredColumn={hoveredColumn}
+                          isDiscrete={isDiscrete}
+                          isClickValid={isClickValid}
+                        />
+                        <tr>
+                          <th>
+                            <Typography>Wind direction</Typography>
                           </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <th></th>
-                        <th></th>
-                        {forecast.forecasts.map((data, index) => (
-                          <td
-                            key={index}
-                            onMouseEnter={() => handleMouseEnter(index + 2)}
-                            onMouseLeave={handleMouseLeave}
-                            onClick={() => {
-                              setActiveColumn(index + 3); // Adjust for first 2 columns
-                              setDate(data.date); // ✅ Set the date using setDate
-                            }}
-                          >
-                            {renderWeatherIcon(data)}
-                          </td>
-                        ))}
-                      </tr>
-                      <ForecastTable
-                        forecast={forecast}
-                        overlay={overlay}
-                        setOverlay={setOverlay}
-                        setIsMenuOpen={setIsMenuOpen}
-                        temp={temp}
-                        setTemp={setTemp}
-                        setActiveTooltip={setActiveTooltip}
-                        units={units}
-                        setUnits={setUnits}
-                        setActiveColumn={setActiveColumn}
-                        setDate={setDate}
-                        handleMouseEnter={handleMouseEnter}
-                        handleMouseLeave={handleMouseLeave}
-                        hoveredColumn={hoveredColumn}
-                        isDiscrete={isDiscrete}
-                      />
-                      <tr>
-                        <th>
-                          <Typography>Wind direction</Typography>
-                        </th>
-                        <th>
-                          <ToggleUnits
-                            color="neutral"
-                            size="sm"
-                            variant="plain"
-                            sx={{ fontSize: "0.8rem", minHeight: 0 }}
-                            context="container"
-                            overlay="wind_direction"
-                            units={units}
-                            setUnits={setUnits}
-                          />
-                        </th>
-                        {forecast.forecasts.map((data, index) => (
-                          <td
-                            key={index}
-                            onMouseEnter={() => handleMouseEnter(index + 2)}
-                            onMouseLeave={handleMouseLeave}
-                            onClick={() => {
-                              setActiveColumn(index + 3); // Adjust for first 2 columns
-                              setDate(data.date); // ✅ Set the date using setDate
-                            }}
-                            style={{ minHeight: "28px" }}
-                          >
-                            {units.windDirection === "arrow" ? (
-                              renderWindIcon(data)
-                            ) : (
-                              <Typography>{data.wind.direction}</Typography>
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </Table>
-                </Sheet>
+                          <th>
+                            <ToggleUnits
+                              color="neutral"
+                              size="sm"
+                              variant="plain"
+                              sx={{ fontSize: "0.8rem", minHeight: 0 }}
+                              context="container"
+                              overlay="wind_direction"
+                              units={units}
+                              setUnits={setUnits}
+                            />
+                          </th>
+                          {forecast.forecasts.map((data, index) => (
+                            <td
+                              key={index}
+                              onMouseEnter={() => handleMouseEnter(index + 2)}
+                              onMouseLeave={handleMouseLeave}
+                              onClick={() => {
+                                if (isClickValid.current) {
+                                  setActiveColumn(index + 3);
+                                  setDate(data.date);
+                                }
+                              }}
+                              style={{ minHeight: "28px" }}
+                            >
+                              {units.windDirection === "arrow" ? (
+                                renderWindIcon(data)
+                              ) : (
+                                <Typography>{data.wind.direction}</Typography>
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </Table>
+                  </Sheet>
+
+                  <Fade in={shadowLeft} timeout={100}>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 80,
+                        width: "24px",
+                        height: "100%",
+                        pointerEvents: "none",
+                        background:
+                          "linear-gradient(to right, rgba(0,0,0,0.12), transparent)",
+                        zIndex: 1,
+                      }}
+                    />
+                  </Fade>
+                  <Fade in={shadowRight} timeout={100}>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        width: "24px",
+                        height: "100%",
+                        pointerEvents: "none",
+                        background:
+                          "linear-gradient(to left, rgba(0,0,0,0.2), transparent)",
+                        zIndex: 1,
+                        borderRadius: "6px",
+                      }}
+                    />
+                  </Fade>
+                </Box>
+
                 <Box
                   sx={{
                     p: 1,
-                    width: "max-content",
-                    minWidth: "220px",
+                    width: "100%",
+                    minWidth: "100px",
                     maxWidth: "220px",
                     height: "100%",
                   }}
@@ -993,6 +1100,7 @@ const ForecastContainer = ({
                         });
 
                         setOpen(false);
+                        setShadowLeft(false);
                       }}
                     >
                       <CloseIcon

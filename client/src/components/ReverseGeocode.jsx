@@ -3,19 +3,9 @@ import { reverseGeocode } from "esri-leaflet-geocoder";
 import { useMapEvents, useMap } from "react-leaflet";
 import ForecastPopup from "./ForecastPopup";
 
-const ReverseGeocode = ({
-  arcgisToken,
-  setLocation,
-  setIsLocationReady,
-  selectedPolygon,
-}) => {
-  const map = useMap();
-
+const ReverseGeocode = ({ arcgisToken, setLocation, setIsLocationReady }) => {
   useMapEvents({
     click(e) {
-      // if (selectedPolygon.current) {
-      //   map.removeLayer(selectedPolygon.current);
-      // }
       const { latlng } = e;
 
       setIsLocationReady(false);
@@ -30,8 +20,6 @@ const ReverseGeocode = ({
             console.error("Geocoding error:", error);
             return;
           }
-
-          console.log(result);
 
           setLocation({
             latLng: result.latlng,

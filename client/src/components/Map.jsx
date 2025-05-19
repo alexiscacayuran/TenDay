@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup } from "react-leaflet";
-// import { CssVarsProvider } from "@mui/joy/styles";
+import { useMediaQuery } from "@mui/material";
+import { Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
 
 import L from "leaflet";
@@ -27,6 +28,9 @@ import Box from "@mui/joy/Box";
 
 const Map = () => {
   const theme = useTheme();
+  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+  console.log(isBelowLaptop);
+
   useEffect(() => {
     document.body.style.overflow = "hidden";
   }, []);
@@ -163,12 +167,14 @@ const Map = () => {
               selectedPolygon={selectedPolygon}
             />
           ) : null}
-          <ScaleNautic
-            metric={scale.metric}
-            imperial={scale.imperial}
-            nautic={false}
-            key={`${scale.metric}-${scale.imperial}`} // Rerender on scale change
-          />
+          {isBelowLaptop ? null : (
+            <ScaleNautic
+              metric={scale.metric}
+              imperial={scale.imperial}
+              nautic={false}
+              key={`${scale.metric}-${scale.imperial}`} // Rerender on scale change
+            />
+          )}
 
           <LayerGroup ref={markerLayer} />
           <LayerGroup ref={overlayLayer} />
@@ -200,7 +206,7 @@ const Map = () => {
           spacing={2}
           direction="row"
           sx={{
-            justifyContent: "space-between",
+            justifyContent: "center",
             alignItems: "flex-end",
             position: "absolute",
             bottom: 20,
@@ -213,8 +219,11 @@ const Map = () => {
           <Box
             sx={{
               minWidth: "100px",
-
-              flexShrink: 0,
+              backgroundColor: "red",
+              display: "inline",
+              [theme.breakpoints.down("lg")]: {
+                display: "none",
+              },
             }}
           ></Box>
           <Stack
@@ -223,11 +232,11 @@ const Map = () => {
               alignItems: "center",
               justifyContent: "flex-end",
               position: "relative",
-              width: "calc(100% - 180px)",
+              width: "calc(100% - 140px)",
               height: "auto",
-              // [theme.breakpoints.down("lg")]: {
-              //   width: "100%",
-              // },
+              [theme.breakpoints.down("lg")]: {
+                width: "calc(100% - 80px)",
+              },
             }}
           >
             {dateReady && (
@@ -314,6 +323,7 @@ const Map = () => {
       zoomLevel,
       scale,
       isLocationReady,
+      isBelowLaptop,
     ]
   );
 

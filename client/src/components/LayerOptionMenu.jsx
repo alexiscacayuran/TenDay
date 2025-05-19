@@ -36,6 +36,7 @@ const LayerOptionMenu = ({
               variant="plain"
               size="lg"
               sx={{
+                fontSize: "1.5rem",
                 "--IconButton-size": "3.25rem",
                 backgroundColor: "rgba(255, 255, 255, 0.4)",
                 backdropFilter: "blur(7px)",
@@ -46,7 +47,7 @@ const LayerOptionMenu = ({
               }}
               {...bindTrigger(popupState)}
             >
-              <LayerStyleIcon />
+              <LayerStyleIcon sx />
             </IconButton>
             <Popover
               {...bindPopover(popupState)}

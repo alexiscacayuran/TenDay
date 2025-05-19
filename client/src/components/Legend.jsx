@@ -67,7 +67,12 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
           >
             {overlayData.domain.map((value, index) => (
               <li key={index} className="legend-item">
-                <ForecastValue overlay={overlay} units={units} value={value} />
+                <ForecastValue
+                  overlay={overlay}
+                  units={units}
+                  value={value}
+                  context={"legend"}
+                />
               </li>
             ))}
           </ul>

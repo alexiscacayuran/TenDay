@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 import { format } from "date-fns";
+import TimeAgo from "timeago-react";
 
 const Issuance = ({ startDate }) => {
   const date = new Date(startDate.current.latest_date);
@@ -32,10 +33,14 @@ const Issuance = ({ startDate }) => {
             textShadow: " 0px -1px 5px rgba(0,0,0,0.2)",
           }}
         >
-          Forecast date:{" "}
-          {format(startDate.current.latest_date, "MMM d") +
+          Forecast updated{" "}
+          <TimeAgo
+            datetime={`${startDate.current.latest_date} ${startDate.current.latest_time}`}
+          />{" "}
+          PST
+          {/* {format(startDate.current.latest_date, "MMM d") +
             " " +
-            startDate.current.latest_time.replace(/:\d{2}(?=\s?[AP]M)/, "")}
+            startDate.current.latest_time.replace(/:\d{2}(?=\s?[AP]M)/, "")} */}
         </Typography>
         <Typography
           level="body-xs"

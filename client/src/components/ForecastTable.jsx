@@ -59,6 +59,7 @@ const ForecastTable = ({
   handleMouseLeave,
   hoveredColumn,
   isDiscrete,
+  isClickValid,
 }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_mean"); // Stores last selected temperature overlay
@@ -153,6 +154,7 @@ const ForecastTable = ({
                       justifyContent: "flex-end",
                       textDecorationStyle: "dotted",
                     }}
+                    sxProps={{}}
                   >
                     {displayName}
                   </Link>
@@ -214,14 +216,17 @@ const ForecastTable = ({
                     onMouseEnter={() => handleMouseEnter(index + 2)}
                     onMouseLeave={handleMouseLeave}
                     onClick={() => {
-                      setActiveColumn(index + 3); // Adjust for first 2 columns
-                      setDate(data.date); // ✅ Set the date using setDate
+                      if (isClickValid.current) {
+                        setActiveColumn(index + 3);
+                        setDate(data.date);
+                      }
                     }}
                   >
                     <ForecastValue
                       value={current}
                       overlay={overlayRef}
                       units={units}
+                      context={"table"}
                     />
                   </td>
                 );

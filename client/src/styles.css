@@ -203,7 +203,7 @@
     margin-left: -100%;
     margin-top: -100%;
     border-radius: 45px;
-    background-color: #01a4e9;
+    background-color: white;
     animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
   }
 
