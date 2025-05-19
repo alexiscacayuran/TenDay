@@ -85,12 +85,17 @@ export const authenticateToken = (api_id) => {
         api_name
       };
 
+      // Skip rate limiting for organization '10-Day Forecast'
+      if (organization === "10-Day Forecast") {
+        return next();
+      }
+
       // Rate limiting: Check the number of requests from the user/IP
       const ip = req.ip || req.headers["x-forwarded-for"] || "unknown_ip";
       const rateLimitKey = `rate_limit:${ip}:${api_id}`;
-      
+
       // Maximum requests allowed per hour
-      const MAX_REQUESTS = 100;
+      const MAX_REQUESTS = 1;
       // Cooldown time in seconds
       const COOL_DOWN_TIME = 60;
 
@@ -101,10 +106,10 @@ export const authenticateToken = (api_id) => {
       if (currentRequestCount >= MAX_REQUESTS) {
         // Check if cooldown time has passed
         const lastRequestTime = await redisClient.get(`last_request_time:${ip}:${api_id}`);
-        
+
         if (lastRequestTime) {
           const timeElapsed = Date.now() - parseInt(lastRequestTime);
-          
+
           if (timeElapsed < COOL_DOWN_TIME * 1000) {
             return res.status(429).json({
               metadata: {
@@ -123,7 +128,6 @@ export const authenticateToken = (api_id) => {
       }
 
       // If the rate limit is not exceeded, proceed with the request:
-      // Increment the request count and set an expiration time of 1 hour
       await redisClient.multi()
         .incr(rateLimitKey) 
         .expire(rateLimitKey, 3600)  // TTL of 1 hour

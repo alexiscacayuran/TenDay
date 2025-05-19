@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup } from "react-leaflet";
 import { CssVarsProvider } from "@mui/joy/styles";
+
 import theme from "../theme";
 import useResponsiveCheck from "../hooks/useResponsiveCheck";
 
@@ -102,7 +103,7 @@ const Map = () => {
     // Function to fetch data from the API
     const fetchDate = async () => {
       try {
-        const response = await axios.get("/valid");
+        const response = await axios.get("/api/v1/valid");
         startDate.current = response.data; // Store the fetched data
         const currentDate = new Date();
         const endDate = new Date(startDate.current.latest_date);

@@ -73,6 +73,9 @@ import { uploadTIF } from "./ceram/uploadTIF.js";
 //Health Check
 import { checkWebsiteStatus } from "./backgroundJob/healthCheck.js";
 
+//Upload Check
+import checkValidRouter from './admin/checkValid.js';
+
 const app = express();
 const port = 5000;
 
@@ -151,6 +154,8 @@ app.use("/fullInternal", getFullForecastInternal);
 
 // Route for fetching municities - internal
 app.use("/municitiesInternal", getMunicities);
+
+app.use('/api/', checkValidRouter);
 
 // Route for uploading Ten Day Data
 app.get("/uploadForecastData", authenticate, async (req, res) => {
