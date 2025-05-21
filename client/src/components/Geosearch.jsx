@@ -5,6 +5,7 @@ import { ModalClose } from "@mui/joy";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { geocodeService, reverseGeocode } from "esri-leaflet-geocoder";
 import { query } from "esri-leaflet";
+import Logo from "../assets/logo/logo-rgb-light.png";
 
 //styles
 import {
@@ -230,123 +231,160 @@ const GeoSearch = ({
   };
 
   return (
-    <>
-      <Stack
-        direction="row"
-        spacing={1}
+    <Box
+      sx={{
+        pointerEvents: "auto",
+        width: "600px",
+        minWidth: 0,
+        flexShrink: 1,
+      }}
+    >
+      <Sheet
+        variant="solid"
         sx={{
-          justifyContent: "flex-start",
-          alignItems: "center",
+          borderRadius: "lg",
+          py: 1.5,
+          paddingInline: "1.25rem",
+          boxShadow: "sm",
         }}
       >
-        <Input
-          placeholder={
-            localLocation.municity
-              ? localLocation.municity + ", " + localLocation.province
-              : "Search for location..."
-          }
-          size="sm"
+        <Stack
           variant="solid"
-          value={input}
-          startDecorator={<SearchIcon sx={{ color: "common.white" }} />}
-          sx={{ width: "200px", "--Input-radius": "14px" }}
-          onChange={handleInputChange}
-        />
-        <IconButton
-          size="sm"
-          color="neutral"
-          variant="solid"
-          onClick={handleLocate}
-          sx={{ borderRadius: "20px" }}
-        >
-          <MyLocationIcon sx={{ fontSize: "1.25rem" }} />
-        </IconButton>
-      </Stack>
-
-      {suggestions.length > 0 ? (
-        <Sheet
+          direction="row"
+          spacing={1}
           sx={{
-            position: "absolute",
-            top: 60,
-            borderRadius: "8px",
+            justifyContent: "flex-start",
+            alignItems: "center",
           }}
         >
-          <Box
+          <img src={Logo} style={{ height: "30px", marginRight: 10 }} />
+
+          <Input
+            placeholder={
+              localLocation.municity
+                ? localLocation.municity + ", " + localLocation.province
+                : "Search for location..."
+            }
+            color="neutral"
+            size="md"
+            variant="solid"
+            value={input}
+            startDecorator={
+              <SearchIcon sx={{ color: "common.white", fontSize: "1.25rem" }} />
+            }
             sx={{
-              mx: "10px",
-              mt: "5px",
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
+              width: "100%",
+              maxWidth: 400,
+              minWidth: 42,
+              flexShrink: 1,
+              "--Input-radius": "24px",
+              "--variant-borderWidth": "3px",
+              borderWidth: "1px",
+              borderColor: "common.white",
+              backgroundColor: "neutral.600",
+              boxShadow: "none",
+              color: "common.white",
             }}
-          >
-            <List
+            onChange={handleInputChange}
+          />
+          {suggestions.length > 0 ? (
+            <Sheet
               sx={{
-                minWidth: 300,
-                maxWidth: 500,
-                borderRadius: "sm",
+                position: "absolute",
+                top: 70,
+                left: 160,
+                borderRadius: "8px",
               }}
             >
-              {suggestions.map((suggestion, index) => (
-                <div key={index}>
-                  <ListItem
-                    endAction={
-                      <Tooltip
-                        placement="bottom"
-                        title="See on map"
-                        variant="plain"
+              <Box
+                sx={{
+                  mx: "10px",
+                  mt: "5px",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                }}
+              >
+                <List
+                  sx={{
+                    minWidth: 300,
+                    maxWidth: 500,
+                    borderRadius: "sm",
+                  }}
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <div key={index}>
+                      <ListItem
+                        endAction={
+                          <Tooltip
+                            placement="bottom"
+                            title="See on map"
+                            variant="plain"
+                          >
+                            <IconButton
+                              aria-label="See Full Forecast"
+                              color="primary"
+                              sx={{ fontSize: "1.5rem" }}
+                              onClick={() => {
+                                setInput(
+                                  suggestion.text.split(", ")[0] +
+                                    ", " +
+                                    suggestion.text.split(", ")[1]
+                                );
+                                handleFlyToLocation(suggestion.text);
+                              }}
+                            >
+                              <MapIcon />
+                            </IconButton>
+                          </Tooltip>
+                        }
                       >
-                        <IconButton
-                          aria-label="See Full Forecast"
-                          color="primary"
-                          sx={{ fontSize: "1.5rem" }}
-                          onClick={() => {
-                            setInput(
-                              suggestion.text.split(", ")[0] +
-                                ", " +
-                                suggestion.text.split(", ")[1]
-                            );
-                            handleFlyToLocation(suggestion.text);
-                          }}
+                        <ListItemButton
+                          onClick={() =>
+                            handleSelectSuggestion(suggestion.text)
+                          }
                         >
-                          <MapIcon />
-                        </IconButton>
-                      </Tooltip>
-                    }
-                  >
-                    <ListItemButton
-                      onClick={() => handleSelectSuggestion(suggestion.text)}
-                    >
-                      <Stack spacing={1} sx={{ maxWidth: "100ch" }}>
-                        <Typography level="title-lg" color="primary">
-                          {suggestion.text.split(", ")[0]}
-                        </Typography>
-                        <Typography level="title-sm">
-                          {suggestion.text.split(", ")[1]}
-                          {suggestion.text.split(", ").length > 3
-                            ? ", " + suggestion.text.split(", ")[2]
-                            : ""}
-                        </Typography>
-                      </Stack>
-                    </ListItemButton>
-                  </ListItem>
+                          <Stack spacing={1} sx={{ maxWidth: "100ch" }}>
+                            <Typography level="title-lg" color="primary">
+                              {suggestion.text.split(", ")[0]}
+                            </Typography>
+                            <Typography level="title-sm">
+                              {suggestion.text.split(", ")[1]}
+                              {suggestion.text.split(", ").length > 3
+                                ? ", " + suggestion.text.split(", ")[2]
+                                : ""}
+                            </Typography>
+                          </Stack>
+                        </ListItemButton>
+                      </ListItem>
 
-                  {index < suggestions.length - 1 && (
-                    <ListDivider
-                      inset="gutter"
-                      sx={{ "--Divider-thickness": "0.5px" }}
-                    />
-                  )}
-                </div>
-              ))}
-            </List>
-          </Box>
-        </Sheet>
-      ) : (
-        <Box></Box>
-      )}
-      {/* </Sheet> */}
-    </>
+                      {index < suggestions.length - 1 && (
+                        <ListDivider
+                          inset="gutter"
+                          sx={{ "--Divider-thickness": "0.5px" }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </List>
+              </Box>
+            </Sheet>
+          ) : (
+            <Box />
+          )}
+
+          <IconButton
+            size="md"
+            color="neutral"
+            variant="solid"
+            onClick={handleLocate}
+            sx={{ borderRadius: "25px", backgroundColor: "neutral.600" }}
+          >
+            <MyLocationIcon sx={{ fontSize: "1.5rem" }} />
+          </IconButton>
+        </Stack>
+      </Sheet>
+    </Box>
   );
 };
 

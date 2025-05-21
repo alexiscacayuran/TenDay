@@ -170,7 +170,6 @@ const WeatherLayer = ({
         updateWhenIdle: true,
         caching: true,
       });
-      //console.log("scalarLayer", scalarLayer);
 
       if (scalarLayerRef.current) {
         overlayLayer.current.removeLayer(scalarLayerRef.current);

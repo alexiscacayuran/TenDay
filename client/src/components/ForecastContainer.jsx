@@ -136,13 +136,18 @@ const ForecastContainer = ({
   const isTableCollapsed = useMediaQuery("(max-width:1295px)");
   const [shadowLeft, setShadowLeft] = useState(false);
   const [shadowRight, setShadowRight] = useState(isTableCollapsed);
+  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+
+  useEffect(() => {
+    setShadowLeft(false);
+  }, [isBelowLaptop]);
 
   const updateShadows = () => {
     const el = scrollRef.current;
     if (!el) return;
     const { scrollLeft, scrollWidth, clientWidth } = el;
-    console.log(scrollLeft);
-    setShadowLeft(scrollLeft > 150);
+    console.dir(el);
+    setShadowLeft(isBelowLaptop && scrollLeft > 150);
     setShadowRight(scrollLeft + clientWidth < scrollWidth - 5);
   };
 
@@ -387,6 +392,7 @@ const ForecastContainer = ({
     "& td, & th": {
       height: "var(--TableCell-height)",
       boxSizing: "border-box",
+      padding: "2px",
     },
 
     // first header column
@@ -575,7 +581,7 @@ const ForecastContainer = ({
                       "--Table-secondColumnWidth": "80px",
                       "--Table-lastColumnWidth": "0px",
                       "--Table-headerColumnWidth": "230px",
-                      "--Table-bodyColumnWidth": "68px",
+                      "--Table-bodyColumnWidth": "65px",
                       backgroundColor: "background.surface",
                     }}
                   >

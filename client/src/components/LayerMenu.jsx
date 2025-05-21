@@ -73,12 +73,18 @@ const LayerMenu = ({
 
   return (
     <>
-      <Box sx={{ position: "absolute", top: 60, left: 10, zIndex: 999 }}>
+      <Box sx={{ position: "absolute", top: 80, left: 10, zIndex: 999 }}>
         <Sheet
           className="glass"
           color="primary"
           variant="soft"
-          sx={{ borderRadius: "md", display: "inline-flex", gap: 2, p: 0.5 }}
+          sx={{
+            borderRadius: "md",
+            display: "inline-flex",
+            gap: 2,
+            p: 0.5,
+            boxShadow: "sm",
+          }}
         >
           <ToggleButtonGroup
             size="lg"
@@ -161,6 +167,7 @@ const LayerMenu = ({
               gap: 2,
               p: 0.5,
               position: "absolute",
+              boxShadow: "sm",
             }}
           >
             {/* Temp Button Group Sheet (Slide + Smoother) */}

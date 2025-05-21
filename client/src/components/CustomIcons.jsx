@@ -111,9 +111,10 @@ import { ReactComponent as LayerStyle } from "../assets/icons/buttons/layer-styl
 import { ReactComponent as Gradient } from "../assets/icons/buttons/gradient.svg";
 import { ReactComponent as Particles } from "../assets/icons/buttons/particles.svg";
 
-import Logo from "../assets/logo/logo-rgb.png";
-import { ReactComponent as Logotype } from "../assets/logo/logotype-rgb.svg";
+import Logo from "../assets/logo/logo-rgb-light.png";
+import { ReactComponent as Logotype } from "../assets/logo/logotype-light.svg";
 import Logofull from "../assets/logo/logo-full-rgb.png";
+import PAGASA from "../assets/logo/pagasa-logo.png";
 import BMUVIK from "../assets/logo/bmuv-iki-logo.png";
 import GIZ from "../assets/logo/giz-logo.png";
 import NoResult from "../assets/images/no-result.png";
@@ -147,18 +148,26 @@ export const NoResultImage = (props) => (
   <img src={NoResult} style={{ width: "230px" }} {...props} />
 );
 
-export const TanawPHLogo = (props) => {
-  <img src={Logo} {...props} style={{ height: "40px" }}></img>;
+export const TenDayLogo = (props) => {
+  <img src={Logo} {...props} style={{ height: "45px" }}></img>;
 };
 
-export const TanawPHLogoFull = (props) => {
+export const TenDayLogoFull = (props) => {
   <img src={Logofull} {...props} style={{ height: "40px" }}></img>;
 };
 
-export const TanawPHLogoType = (props) => (
+export const TenDayLogoType = (props) => (
   <SvgIcon {...props} style={{ fontSize: "5rem", margin: "-34px 0" }}>
     <Logotype />
   </SvgIcon>
+);
+
+export const PAGASALogo = (props) => (
+  <img
+    src={PAGASA}
+    {...props}
+    style={{ width: "35px", marginRight: "10px" }}
+  ></img>
 );
 
 export const GIZLogo = (props) => (
