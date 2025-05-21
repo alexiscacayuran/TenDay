@@ -73,7 +73,7 @@ const LayerMenu = ({
 
   return (
     <>
-      <Box sx={{ position: "absolute", top: 80, left: 10, zIndex: 999 }}>
+      <Box sx={{ position: "absolute", top: 70, left: 10, zIndex: 999 }}>
         <Sheet
           className="glass"
           color="primary"
@@ -84,6 +84,7 @@ const LayerMenu = ({
             gap: 2,
             p: 0.5,
             boxShadow: "sm",
+            mb: 1,
           }}
         >
           <ToggleButtonGroup
@@ -145,7 +146,6 @@ const LayerMenu = ({
           initial={{ height: 0 }}
           animate={{
             height: isMenuOpen ? "155px" : 0,
-            marginTop: isMenuOpen ? "8px" : 0,
           }}
           exit={{ height: 0 }}
           transition={{

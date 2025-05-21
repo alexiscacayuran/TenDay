@@ -27,7 +27,6 @@ import Box from "@mui/joy/Box";
 const Map = () => {
   const theme = useTheme();
   const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
-  console.log(isBelowLaptop);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -226,7 +225,9 @@ const Map = () => {
           ></Box>
           <Stack
             direction="column"
+            spacing={0}
             sx={{
+              ml: 0,
               alignItems: "center",
               justifyContent: "flex-end",
               position: "relative",

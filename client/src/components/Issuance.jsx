@@ -11,9 +11,9 @@ const Issuance = ({ startDate }) => {
     <Box
       sx={{
         position: "absolute",
-        top: 80,
+        top: 70,
         right: 60,
-        zIndex: 1000,
+        zIndex: 400,
       }}
     >
       <Stack

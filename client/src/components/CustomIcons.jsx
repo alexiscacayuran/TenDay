@@ -113,7 +113,7 @@ import { ReactComponent as Particles } from "../assets/icons/buttons/particles.s
 
 import Logo from "../assets/logo/logo-rgb-light.png";
 import { ReactComponent as Logotype } from "../assets/logo/logotype-light.svg";
-import Logofull from "../assets/logo/logo-full-rgb.png";
+import LogoDark from "../assets/logo/logo-rgb-dark.png";
 import PAGASA from "../assets/logo/pagasa-logo.png";
 import BMUVIK from "../assets/logo/bmuv-iki-logo.png";
 import GIZ from "../assets/logo/giz-logo.png";
@@ -152,8 +152,8 @@ export const TenDayLogo = (props) => {
   <img src={Logo} {...props} style={{ height: "45px" }}></img>;
 };
 
-export const TenDayLogoFull = (props) => {
-  <img src={Logofull} {...props} style={{ height: "40px" }}></img>;
+export const TenDayLogoDark = (props) => {
+  <img src={LogoDark} {...props} style={{ height: "40px" }}></img>;
 };
 
 export const TenDayLogoType = (props) => (
@@ -166,7 +166,7 @@ export const PAGASALogo = (props) => (
   <img
     src={PAGASA}
     {...props}
-    style={{ width: "35px", marginRight: "10px" }}
+    style={{ height: "35px", marginRight: "10px" }}
   ></img>
 );
 

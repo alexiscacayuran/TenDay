@@ -134,8 +134,8 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
             display: "flex",
             gap: "5px",
             "--ButtonGroup-separatorColor": "transparent",
-
             maxWidth: "85vw",
+            boxShadow: "sm",
           }}
         >
           <IconButton

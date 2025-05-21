@@ -121,7 +121,8 @@ const ForecastPopup = ({
         minWidth="320"
         onClose={handlePopupClose}
         closeButton={false}
-        autoPanPaddingTopLeft={[200, 150]}
+        autoPanPaddingTopLeft={[200, 80]}
+        autoPanPaddingBottomRight={[70, 80]}
       >
         <PopupContent
           forecast={forecast}

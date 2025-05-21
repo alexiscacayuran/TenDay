@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Box } from "@mui/joy";
 import chroma from "chroma-js";
 import overlayList from "./OverlayList";
 import ToggleUnits from "./ToggleUnits";
@@ -29,7 +30,10 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
   const overlayData = getColorScale(); // Call once per render
 
   return (
-    <div className="glass legend-container" style={{ pointerEvents: "auto" }}>
+    <Box
+      className="glass legend-container"
+      sx={{ pointerEvents: "auto", boxShadow: "sm" }}
+    >
       <div className="legend-units-container">
         <span>
           <ToggleUnits
@@ -78,7 +82,7 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
           </ul>
         )}
       </div>
-    </div>
+    </Box>
   );
 };
 

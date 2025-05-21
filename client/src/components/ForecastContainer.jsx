@@ -532,7 +532,7 @@ const ForecastContainer = ({
             alignItems: "center",
             justifyContent: "center",
             width: "100%",
-            maxWidth: "min-content",
+            maxWidth: "1200px",
             scrollbarWidth: "none",
             "&::-webkit-scrollbar": { display: "none" },
             flexGrow: 0,
@@ -1155,7 +1155,8 @@ const ForecastContainer = ({
             ) : (
               <Box
                 sx={{
-                  width: "1138px",
+                  width: "100%",
+                  maxWidth: "1200px",
                   height: "256px",
                   bgcolor: "common.white",
                   borderRadius: "6px",

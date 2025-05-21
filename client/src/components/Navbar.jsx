@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { useTheme } from "@mui/joy/styles";
 import Geosearch from "./Geosearch";
+import { useTheme } from "@mui/joy/styles";
+import { useMediaQuery } from "@mui/material";
+import Dexie from "dexie";
 import {
   Box,
   Button,
@@ -16,11 +18,23 @@ import {
   Card,
   CardContent,
   CardActions,
+  Drawer,
+  DialogTitle,
+  ModalClose,
+  DialogContent,
+  FormControl,
+  FormLabel,
+  FormHelperText,
 } from "@mui/joy";
 
 import Logo from "../assets/logo/logo-rgb-light.png";
-
-import { GIZLogo, BMUVIKILogo, PAGASALogo } from "./CustomIcons";
+import LogoDark from "../assets/logo/logo-rgb-dark.png";
+import {
+  GIZLogo,
+  BMUVIKILogo,
+  PAGASALogo,
+  TenDayLogoDark,
+} from "./CustomIcons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleInfo,
@@ -30,16 +44,6 @@ import {
   faChevronLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import Ana from "../assets/images/ana-portrait.jpg";
-
-import Drawer from "@mui/joy/Drawer";
-import DialogTitle from "@mui/joy/DialogTitle";
-import ModalClose from "@mui/joy/ModalClose";
-import DialogContent from "@mui/joy/DialogContent";
-import FormControl from "@mui/joy/FormControl";
-import FormLabel from "@mui/joy/FormLabel";
-import FormHelperText from "@mui/joy/FormHelperText";
-
-import Dexie from "dexie";
 
 // Use existing Dexie instance for OverlayCache
 const db = new Dexie("WeatherLayerCache");
@@ -51,7 +55,6 @@ db.version(1).stores({
 const Navbar = ({
   arcgisToken,
   map,
-  markerLayer,
   location,
   setLocation,
   setOpen,
@@ -64,6 +67,7 @@ const Navbar = ({
   selectedPolygon,
 }) => {
   const theme = useTheme();
+  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
   const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openAbout, setOpenAbout] = useState(false);
@@ -100,11 +104,11 @@ const Navbar = ({
   return (
     <Box
       sx={{
-        mt: 2,
+        mt: 1,
         position: "absolute",
         display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
+        justifyContent: !isBelowLaptop ? "space-between" : "flex-start",
+        alignItems: "center",
         zIndex: theme.zIndex.navbar,
         width: "100vw",
         pointerEvents: "none",
@@ -118,6 +122,7 @@ const Navbar = ({
           justifyContent: "flex-end",
           display: "flex",
           alignItems: "center",
+          pointerEvents: "auto",
         }}
       >
         <IconButton color="inherit" sx={{ mr: 1 }}>
@@ -127,52 +132,72 @@ const Navbar = ({
               fontSize: "1.25rem",
               color: "white",
             }}
-            onClick={toggleAboutDrawer(true)}
+            onClick={() => {}}
           />
         </IconButton>
+
         <PAGASALogo />
-        <Stack
-          direction="column"
-          spacing={0}
-          sx={{
-            justifyContent: "center",
-            alignItems: "flex-start",
-          }}
-        >
-          <Box
-            sx={{
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              maxWidth: "100%", // Optional: ensures it doesn't overflow parent
-            }}
-          >
-            <Typography
+        {
+          !isBelowLaptop ? (
+            <Stack
+              direction="column"
+              spacing={0}
               sx={{
-                color: "white",
-                lineHeight: 1.3,
-                fontSize: "0.6rem",
-                textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
+                justifyContent: "center",
+                alignItems: "flex-start",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                maxWidth: "100%", // Optional: ensures it doesn't overflow parent
+                userSelect: "none",
               }}
             >
-              Department of Science and Technology
-            </Typography>
-            <Typography
-              sx={{
-                color: "white",
-                lineHeight: 1.2,
-                fontWeight: "bold",
-                fontSize: "0.7rem",
-                textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
-              }}
-            >
-              Philippine Atmospheric, Geophysical, and
-              <br />
-              Astronomical Services Administration
-            </Typography>
-          </Box>
-        </Stack>
-        {/* <img src={Logo} style={{ height: "44px" }} /> */}
+              <Typography
+                sx={{
+                  color: "white",
+                  lineHeight: 1.3,
+                  fontSize: "0.6rem",
+                  textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
+                }}
+              >
+                Department of Science and Technology
+              </Typography>
+              <Typography
+                sx={{
+                  color: "white",
+                  lineHeight: 1.2,
+                  fontWeight: "bold",
+                  fontSize: "0.7rem",
+                  textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
+                }}
+              >
+                Philippine Atmospheric, Geophysical, and
+                <br />
+                Astronomical Services Administration
+              </Typography>
+            </Stack>
+          ) : null
+          // <Box
+          //   sx={{
+          //     whiteSpace: "nowrap",
+          //     overflow: "hidden",
+          //     textOverflow: "ellipsis",
+          //     maxWidth: "100%",
+          //   }}
+          // >
+          //   <Typography
+          //     sx={{
+          //       color: "white",
+          //       lineHeight: 1.2,
+          //       fontWeight: "bold",
+          //       fontSize: "0.7rem",
+          //       textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
+          //     }}
+          //   >
+          //     DOST PAGASA
+          //   </Typography>
+          // </Box>
+        }
       </Stack>
 
       <Stack
@@ -204,6 +229,7 @@ const Navbar = ({
         sx={{
           borderRadius: "lg",
           mx: "1.25rem",
+          ml: isBelowLaptop ? "auto" : "0",
           px: "1rem",
           justifyContent: "flex-end",
           alignItems: "center",
@@ -228,12 +254,31 @@ const Navbar = ({
             API
           </Typography>
         </Button>
-        <Button
-          size="lg"
-          color="inherit"
-          sx={{ px: "0.75rem" }}
-          onClick={toggleSettingsDrawer(true)}
-          startDecorator={
+        {!isBelowLaptop ? (
+          <Button
+            size="lg"
+            color="inherit"
+            sx={{ px: "0.75rem" }}
+            onClick={toggleSettingsDrawer(true)}
+            startDecorator={
+              <FontAwesomeIcon
+                icon={faGear}
+                style={{
+                  fontSize: "1.25rem",
+                  color: "var(--joy-palette-neutral-700, #32383E)",
+                }}
+              />
+            }
+          >
+            Settings
+          </Button>
+        ) : (
+          <IconButton
+            size="lg"
+            color="inherit"
+            sx={{ px: "0.75rem" }}
+            onClick={toggleSettingsDrawer(true)}
+          >
             <FontAwesomeIcon
               icon={faGear}
               style={{
@@ -241,17 +286,34 @@ const Navbar = ({
                 color: "var(--joy-palette-neutral-700, #32383E)",
               }}
             />
-          }
-        >
-          Settings
-        </Button>
+          </IconButton>
+        )}
 
-        <Button
-          size="lg"
-          color="inherit"
-          sx={{ px: "0.75rem" }}
-          onClick={toggleAboutDrawer(true)}
-          startDecorator={
+        {!isBelowLaptop ? (
+          <Button
+            size="lg"
+            color="inherit"
+            sx={{ px: "0.75rem" }}
+            onClick={toggleAboutDrawer(true)}
+            startDecorator={
+              <FontAwesomeIcon
+                icon={faCircleInfo}
+                style={{
+                  fontSize: "1.25rem",
+                  color: "var(--joy-palette-neutral-700, #32383E)",
+                }}
+              />
+            }
+          >
+            About
+          </Button>
+        ) : (
+          <IconButton
+            size="lg"
+            color="inherit"
+            sx={{ px: "0.75rem" }}
+            onClick={toggleAboutDrawer(true)}
+          >
             <FontAwesomeIcon
               icon={faCircleInfo}
               style={{
@@ -259,10 +321,8 @@ const Navbar = ({
                 color: "var(--joy-palette-neutral-700, #32383E)",
               }}
             />
-          }
-        >
-          About
-        </Button>
+          </IconButton>
+        )}
       </Stack>
       <Drawer
         size="md"
@@ -533,25 +593,26 @@ const Navbar = ({
             <Box sx={{ mt: 3 }}>
               <Stack
                 direction="row"
-                spacing={4}
+                spacing={1}
                 sx={{
                   justifyContent: "flex-start",
-                  alignItems: "flex-start",
+                  alignItems: "center",
                 }}
               >
-                <img src={Logo} alt="10-Day Forecast Logo" height="50" />
-                {/* <img
-                      src="https://pubfiles.pagasa.dost.gov.ph/pagasaweb/images/pagasa-logo.png"
-                      alt="NOAA"
-                      height="50"
-                    /> */}
+                <img
+                  src="https://pubfiles.pagasa.dost.gov.ph/pagasaweb/images/pagasa-logo.png"
+                  alt="NOAA"
+                  height="40"
+                  style={{ marginRight: 10 }}
+                />
+                <img src={LogoDark} alt="tenDay logo" height="35" />
               </Stack>
             </Box>
             <Box sx={{ mt: 1 }}>
               <Typography level="body-md">
                 TenDay is a{" "}
                 <Typography sx={{ fontWeight: "bold" }}>
-                  10-day forecast visualization app
+                  10-day climate forecast visualization app
                 </Typography>{" "}
                 that provides advance notice of potential hazards related to
                 weather, climate and hydrological events for farmers and other
