@@ -244,7 +244,7 @@ const GeoSearch = ({
       <img
         src={Logo}
         style={{
-          height: !isBelowLaptop ? "30px" : "25px",
+          height: !isBelowLaptop ? "30px" : "35px",
           marginRight: 10,
         }}
       />

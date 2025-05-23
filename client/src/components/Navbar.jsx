@@ -68,11 +68,8 @@ const Navbar = ({
 }) => {
   const theme = useTheme();
   const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
-  const [openSearch, setOpenSearch] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const [openAbout, setOpenAbout] = useState(false);
-
-  console.log(theme.zIndex);
 
   const clearCache = async () => {
     await Promise.all([db.scalars.clear(), db.vectors.clear()]);
@@ -108,7 +105,7 @@ const Navbar = ({
         position: "absolute",
         display: "flex",
         justifyContent: !isBelowLaptop ? "space-between" : "flex-start",
-        alignItems: "center",
+        alignItems: !isBelowLaptop ? "flex-start" : "center",
         zIndex: theme.zIndex.navbar,
         width: "100vw",
         pointerEvents: "none",
@@ -118,7 +115,8 @@ const Navbar = ({
         direction={"row"}
         spacing={0}
         sx={{
-          mx: "1.25rem",
+          ml: "1.25rem",
+          mr: !isBelowLaptop ? "1.25rem" : 0,
           justifyContent: "flex-end",
           display: "flex",
           alignItems: "center",
@@ -136,7 +134,9 @@ const Navbar = ({
           />
         </IconButton>
 
-        <PAGASALogo />
+        <PAGASALogo
+          style={{ height: !isBelowLaptop ? "40px" : "35px", marginRight: 10 }}
+        />
         {
           !isBelowLaptop ? (
             <Stack
@@ -156,7 +156,7 @@ const Navbar = ({
                 sx={{
                   color: "white",
                   lineHeight: 1.3,
-                  fontSize: "0.6rem",
+                  fontSize: "0.7rem",
                   textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
                 }}
               >
@@ -167,7 +167,7 @@ const Navbar = ({
                   color: "white",
                   lineHeight: 1.2,
                   fontWeight: "bold",
-                  fontSize: "0.7rem",
+                  fontSize: "0.8rem",
                   textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
                 }}
               >
@@ -610,7 +610,7 @@ const Navbar = ({
             </Box>
             <Box sx={{ mt: 1 }}>
               <Typography level="body-md">
-                TenDay is a{" "}
+                tenDay is a{" "}
                 <Typography sx={{ fontWeight: "bold" }}>
                   10-day climate forecast visualization app
                 </Typography>{" "}

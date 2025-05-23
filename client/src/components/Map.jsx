@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup } from "react-leaflet";
 import { useMediaQuery } from "@mui/material";
-import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
+import { useTheme } from "@mui/joy/styles";
 import L from "leaflet";
 import axios from "axios";
 import MapControl from "./MapControl";
@@ -18,15 +18,15 @@ import ZoomLevel from "./ZoomLevel";
 import ScaleNautic from "react-leaflet-nauticsale";
 import ForecastPopup from "./ForecastPopup";
 import Issuance from "./Issuance";
+import DateSlider from "./DateSlider";
 
 import Stack from "@mui/joy/Stack";
 import Box from "@mui/joy/Box";
 
-// console.log("defaultBg", theme.vars.palette.AppBar.defaultBg);
-
 const Map = () => {
   const theme = useTheme();
   const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -74,6 +74,7 @@ const Map = () => {
   const [isLocationReady, setIsLocationReady] = useState(false);
 
   const startDate = useRef(null);
+
   const markerLayer = useRef(null);
   const overlayLayer = useRef(null);
   const selectedPolygon = useRef(null);
@@ -90,7 +91,7 @@ const Map = () => {
   const [activeTooltip, setActiveTooltip] = useState("Temperature");
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
-  const [isLayerClipped, setIsLayerClipped] = useState(false);
+  const [isLayerClipped, setIsLayerClipped] = useState(true);
 
   const [units, setUnits] = useState({
     temperature: "°C",
@@ -109,6 +110,7 @@ const Map = () => {
         startDate.current = response.data; // Store the fetched data
         const currentDate = new Date();
         const endDate = new Date(startDate.current.latest_date);
+
         endDate.setDate(endDate.getDate() + 9);
         setDate(currentDate > endDate ? endDate : currentDate);
         setDateReady(true); // Set readiness to true once data is fetched
@@ -199,87 +201,155 @@ const Map = () => {
           />
         </MapContainer>
 
-        <Stack
-          spacing={2}
-          direction="row"
-          sx={{
-            justifyContent: "center",
-            alignItems: "flex-end",
-            position: "absolute",
-            bottom: 20,
-            zIndex: 1200,
-            width: "100%",
-            px: 1,
-            pointerEvents: "none", //Let clicks pass through by default
-          }}
-        >
-          <Box
-            sx={{
-              minWidth: "100px",
-              backgroundColor: "red",
-              display: "inline",
-              [theme.breakpoints.down("lg")]: {
-                display: "none",
-              },
-            }}
-          ></Box>
+        {!isMobile && (
           <Stack
-            direction="column"
-            spacing={0}
+            spacing={2}
+            direction="row"
             sx={{
-              ml: 0,
-              alignItems: "center",
-              justifyContent: "flex-end",
-              position: "relative",
-              width: "calc(100% - 140px)",
-              height: "auto",
-              [theme.breakpoints.down("lg")]: {
-                width: "calc(100% - 80px)",
-              },
+              justifyContent: "center",
+              alignItems: "flex-end",
+              position: "absolute",
+              bottom: 20,
+              zIndex: 1200,
+              width: "100%",
+              px: 1,
+              pointerEvents: "none", //Let clicks pass through by default
             }}
           >
-            {dateReady && (
-              <DateNavigation
-                initialDate={new Date(startDate.current.latest_date)}
-                range={10}
-                setDate={setDate}
-                date={date}
+            <Box
+              sx={{
+                minWidth: "100px",
+                backgroundColor: "red",
+                display: "inline",
+                [theme.breakpoints.down("lg")]: {
+                  display: "none",
+                },
+              }}
+            ></Box>
+            <Stack
+              direction="column"
+              spacing={0}
+              sx={{
+                ml: 0,
+                alignItems: "center",
+                justifyContent: "flex-end",
+                position: "relative",
+                width: "calc(100% - 140px)",
+                height: "auto",
+                [theme.breakpoints.down("lg")]: {
+                  width: "calc(100% - 80px)",
+                },
+              }}
+            >
+              {dateReady && (
+                <DateNavigation
+                  initialDate={new Date(startDate.current.latest_date)}
+                  range={10}
+                  setDate={setDate}
+                  date={date}
+                  open={open}
+                />
+              )}
+              <ForecastContainer
+                serverToken={serverToken}
+                map={map}
                 open={open}
+                setOpen={setOpen}
+                location={location}
+                setLocation={setLocation}
+                markerLayer={markerLayer}
+                overlay={overlay}
+                setOverlay={setOverlay}
+                setIsMenuOpen={setIsMenuOpen}
+                temp={temp}
+                setTemp={setTemp}
+                setActiveTooltip={setActiveTooltip}
+                units={units}
+                setUnits={setUnits}
+                date={date}
+                setDate={setDate}
+                isDiscrete={isDiscrete}
+                arcgisToken={arcgisToken}
+                selectedPolygon={selectedPolygon}
+                interactive={false}
               />
-            )}
-            <ForecastContainer
-              serverToken={serverToken}
-              map={map}
-              open={open}
-              setOpen={setOpen}
-              location={location}
-              setLocation={setLocation}
-              markerLayer={markerLayer}
+            </Stack>
+            <Legend
               overlay={overlay}
-              setOverlay={setOverlay}
-              setIsMenuOpen={setIsMenuOpen}
-              temp={temp}
-              setTemp={setTemp}
-              setActiveTooltip={setActiveTooltip}
+              isDiscrete={isDiscrete}
               units={units}
               setUnits={setUnits}
-              date={date}
-              setDate={setDate}
-              isDiscrete={isDiscrete}
-              arcgisToken={arcgisToken}
-              selectedPolygon={selectedPolygon}
-              interactive={false}
             />
           </Stack>
+        )}
 
-          <Legend
-            overlay={overlay}
-            isDiscrete={isDiscrete}
-            units={units}
-            setUnits={setUnits}
-          />
-        </Stack>
-        {/* </CssVarsProvider> */}
+        {isMobile && (
+          <>
+            <Stack
+              direction="column"
+              spacing={0}
+              sx={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 1200,
+              }}
+            >
+              <Stack
+                direction="column"
+                spacing={0}
+                sx={{
+                  ml: 0,
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  position: "relative",
+                  width: "100%",
+                  height: "auto",
+                }}
+              >
+                {dateReady && (
+                  <DateSlider
+                    initialDate={new Date(startDate.current.latest_date)}
+                    range={10}
+                    setDate={setDate}
+                    date={date}
+                    open={open}
+                  />
+                )}
+                <ForecastContainer
+                  serverToken={serverToken}
+                  map={map}
+                  open={open}
+                  setOpen={setOpen}
+                  location={location}
+                  setLocation={setLocation}
+                  markerLayer={markerLayer}
+                  overlay={overlay}
+                  setOverlay={setOverlay}
+                  setIsMenuOpen={setIsMenuOpen}
+                  temp={temp}
+                  setTemp={setTemp}
+                  setActiveTooltip={setActiveTooltip}
+                  units={units}
+                  setUnits={setUnits}
+                  date={date}
+                  setDate={setDate}
+                  isDiscrete={isDiscrete}
+                  arcgisToken={arcgisToken}
+                  selectedPolygon={selectedPolygon}
+                  interactive={false}
+                />
+              </Stack>
+              <Legend
+                overlay={overlay}
+                isDiscrete={isDiscrete}
+                units={units}
+                setUnits={setUnits}
+              />
+            </Stack>
+          </>
+        )}
 
         {dateReady && <Issuance startDate={startDate} />}
 
@@ -323,6 +393,7 @@ const Map = () => {
       scale,
       isLocationReady,
       isBelowLaptop,
+      isMobile,
     ]
   );
 

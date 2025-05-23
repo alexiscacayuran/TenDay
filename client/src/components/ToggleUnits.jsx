@@ -1,5 +1,7 @@
 import React from "react";
 import { Button, Link, Box, Typography } from "@mui/joy";
+import { useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/joy/styles";
 
 // Helper function to toggle units
 export const handleToggle = (prevUnits, overlay) => {
@@ -43,6 +45,12 @@ export const handleToggle = (prevUnits, overlay) => {
 };
 
 const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const adaptiveColor = !isMobile
+    ? "var(--joy-palette-neutral-700, #32383E)"
+    : "common.white";
+
   const toggleUnits = () => {
     setUnits((prevUnits) => handleToggle(prevUnits, overlay));
   };
@@ -106,44 +114,47 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
       ) : context === "legend" ? (
         overlay.includes("temperature") ? (
           <Link
-            level="body-sm"
-            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
-            onClick={toggleUnits}
             className="legend-units"
+            level="body-sm"
+            sx={{ color: adaptiveColor, textDecorationColor: adaptiveColor }}
+            onClick={toggleUnits}
           >
             {units.temperature}
           </Link>
         ) : overlay === "rainfall" ? (
           <Link
+            className="legend-units"
             level="body-sm"
             sx={{
-              color: "var(--joy-palette-neutral-700, #32383E)",
+              color: adaptiveColor,
+              textDecorationColor: adaptiveColor,
             }}
             onClick={toggleUnits}
-            className="legend-units"
           >
             {units.rainfall.slice(0, 2)}
           </Link>
         ) : overlay === "humidity" ? (
           <Typography
+            className="legend-units"
             level="body-sm"
-            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
+            sx={{ color: adaptiveColor, textDecorationColor: adaptiveColor }}
           >
             %
           </Typography>
         ) : overlay === "wind" ? (
           <Link
-            level="body-sm"
-            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
-            onClick={toggleUnits}
             className="legend-units"
+            level="body-sm"
+            sx={{ color: adaptiveColor, textDecorationColor: adaptiveColor }}
+            onClick={toggleUnits}
           >
             {units.windSpeed}
           </Link>
         ) : overlay === "cloud" ? (
           <Typography
+            className="legend-units"
             level="body-sm"
-            sx={{ color: "var(--joy-palette-neutral-700, #32383E)" }}
+            sx={{ color: adaptiveColor, textDecorationColor: adaptiveColor }}
           >
             %
           </Typography>

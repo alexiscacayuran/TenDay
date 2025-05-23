@@ -145,7 +145,7 @@ const SvgWrapper = ({ Icon, ...props }) => (
 );
 
 export const NoResultImage = (props) => (
-  <img src={NoResult} style={{ width: "230px" }} {...props} />
+  <img src={NoResult} style={{ width: "210px" }} {...props} />
 );
 
 export const TenDayLogo = (props) => {
@@ -162,13 +162,7 @@ export const TenDayLogoType = (props) => (
   </SvgIcon>
 );
 
-export const PAGASALogo = (props) => (
-  <img
-    src={PAGASA}
-    {...props}
-    style={{ height: "35px", marginRight: "10px" }}
-  ></img>
-);
+export const PAGASALogo = (props) => <img src={PAGASA} {...props}></img>;
 
 export const GIZLogo = (props) => (
   <img src={GIZ} {...props} style={{ width: "100px", margin: "-25px 0" }}></img>

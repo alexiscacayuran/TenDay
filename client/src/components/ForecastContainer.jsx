@@ -1157,7 +1157,7 @@ const ForecastContainer = ({
                 sx={{
                   width: "100%",
                   maxWidth: "1200px",
-                  height: "256px",
+                  height: "231.81px",
                   bgcolor: "common.white",
                   borderRadius: "6px",
                   boxSizing: "border-box",
