@@ -125,10 +125,10 @@ export const uploadForecastTIF = async (year, month, day) => {
         const resFiles = files.filter(file => file.endsWith('_res.tif'));
 
         const processFiles = async (fileList, suffix) => {
-          for (const resFile of fileList) {
+          await Promise.all(fileList.map(async (resFile) => {
             const match = resFile.match(/(MAX|MIN|MEAN|RH|TCC|TP|WS)(\d+)_res(?:_C)?\.tif/);
-            if (!match) continue;
-
+            if (!match) return;
+        
             const folderNameMap = {
               MAX: 'TMAX',
               MIN: 'TMIN',
@@ -141,54 +141,56 @@ export const uploadForecastTIF = async (year, month, day) => {
             const newDate = moment(`${year}-${monthNumber}-${day}`, 'YYYY-MM-DD')
               .add(num - 1, 'days')
               .format('YYYYMMDD');
-
+        
             const newFileName = `${folderName}_${newDate}`;
             const s3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folderName}/${newFileName}.tif`;
-
+        
             const filePath = path.join(folderPath, resFile);
-
             const result = await maskTif(filePath, newFileName);
-
-            if (result) {
-              const { cogPath, maskedPath } = result;
-
-              if (fs.existsSync(cogPath)) {
-                const cogFileContent = fs.readFileSync(cogPath);
-                try {
-                  await s3.send(new PutObjectCommand({
-                    Bucket: BUCKET_NAME,
-                    Key: s3Key,
-                    Body: cogFileContent,
-                    ContentType: 'application/octet-stream',
-                  }));
-                  console.log(`${newFileName}.tif (COG) uploaded to S3`);
-                } catch (err) {
-                  console.error(`Error uploading ${newFileName}.tif (COG) to S3: ${err}`);
-                }
-              }
-
-              if (fs.existsSync(maskedPath)) {
-                const clipFileContent = fs.readFileSync(maskedPath);
-                const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folderName}/${newFileName}_masked.tif`;
-
-                try {
-                  await s3.send(new PutObjectCommand({
-                    Bucket: BUCKET_NAME,
-                    Key: clipS3Key,
-                    Body: clipFileContent,
-                    ContentType: 'application/octet-stream',
-                  }));
-                  console.log(`${newFileName}_masked.tif uploaded to S3`);
-                } catch (err) {
-                  console.error(`Error uploading ${newFileName}_masked.tif to S3: ${err}`);
-                }
-              } else {
-                console.log(`Clipped file ${newFileName}_masked.tif not found.`);
-              }
+            if (!result) return;
+        
+            const { cogPath, maskedPath } = result;
+            const uploadTasks = [];
+        
+            // Upload COG
+            if (fs.existsSync(cogPath)) {
+              const cogFileStream = fs.createReadStream(cogPath);
+              const uploadCOG = s3.send(new PutObjectCommand({
+                Bucket: BUCKET_NAME,
+                Key: s3Key,
+                Body: cogFileStream,
+                ContentType: 'application/octet-stream',
+              }))
+              .then(() => console.log(`${newFileName}.tif (COG) uploaded to S3`))
+              .catch((err) => console.error(`Error uploading ${newFileName}.tif (COG) to S3: ${err}`));
+              
+              uploadTasks.push(uploadCOG);
             }
-          }
+        
+            // Upload Masked
+            if (fs.existsSync(maskedPath)) {
+              const clipFileStream = fs.createReadStream(maskedPath);
+              const clipS3Key = `${year}${monthNumber}${String(day).padStart(2, '0')}/${folderName}/${newFileName}_masked.tif`;
+        
+              const uploadMasked = s3.send(new PutObjectCommand({
+                Bucket: BUCKET_NAME,
+                Key: clipS3Key,
+                Body: clipFileStream,
+                ContentType: 'application/octet-stream',
+              }))
+              .then(() => console.log(`${newFileName}_masked.tif uploaded to S3`))
+              .catch((err) => console.error(`Error uploading ${newFileName}_masked.tif to S3: ${err}`));
+              
+              uploadTasks.push(uploadMasked);
+            } else {
+              console.log(`Clipped file ${newFileName}_masked.tif not found.`);
+            }
+        
+            // Wait for all uploads to finish for this file
+            await Promise.all(uploadTasks);
+          }));
         };
-
+        
         if (resCFiles.length > 0) {
           await processFiles(resCFiles, '_res_C.tif');
         } else if (resFiles.length > 0) {
