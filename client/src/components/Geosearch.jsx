@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import L from "leaflet";
-import { DivIcon } from "leaflet";
-import { ModalClose } from "@mui/joy";
-import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { geocodeService, reverseGeocode } from "esri-leaflet-geocoder";
 import { query } from "esri-leaflet";
+import { useTheme } from "@mui/joy/styles";
+import { useMediaQuery } from "@mui/material";
 
-//styles
 import {
   Button,
   Box,
@@ -21,6 +19,9 @@ import {
   Stack,
   Sheet,
 } from "@mui/joy";
+
+import Logo from "../assets/logo/logo-rgb-light.png";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
 import SearchIcon from "@mui/icons-material/Search";
 import MapIcon from "@mui/icons-material/Map";
 
@@ -33,6 +34,9 @@ const GeoSearch = ({
   location,
   selectedPolygon,
 }) => {
+  const theme = useTheme();
+  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [localLocation, setLocalLocation] = useState({
@@ -113,7 +117,6 @@ const GeoSearch = ({
 
   // Handle selection of a suggestion
   const handleFlyToLocation = (text) => {
-    // Perform geocode search using the selected suggestion text
     const _geocodeService = geocodeService({
       apikey: arcgisToken,
     });
@@ -137,10 +140,9 @@ const GeoSearch = ({
         }
       });
 
-    // Clear suggestions after selection
     setSuggestions([]);
   };
-  // Add an event listener for the Enter key press
+
   useEffect(() => {
     const handleKeyPress = (event) => {
       if (event.key === "Enter" && suggestions.length > 0) {
@@ -150,7 +152,6 @@ const GeoSearch = ({
 
     document.addEventListener("keydown", handleKeyPress);
 
-    // Cleanup event listener on component unmount
     return () => {
       document.removeEventListener("keydown", handleKeyPress);
     };
@@ -229,45 +230,59 @@ const GeoSearch = ({
     });
   };
 
-  return (
-    <>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          justifyContent: "flex-start",
-          alignItems: "center",
+  const searchbar = (
+    <Stack
+      variant="solid"
+      direction="row"
+      spacing={1}
+      sx={{
+        justifyContent: "flex-start",
+        alignItems: "center",
+        mr: isBelowLaptop ? "1.25rem" : 0,
+      }}
+    >
+      <img
+        src={Logo}
+        style={{
+          height: !isBelowLaptop ? "30px" : "35px",
+          marginRight: 10,
         }}
-      >
-        <Input
-          placeholder={
-            localLocation.municity
-              ? localLocation.municity + ", " + localLocation.province
-              : "Search for location..."
-          }
-          size="sm"
-          variant="solid"
-          value={input}
-          startDecorator={<SearchIcon sx={{ color: "common.white" }} />}
-          sx={{ width: "200px", "--Input-radius": "14px" }}
-          onChange={handleInputChange}
-        />
-        <IconButton
-          size="sm"
-          color="neutral"
-          variant="solid"
-          onClick={handleLocate}
-          sx={{ borderRadius: "20px" }}
-        >
-          <MyLocationIcon sx={{ fontSize: "1.25rem" }} />
-        </IconButton>
-      </Stack>
+      />
 
+      <Input
+        placeholder={
+          localLocation.municity
+            ? localLocation.municity + ", " + localLocation.province
+            : "Search for location..."
+        }
+        color="neutral"
+        size={!isBelowLaptop ? "md" : "lg"}
+        variant="solid"
+        value={input}
+        startDecorator={
+          <SearchIcon sx={{ color: "common.white", fontSize: "1.25rem" }} />
+        }
+        sx={{
+          width: "100%",
+          maxWidth: 400,
+          minWidth: 42,
+          flexShrink: 1,
+          "--Input-radius": "24px",
+          "--variant-borderWidth": "3px",
+          borderWidth: "1px",
+          borderColor: "common.white",
+          backgroundColor: "neutral.600",
+          boxShadow: "none",
+          color: "common.white",
+        }}
+        onChange={handleInputChange}
+      />
       {suggestions.length > 0 ? (
         <Sheet
           sx={{
             position: "absolute",
-            top: 60,
+            top: !isBelowLaptop ? 70 : 50,
+            left: !isBelowLaptop ? 160 : 280,
             borderRadius: "8px",
           }}
         >
@@ -343,10 +358,47 @@ const GeoSearch = ({
           </Box>
         </Sheet>
       ) : (
-        <Box></Box>
+        <Box />
       )}
-      {/* </Sheet> */}
-    </>
+
+      <IconButton
+        size={!isBelowLaptop ? "md" : "lg"}
+        color="neutral"
+        variant="solid"
+        onClick={handleLocate}
+        sx={{ borderRadius: "25px", backgroundColor: "neutral.600" }}
+      >
+        <MyLocationIcon sx={{ fontSize: "1.5rem" }} />
+      </IconButton>
+    </Stack>
+  );
+
+  return (
+    <Box
+      sx={{
+        pointerEvents: "auto",
+        width: "600px",
+        minWidth: 0,
+        flexShrink: 1,
+      }}
+    >
+      {!isBelowLaptop ? (
+        <Sheet
+          variant="solid"
+          sx={{
+            borderRadius: "lg",
+            py: 1.5,
+            paddingInline: "1.25rem",
+            boxShadow: "sm",
+            mx: "1.25rem",
+          }}
+        >
+          {searchbar}
+        </Sheet>
+      ) : (
+        <>{searchbar}</>
+      )}
+    </Box>
   );
 };
 

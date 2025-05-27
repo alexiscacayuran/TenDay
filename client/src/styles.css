@@ -1,3 +1,10 @@
+:root {
+  --breakpoint-xs: 0;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1200px;
+  --breakpoint-xl: 1312px;
+}
+
 /* commissioner-latin-wght-normal */
 @font-face {
   font-family: "Commissioner Variable";
@@ -9,10 +16,6 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
     U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
     U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-:root {
-  --blue: #187498;
 }
 
 * {
@@ -77,13 +80,19 @@
   white-space: nowrap;
 }
 
+@media (max-width: 768px) {
+  .leaflet-control-attribution {
+    display: none !important;
+  }
+}
+
 .leaflet-control-attribution a {
   color: white !important;
   text-overflow: ellipsis !important;
 }
 
 .glass {
-  background-color: rgba(255, 255, 255, 0.4) !important;
+  background-color: rgba(255, 255, 255, 0.5) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(7px) !important;
 }
@@ -203,7 +212,7 @@
     margin-left: -100%;
     margin-top: -100%;
     border-radius: 45px;
-    background-color: #01a4e9;
+    background-color: white;
     animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
   }
 
@@ -248,13 +257,12 @@
   font-weight: bold;
   font-size: 14px;
   width: 36px; /* Set the desired width */
-  word-wrap: break-word; /* For older browsers */
-  overflow-wrap: break-word; /* Standard property */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   white-space: normal; /* Allow text to wrap */
 }
 
 .legend-units {
-  color: #32383e !important;
   text-decoration-color: #32383e !important;
   text-decoration-style: dotted !important;
 }
@@ -263,61 +271,6 @@
   background-color: #696969 !important;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
-}
-
-/* Standard size for both legends */
-.legend-discrete,
-.legend-continuous {
-  width: 36px;
-  height: 450px; /* 320px */
-  display: flex;
-  flex-direction: column-reverse; /* Ensures values go from bottom to top */
-  align-items: center;
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
-}
-
-/* Discrete Mode: List items should have no gaps */
-.legend-discrete {
-  background: none; /* No background gradient */
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column-reverse;
-  justify-content: flex-start; /* Ensures no gaps */
-}
-
-.legend-discrete .legend-item {
-  width: 100%;
-  flex: 1; /* Ensures all items take equal space */
-  text-align: center;
-  color: white;
-  font-size: 14px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
-}
-
-/* Continuous Mode: Gradient Background */
-.legend-continuous {
-  justify-content: space-between; /* Spread items evenly */
-  padding: 0;
-  margin: 0;
-}
-
-/* Spread legend values evenly in Continuous Mode */
-.legend-continuous .legend-item {
-  width: 100%;
-  flex: 1; /* Makes each item take equal vertical space */
-  text-align: center;
-  font-size: 14px;
-  font-weight: bold;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .loader {

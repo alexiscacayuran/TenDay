@@ -338,7 +338,7 @@ const PopupContent = React.memo(
               color="primary"
               aria-label="See Forecast"
               sx={{ ml: "auto", alignSelf: "center", fontWeight: 600 }}
-              endDecorator={<ExpandMoreIcon />}
+              endDecorator={<ExpandMoreIcon sx={{ fontSize: "1.5rem" }} />}
               onClick={(e) => {
                 e.stopPropagation(); // Prevent map interaction when button is clicked
                 markerRef.current.closePopup();

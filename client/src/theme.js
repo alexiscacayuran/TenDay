@@ -16,6 +16,9 @@ export const joyTheme = extendTheme({
     display: '"Commissioner", sans-serif',
     body: '"Commissioner", sans-serif',
   },
+  zIndex: {
+    navbar: 1200,
+  },
 });
 
 export const muiTheme = createTheme({

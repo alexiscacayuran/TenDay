@@ -73,12 +73,19 @@ const LayerMenu = ({
 
   return (
     <>
-      <Box sx={{ position: "absolute", top: 60, left: 10, zIndex: 999 }}>
+      <Box sx={{ position: "absolute", top: 70, left: 10, zIndex: 999 }}>
         <Sheet
           className="glass"
           color="primary"
           variant="soft"
-          sx={{ borderRadius: "md", display: "inline-flex", gap: 2, p: 0.5 }}
+          sx={{
+            borderRadius: "md",
+            display: "inline-flex",
+            gap: 2,
+            p: 0.5,
+            boxShadow: "sm",
+            mb: 1,
+          }}
         >
           <ToggleButtonGroup
             size="lg"
@@ -139,7 +146,6 @@ const LayerMenu = ({
           initial={{ height: 0 }}
           animate={{
             height: isMenuOpen ? "155px" : 0,
-            marginTop: isMenuOpen ? "8px" : 0,
           }}
           exit={{ height: 0 }}
           transition={{
@@ -161,6 +167,7 @@ const LayerMenu = ({
               gap: 2,
               p: 0.5,
               position: "absolute",
+              boxShadow: "sm",
             }}
           >
             {/* Temp Button Group Sheet (Slide + Smoother) */}

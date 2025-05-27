@@ -14,13 +14,11 @@ const MunicitiesSelector = ({
   const [localSelected, setLocalSelected] = useState([]);
   const action = React.useRef(null);
 
-  console.log(localSelected);
   const handleChange = (event, newValue) => {
     setLocalSelected(newValue);
   };
 
-  const handleClose = (event, newValue) => {
-    console.log("Close triggered");
+  const handleClose = () => {
     setSelectedMunicities(localSelected);
   };
 

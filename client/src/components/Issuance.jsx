@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 import { format } from "date-fns";
+import TimeAgo from "react-timeago";
 
 const Issuance = ({ startDate }) => {
   const date = new Date(startDate.current.latest_date);
@@ -10,10 +11,9 @@ const Issuance = ({ startDate }) => {
     <Box
       sx={{
         position: "absolute",
-        top: 60,
+        top: 70,
         right: 60,
-        zIndex: 1000,
-        userSelect: "none",
+        zIndex: 400,
       }}
     >
       <Stack
@@ -26,23 +26,29 @@ const Issuance = ({ startDate }) => {
       >
         <Typography
           level="body-xs"
-          variant="plain"
           sx={{
             color: "common.white",
-            textShadow: " 0px -1px 5px rgba(0,0,0,0.2)",
+            fontSize: "0.7rem",
+            textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
           }}
         >
-          Forecast date:{" "}
-          {format(startDate.current.latest_date, "MMM d") +
+          Forecast updated{" "}
+          {startDate.current && (
+            <TimeAgo
+              date={`${startDate.current.latest_date} ${startDate.current.latest_time}`}
+            />
+          )}
+          {/* {format(startDate.current.latest_date, "MMM d") +
             " " +
-            startDate.current.latest_time.replace(/:\d{2}(?=\s?[AP]M)/, "")}
+            startDate.current.latest_time.replace(/:\d{2}(?=\s?[AP]M)/, "")} */}
         </Typography>
         <Typography
           level="body-xs"
-          variant="plain"
           sx={{
             color: "common.white",
-            textShadow: " 0px -1px 5px rgba(0,0,0,0.2)",
+
+            fontSize: "0.7rem",
+            textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
           }}
         >
           Next update: {format(nextUpdate, "MMM d")}

@@ -27,7 +27,7 @@ const LayerOptionMenu = ({
 
   return (
     // <Box sx={{ position: "absolute", bottom: 20, left: 10, zIndex: 999 }}>
-    <Box sx={{ zIndex: 999, mt: 2 }}>
+    <Box sx={{ zIndex: 999 }}>
       <PopupState variant="popover" popupId="demo-popup-popover">
         {(popupState) => (
           <>
@@ -36,6 +36,8 @@ const LayerOptionMenu = ({
               variant="plain"
               size="lg"
               sx={{
+                boxShadow: "sm",
+                fontSize: "1.5rem",
                 "--IconButton-size": "3.25rem",
                 backgroundColor: "rgba(255, 255, 255, 0.4)",
                 backdropFilter: "blur(7px)",

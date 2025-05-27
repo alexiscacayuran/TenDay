@@ -111,9 +111,10 @@ import { ReactComponent as LayerStyle } from "../assets/icons/buttons/layer-styl
 import { ReactComponent as Gradient } from "../assets/icons/buttons/gradient.svg";
 import { ReactComponent as Particles } from "../assets/icons/buttons/particles.svg";
 
-import Logo from "../assets/logo/logo-rgb.png";
-import { ReactComponent as Logotype } from "../assets/logo/logotype-rgb.svg";
-import Logofull from "../assets/logo/logo-full-rgb.png";
+import Logo from "../assets/logo/logo-rgb-light.png";
+import { ReactComponent as Logotype } from "../assets/logo/logotype-light.svg";
+import LogoDark from "../assets/logo/logo-rgb-dark.png";
+import PAGASA from "../assets/logo/pagasa-logo.png";
 import BMUVIK from "../assets/logo/bmuv-iki-logo.png";
 import GIZ from "../assets/logo/giz-logo.png";
 import NoResult from "../assets/images/no-result.png";
@@ -124,36 +125,44 @@ const ImgPDFWrapper = ({ src, style, ...props }) => (
 
 const ImgWrapper = ({ Icon, Title, ...props }) => (
   <Tooltip title={Title} color="primary" placement="bottom" variant="soft">
-    <img src={Icon} {...props} style={{ width: "30px" }}></img>
+    <img
+      draggable="false"
+      src={Icon}
+      {...props}
+      style={{ width: "30px" }}
+    ></img>
   </Tooltip>
 );
 
 const SvgWrapper = ({ Icon, ...props }) => (
   <SvgIcon
     {...props}
-    style={{ width: "20px", fontSize: "1rem", boxSizing: "border-box" }}
+    draggable="false"
+    sx={{ width: "20px", fontSize: "1rem", boxSizing: "border-box" }}
   >
     <Icon />
   </SvgIcon>
 );
 
 export const NoResultImage = (props) => (
-  <img src={NoResult} style={{ width: "230px" }} {...props} />
+  <img src={NoResult} style={{ width: "210px" }} {...props} />
 );
 
-export const TanawPHLogo = (props) => {
-  <img src={Logo} {...props} style={{ height: "40px" }}></img>;
+export const TenDayLogo = (props) => {
+  <img src={Logo} {...props} style={{ height: "45px" }}></img>;
 };
 
-export const TanawPHLogoFull = (props) => {
-  <img src={Logofull} {...props} style={{ height: "40px" }}></img>;
+export const TenDayLogoDark = (props) => {
+  <img src={LogoDark} {...props} style={{ height: "40px" }}></img>;
 };
 
-export const TanawPHLogoType = (props) => (
+export const TenDayLogoType = (props) => (
   <SvgIcon {...props} style={{ fontSize: "5rem", margin: "-34px 0" }}>
     <Logotype />
   </SvgIcon>
 );
+
+export const PAGASALogo = (props) => <img src={PAGASA} {...props}></img>;
 
 export const GIZLogo = (props) => (
   <img src={GIZ} {...props} style={{ width: "100px", margin: "-25px 0" }}></img>

@@ -24,7 +24,7 @@ const baseParticleOption = {
   velocityScale: 1 / 500,
   fade: 0.94,
   color: chroma("white").alpha(0.25),
-  width: 4.5,
+  width: 2.5,
   paths: 70000,
   maxAge: 10,
 };
@@ -170,7 +170,6 @@ const WeatherLayer = ({
         updateWhenIdle: true,
         caching: true,
       });
-      //console.log("scalarLayer", scalarLayer);
 
       if (scalarLayerRef.current) {
         overlayLayer.current.removeLayer(scalarLayerRef.current);
@@ -338,7 +337,7 @@ const WeatherLayer = ({
       <Box
         sx={{
           position: "fixed",
-          bottom: open ? 310 : 70,
+          bottom: open ? 310 : 80,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 999,

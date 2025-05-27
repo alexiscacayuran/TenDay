@@ -1,17 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
+import { useTheme } from "@mui/joy/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Box from "@mui/joy/Box";
 import IconButton from "@mui/joy/IconButton";
 import Button from "@mui/joy/Button";
-import Typography from "@mui/material/Typography";
+import Typography from "@mui/joy/Typography";
 import Stack from "@mui/material/Stack";
 import { format, addDays, subDays } from "date-fns";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import ToggleButtonGroup from "@mui/joy/ToggleButtonGroup";
 import { Slide } from "@mui/material";
-import useResponsiveCheck from "../hooks/useResponsiveCheck";
 
 function generateDateRange(startDate, range) {
   return Array.from({ length: range }, (_, i) => addDays(startDate, i));
@@ -19,21 +18,33 @@ function generateDateRange(startDate, range) {
 
 const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
   const theme = useTheme();
-  const isTablet = useMediaQuery(theme.breakpoints.down("lg"));
+  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [localDate, setlocalDate] = useState(new Date());
   const [dateRange] = useState(generateDateRange(initialDate, range));
-  //const isTablet = useResponsiveCheck("lg"); // viewport below or equal laptop screen
-  const scrollContainerRef = useRef(null);
-  const buttonRefs = useRef([]);
-
-  const isDragging = useRef(false);
-  const dragStartX = useRef(0);
-  const scrollStartX = useRef(0);
-  const wasDragging = useRef(false); // ✅ flag to detect drag gesture
 
   useEffect(() => {
     setlocalDate(new Date(date));
   }, [date]);
+
+  const scrollContainerRef = useRef(null);
+  const buttonRefs = useRef([]);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
+  const wasDragging = useRef(false);
+
+  const handleWheel = (e) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    // Only trigger horizontal scroll when vertical scroll is attempted
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      container.scrollLeft += e.deltaY;
+    }
+  };
 
   useEffect(() => {
     const activeIndex = dateRange.findIndex(
@@ -46,7 +57,7 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
         block: "nearest",
       });
     }
-  }, [localDate, isTablet]);
+  }, [localDate, isBelowLaptop]);
 
   const handleDateSelect = (date) => {
     setDate(date.toLocaleString("en-PH").split(", ")[0]);
@@ -78,7 +89,7 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
 
   // Mouse events for panning
   const handleMouseDown = (e) => {
-    if (!isTablet) return; // Only on tablet
+    if (!isBelowLaptop) return;
     isDragging.current = true;
     wasDragging.current = false;
     dragStartX.current = e.clientX;
@@ -113,7 +124,6 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
           pointerEvents: "auto",
           position: "absolute",
           zIndex: 1200,
-          height: "40px",
         }}
       >
         <ToggleButtonGroup
@@ -125,6 +135,8 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
             display: "flex",
             gap: "5px",
             "--ButtonGroup-separatorColor": "transparent",
+            maxWidth: "85vw",
+            boxShadow: "sm",
           }}
         >
           <IconButton
@@ -147,24 +159,15 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
-            // sx={{
-            //   display: "flex",
-            //   overflowX: "auto",
-            //   whiteSpace: "nowrap",
-            //   maxWidth: isTablet ? "60vw" : "none",
-            //   cursor: isTablet ? "grab" : "default",
-            //   "&::-webkit-scrollbar": { display: "none" },
-            //   "-ms-overflow-style": "none",
-            //   "scrollbar-width": "none",
-            //   scrollBehavior: "auto",
-            // }}
+            onWheel={handleWheel}
             sx={{
               display: "flex",
               overflowX: "auto",
+              overflowY: "hidden",
               whiteSpace: "nowrap",
 
               [theme.breakpoints.down("lg")]: {
-                maxWidth: "60vw",
+                width: "78vw",
                 cursor: "grab",
               },
 
@@ -176,6 +179,7 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
           >
             {dateRange.map((date, index) => (
               <Button
+                size="lg"
                 key={index}
                 ref={(el) => (buttonRefs.current[index] = el)}
                 value={format(date, "yyyy-MM-dd")}
@@ -187,13 +191,13 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
                   handleDateSelect(date);
                 }}
                 sx={{
-                  minWidth: 64,
                   flexShrink: 0,
+                  paddingInline: 2,
                 }}
               >
-                <Stack direction="column" spacing={0} alignItems="center">
+                <Typography size="md" sx={{ color: "common.white" }}>
                   {format(date, "EEE M/d")}
-                </Stack>
+                </Typography>
               </Button>
             ))}
           </Box>
