@@ -3,9 +3,9 @@ import { useTheme } from "@mui/joy/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { Box, List, Typography, ListItem } from "@mui/joy";
 import chroma from "chroma-js";
-import overlayList from "./OverlayList";
-import ToggleUnits from "./ToggleUnits";
-import ForecastValue from "./ForecastValue";
+import overlayList from "../utils/OverlayList";
+import ToggleUnits from "../utils/ToggleUnits";
+import ForecastValue from "../utils/ForecastValue";
 
 const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -41,7 +41,7 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
         className={!isMobile ? "glass" : ""}
         sx={{
           bgcolor: !isMobile ? "inherit" : "#696969",
-
+          zIndex: 1200,
           pointerEvents: "auto",
           userSelect: "none",
           boxShadow: "sm",
@@ -68,10 +68,7 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
           <Typography
             sx={{
               fontWeight: "bold",
-              fontSize: 14,
-              wordWrap: "break-word",
-              overflowWrap: "break-word",
-              whiteSpace: "normal",
+              fontSize: !isMobile ? "0.9rem" : "0.7rem",
             }}
           >
             <ToggleUnits
@@ -110,7 +107,7 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
                   flex: 1,
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 14,
+                  fontSize: !isMobile ? "0.9rem" : "0.7rem",
                   fontWeight: "bold",
                   color: "white",
                   p: 0.5,

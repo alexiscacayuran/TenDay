@@ -4,6 +4,8 @@ import axios from "axios";
 import { Select, Option } from "@mui/joy";
 import { geocodeService } from "esri-leaflet-geocoder";
 import { query } from "esri-leaflet";
+import { useTheme } from "@mui/joy/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const MunicitySelector = ({
   map,
@@ -13,6 +15,9 @@ const MunicitySelector = ({
   setLocation,
   selectedPolygon,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [municities, setMunicities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState("");
@@ -121,15 +126,22 @@ const MunicitySelector = ({
     <Select
       size="lg"
       value={selected}
+      {...(isMobile && {
+        renderValue: (selectedOption) =>
+          selectedOption
+            ? `${selectedOption.value}, ${forecast?.province || ""}`
+            : "",
+      })}
       onChange={handleChange}
       sx={{
-        mb: 1,
         "--Select-minHeight": 0,
         "--Select-paddingInline": "0.5rem",
-
         boxShadow: "none",
         backgroundColor: "transparent",
         borderColor: "neutral.800",
+        border: !isMobile ? "var(--variant-borderWidth) solid" : "none",
+        borderBottom: "1px solid",
+        borderRadius: !isMobile ? "" : "none",
         "&:hover": {
           backgroundColor: "transparent",
         },
@@ -137,9 +149,11 @@ const MunicitySelector = ({
       slotProps={{
         button: {
           sx: {
+            flexShrink: 1,
+
             fontWeight: "600",
             color: "neutral.800",
-            fontSize: "larger",
+            fontSize: !isMobile ? "larger" : "small",
           },
         },
         indicator: {

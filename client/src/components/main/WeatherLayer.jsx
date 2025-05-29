@@ -6,12 +6,15 @@ import { format } from "date-fns";
 import parseGeoraster from "georaster";
 import GeorasterLayer from "georaster-layer-for-leaflet";
 import chroma from "chroma-js";
-import "ih-leaflet-canvaslayer-field/dist/leaflet.canvaslayer.field.js";
+import overlayList from "../utils/OverlayList";
+import VectorField from "../../raster/VectorField";
+import VectorFieldAnim from "../../layer/VectorFieldAnim";
+// import "ih-leaflet-canvaslayer-field/dist/leaflet.canvaslayer.field.js";
 import { buffer } from "d3";
 import Dexie from "dexie";
 import Box from "@mui/joy/Box";
-import overlayList from "./OverlayList";
-import VectorField from "../raster/VectorField";
+
+const vectorWorkerPath = "../../worker/vector-worker.js";
 
 const TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const db = new Dexie("WeatherLayerCache");
@@ -21,24 +24,24 @@ db.version(2).stores({
 });
 
 const baseParticleOption = {
-  velocityScale: 1 / 500,
+  velocityScale: 1 / 1000,
   fade: 0.94,
   color: chroma("white").alpha(0.25),
   width: 2.5,
-  paths: 70000,
-  maxAge: 10,
+  paths: 15000,
+  maxAge: 50,
 };
 
 const particleOptions = [
-  { zoom: 5, width: 2.8, paths: 3600, maxAge: 125 },
-  { zoom: 6, width: 3, paths: 4800, maxAge: 120 },
-  { zoom: 7, width: 3.5, paths: 5400, maxAge: 115 },
-  { zoom: 8, width: 3.8, paths: 7500, maxAge: 110 },
-  { zoom: 9, width: 4.0, paths: 12000, maxAge: 95 },
-  { zoom: 10, width: 4.2, paths: 30000, maxAge: 75 },
-  { zoom: 11, width: 4.4, paths: 60000, maxAge: 60 },
-  { zoom: 12, width: 4.6, paths: 90000, maxAge: 55 },
-  { zoom: 13, width: 4.8, paths: 210000, maxAge: 50 },
+  { zoom: 5, width: 2.3, paths: 3600, maxAge: 125 },
+  { zoom: 6, width: 2.5, paths: 4800, maxAge: 120 },
+  { zoom: 7, width: 3.0, paths: 5400, maxAge: 115 },
+  { zoom: 8, width: 3.3, paths: 7500, maxAge: 110 },
+  { zoom: 9, width: 3.5, paths: 12000, maxAge: 95 },
+  { zoom: 10, width: 3.7, paths: 30000, maxAge: 75 },
+  { zoom: 11, width: 3.9, paths: 60000, maxAge: 60 },
+  { zoom: 12, width: 4.1, paths: 90000, maxAge: 55 },
+  { zoom: 13, width: 4.3, paths: 210000, maxAge: 50 },
 ];
 
 const writeURL = (startDate, overlay, date, isVector, isLayerClipped) => {
@@ -171,8 +174,11 @@ const WeatherLayer = ({
         caching: true,
       });
 
+      console.dir(scalarLayer);
+
       if (scalarLayerRef.current) {
         overlayLayer.current.removeLayer(scalarLayerRef.current);
+        scalarLayerRef.current.remove(); // ✅ explicit cleanup
       }
 
       overlayLayer.current.addLayer(scalarLayer);
@@ -185,13 +191,14 @@ const WeatherLayer = ({
   const renderVectorAnim = (vf) => {
     const options = {
       ...baseParticleOption,
-      ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
+      // ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
     };
 
-    const vectorLayer = L.canvasLayer.vectorFieldAnim(vf, options);
+    const vectorLayer = new VectorFieldAnim(vf, options);
 
     if (vectorLayerRef.current) {
       overlayLayer.current.removeLayer(vectorLayerRef.current);
+      vectorLayerRef.current.remove(); // ✅ for vectors
     }
 
     overlayLayer.current.addLayer(vectorLayer);
@@ -223,12 +230,9 @@ const WeatherLayer = ({
         vf = new VectorField(cached.vf);
         renderVectorAnim(vf);
       } else {
-        const worker = new Worker(
-          new URL("../worker/vector-worker.js", import.meta.url),
-          {
-            type: "module",
-          }
-        );
+        const worker = new Worker(new URL(vectorWorkerPath, import.meta.url), {
+          type: "module",
+        });
 
         const handleAbort = () => {
           worker.terminate();
@@ -266,6 +270,8 @@ const WeatherLayer = ({
           if (error) {
             console.error("Worker error:", error);
           }
+
+          worker.terminate(); // ✅ always terminate
         };
 
         signal?.removeEventListener("abort", handleAbort);
@@ -286,24 +292,25 @@ const WeatherLayer = ({
   }, [isDiscrete]);
 
   useEffect(() => {
+    const controller = new AbortController();
     localOverlay.current = overlayList.find((o) => o.name === overlay);
 
     const load = async () => {
-      const controller = new AbortController();
       setLoadingScalar(true);
       await loadScalar(controller.signal);
       setLoadingScalar(false);
-      return () => controller.abort(); // cancel previous if new one triggers
     };
 
     load();
+
+    return () => controller.abort(); // cancel previous if new one triggers
   }, [map, overlay, date, isLayerClipped]);
 
   useEffect(() => {
     const controller = new AbortController();
     const load = async () => {
       setLoadingVector(true);
-      await loadVectorAnim(controller.signa);
+      await loadVectorAnim(controller.signal);
       setLoadingVector(false);
     };
 
@@ -323,6 +330,7 @@ const WeatherLayer = ({
       // Remove the vector layer if it exists
       if (vectorLayerRef.current) {
         overlayLayer.current.removeLayer(vectorLayerRef.current);
+        vectorLayerRef.current.remove(); // ✅ for vectors
       }
     } else {
       // Add the vector layer if it exists

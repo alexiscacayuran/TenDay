@@ -9,8 +9,10 @@ import { Popup, Marker, useMap } from "react-leaflet";
 import { DivIcon } from "leaflet";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
-import "../styles.css";
+// import "../styles.css";
 import PopupContent from "./PopupContent";
+import { useTheme } from "@mui/joy/styles";
+import { useMediaQuery } from "@mui/material";
 
 const ForecastPopup = ({
   location,
@@ -28,6 +30,8 @@ const ForecastPopup = ({
   const [forecast, setForecast] = useState({});
   const [loading, setLoading] = useState(true);
   const [forecastRetrieval, setForecastRetrieval] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -121,8 +125,8 @@ const ForecastPopup = ({
         minWidth="320"
         onClose={handlePopupClose}
         closeButton={false}
-        autoPanPaddingTopLeft={[200, 80]}
-        autoPanPaddingBottomRight={[70, 80]}
+        autoPanPaddingTopLeft={!isMobile ? [200, 80] : [0, 0]}
+        autoPanPaddingBottomRight={!isMobile ? [70, 80] : [0, 0]}
       >
         <PopupContent
           forecast={forecast}

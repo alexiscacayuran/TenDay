@@ -1,6 +1,5 @@
 import React from "react";
 import { format } from "date-fns";
-
 import Button from "@mui/joy/Button";
 import Box from "@mui/joy/Box";
 import Card from "@mui/joy/Card";
@@ -19,11 +18,13 @@ import {
   faCloud,
   faCloudShowersHeavy,
 } from "@fortawesome/free-solid-svg-icons";
-import { TMaxIcon, TMeanIcon, TMinIcon } from "./CustomIcons";
-import ForecastValue from "./ForecastValue";
-import ToggleUnits from "./ToggleUnits";
+import ForecastValue from "../utils/ForecastValue";
+import ToggleUnits from "../utils/ToggleUnits";
 
 import {
+  TMaxIcon,
+  TMeanIcon,
+  TMinIcon,
   NIcon,
   NNEIcon,
   NEIcon,
@@ -40,32 +41,42 @@ import {
   WNWIcon,
   NWIcon,
   NNWIcon,
-} from "./CustomIcons";
+} from "../utils/CustomIcons";
 
 const OVERLAY_CONFIG = {
   temperature_mean: {
     title: "Mean Temperature",
-    icon: <TMeanIcon style={{ fontSize: "1.5rem" }} />,
+    icon: <TMeanIcon style={{ fontSize: "1.5rem", color: "#12467b" }} />,
     getValue: (data) => data.temperature.mean,
   },
   temperature_minimum: {
     title: "Min Temperature",
-    icon: <TMinIcon style={{ fontSize: "1.5rem" }} />,
+    icon: <TMinIcon style={{ fontSize: "1.5rem", color: "#12467b" }} />,
     getValue: (data) => data.temperature.min,
   },
   temperature_maximum: {
     title: "Max Temperature",
-    icon: <TMaxIcon style={{ fontSize: "1.5rem" }} />,
+    icon: <TMaxIcon style={{ fontSize: "1.5rem", color: "#12467b" }} />,
     getValue: (data) => data.temperature.max,
   },
   humidity: {
     title: "Humidity",
-    icon: <FontAwesomeIcon icon={faDroplet} style={{ fontSize: "1.5rem" }} />,
+    icon: (
+      <FontAwesomeIcon
+        icon={faDroplet}
+        style={{ fontSize: "1.5rem", color: "#12467b" }}
+      />
+    ),
     getValue: (data) => data.humidity,
   },
   wind: {
     title: "Wind",
-    icon: <FontAwesomeIcon icon={faWind} style={{ fontSize: "1.5rem" }} />,
+    icon: (
+      <FontAwesomeIcon
+        icon={faWind}
+        style={{ fontSize: "1.5rem", color: "#12467b" }}
+      />
+    ),
     getValue: (data) => data.wind.speed,
     getDirection: (data) => data.wind.direction,
   },
@@ -74,14 +85,19 @@ const OVERLAY_CONFIG = {
     icon: (
       <FontAwesomeIcon
         icon={faCloudShowersHeavy}
-        style={{ fontSize: "1.5rem" }}
+        style={{ fontSize: "1.5rem", color: "#12467b" }}
       />
     ),
     getValue: (data) => data.rainfall.total,
   },
   cloud: {
     title: "Clouds",
-    icon: <FontAwesomeIcon icon={faCloud} style={{ fontSize: "1.5rem" }} />,
+    icon: (
+      <FontAwesomeIcon
+        icon={faCloud}
+        style={{ fontSize: "1.5rem", color: "#12467b" }}
+      />
+    ),
     getValue: (data) => data.cloud_cover,
   },
 };
@@ -137,7 +153,7 @@ const PopupContent = React.memo(
             <CloseIcon />
           </IconButton>
         </Stack>
-        <CardOverflow color="primary" variant="soft" sx={{ minHeight: 51 }}>
+        <CardOverflow color="neutral" variant="soft" sx={{ minHeight: 51 }}>
           <CardContent orientation="horizontal" sx={{ alignItems: "center" }}>
             {loading ? (
               <Skeleton variant="circular" width={34} height={34} />
@@ -152,7 +168,10 @@ const PopupContent = React.memo(
                 sx={{ borderRadius: "md" }}
               />
             ) : (
-              <Typography color="primary.softColor" level="body-sm">
+              <Typography
+                level="body-sm"
+                sx={{ color: "var(--joy-palette-primary-700, #12467B)" }}
+              >
                 No municipal level forecast available
               </Typography>
             )}
@@ -200,7 +219,7 @@ const PopupContent = React.memo(
             />
           </IconButton>
         </Stack>
-        <CardOverflow color="primary" variant="soft">
+        <CardOverflow color="neutral" variant="soft">
           <CardContent
             orientation="horizontal"
             sx={{ alignItems: "center", p: "5px 0" }}
@@ -234,9 +253,11 @@ const PopupContent = React.memo(
                       {loading ? "Mean Temp" : config.title}
                     </Typography>
                     <Typography
-                      color="primary.softColor"
                       level={overlay === "cloud" ? "h4" : "h3"}
-                      sx={{ fontSize: overlay === "cloud" && "1rem" }}
+                      sx={{
+                        fontSize: overlay === "cloud" && "1rem",
+                        color: "#12467b",
+                      }}
                     >
                       {loading ? (
                         "28°C"

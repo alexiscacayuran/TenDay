@@ -16,7 +16,7 @@ import Tooltip from "@mui/joy/Tooltip";
 import LayerOptionMenu from "./LayerOptionMenu";
 import { motion } from "framer-motion";
 
-import { TMaxIcon, TMeanIcon, TMinIcon } from "./CustomIcons";
+import { TMaxIcon, TMeanIcon, TMinIcon } from "../utils/CustomIcons";
 
 const LayerMenu = ({
   overlay,

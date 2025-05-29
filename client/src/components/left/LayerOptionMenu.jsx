@@ -3,7 +3,11 @@ import Box from "@mui/joy/Box";
 import Typography from "@mui/joy/Typography";
 import Switch from "@mui/joy/Switch";
 import IconButton from "@mui/joy/IconButton";
-import { LayerStyleIcon, GradientIcon, ParticlesIcon } from "./CustomIcons";
+import {
+  LayerStyleIcon,
+  GradientIcon,
+  ParticlesIcon,
+} from "../utils/CustomIcons";
 import List from "@mui/joy/List";
 import ListItem from "@mui/joy/ListItem";
 import ListItemDecorator from "@mui/joy/ListItemDecorator";

@@ -267,6 +267,12 @@
   text-decoration-style: dotted !important;
 }
 
+@media (max-width: 768px) {
+  .legend-units {
+    text-decoration-color: white !important;
+  }
+}
+
 .legend-scale {
   background-color: #696969 !important;
   border-bottom-left-radius: 5px;

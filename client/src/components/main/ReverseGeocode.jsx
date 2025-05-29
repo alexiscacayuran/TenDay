@@ -1,7 +1,5 @@
-import React, { useState } from "react";
 import { reverseGeocode } from "esri-leaflet-geocoder";
-import { useMapEvents, useMap } from "react-leaflet";
-import ForecastPopup from "./ForecastPopup";
+import { useMapEvents } from "react-leaflet";
 
 const ReverseGeocode = ({ arcgisToken, setLocation, setIsLocationReady }) => {
   useMapEvents({

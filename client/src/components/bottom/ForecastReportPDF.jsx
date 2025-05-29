@@ -10,8 +10,8 @@ import {
   PDFViewer,
 } from "@react-pdf/renderer";
 import { format } from "date-fns";
-import PAGASA from "../assets/logo/pagasa-logo.png";
-import BagongPilipinas from "../assets/logo/bagong-pilipinas-logo.png";
+import PAGASA from "../../assets/logo/pagasa-logo.png";
+import BagongPilipinas from "../../assets/logo/bagong-pilipinas-logo.png";
 import {
   SunnyIconPDF,
   NoRainParCloudyIconPDF,
@@ -57,10 +57,10 @@ import {
   WNWIconPDF,
   NWIconPDF,
   NNWIconPDF,
-} from "./CustomIcons";
+} from "../utils/CustomIcons";
 import VerticalBarGraph from "./VerticalBarGraph";
-import OverlayList, { getColorScale } from "./OverlayList";
-import { convertValue } from "./ForecastValue";
+import { getColorScale } from "../utils/OverlayList";
+import { convertValue } from "../utils/ForecastValue";
 import chroma from "chroma-js";
 
 Font.register({

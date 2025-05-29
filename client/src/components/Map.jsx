@@ -4,24 +4,29 @@ import { useMediaQuery } from "@mui/material";
 import { useTheme } from "@mui/joy/styles";
 import L from "leaflet";
 import axios from "axios";
-import MapControl from "./MapControl";
-import Base from "./Base";
-import Labels from "./Labels";
-import ReverseGeocode from "./ReverseGeocode";
-import DateNavigation from "./DateNavigation";
-import Navbar from "./Navbar";
-import ForecastContainer from "./ForecastContainer";
-import LayerMenu from "./LayerMenu";
-import WeatherLayer from "./WeatherLayer";
-import Legend from "./Legend";
-import ZoomLevel from "./ZoomLevel";
-import ScaleNautic from "react-leaflet-nauticsale";
-import ForecastPopup from "./ForecastPopup";
-import Issuance from "./Issuance";
-import DateSlider from "./DateSlider";
+import Navbar from "./header/Navbar";
 
-import Stack from "@mui/joy/Stack";
-import Box from "@mui/joy/Box";
+import Base from "./main/Base";
+import Labels from "./main/Labels";
+import WeatherLayer from "./main/WeatherLayer";
+import ReverseGeocode from "./main/ReverseGeocode";
+import ForecastPopup from "./main/ForecastPopup";
+
+import DateNavigation from "./bottom/DateNavigation";
+import ForecastContainer from "./bottom/ForecastContainer";
+
+import LayerMenu from "./left/LayerMenu";
+import ScaleNautic from "react-leaflet-nauticsale";
+
+import MapControl from "./right/MapControl";
+import Legend from "./right/Legend";
+import Issuance from "./right/Issuance";
+
+import DateSlider from "./bottom/DateSlider";
+import ZoomLevel from "./utils/ZoomLevel";
+
+import { Stack, Box } from "@mui/joy";
+import { Slide } from "@mui/material";
 
 const Map = () => {
   const theme = useTheme();
@@ -141,15 +146,14 @@ const Map = () => {
           selectedPolygon={selectedPolygon}
         />
         <MapContainer
+          ref={setMap}
           center={[13, 122]}
-          zoom={8}
+          zoom={!isMobile ? 8 : 6}
           minZoom={5}
           maxZoom={20}
           maxBounds={bounds}
           maxBoundsViscosity={0.5}
           zoomControl={false}
-          ref={setMap} // Set map instance to external state
-          paddingTopLeft={[2, 2]}
         >
           <ZoomLevel setZoomLevel={setZoomLevel} />
           {isLocationReady ? (
@@ -199,6 +203,7 @@ const Map = () => {
             setIsLocationReady={setIsLocationReady}
             selectedPolygon={selectedPolygon}
           />
+          {dateReady && !isMobile && <Issuance startDate={startDate} />}
         </MapContainer>
 
         {!isMobile && (
@@ -284,76 +289,88 @@ const Map = () => {
         )}
 
         {isMobile && (
-          <>
+          <Stack
+            direction={"column"}
+            spacing={0}
+            sx={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1200,
+              justifyContent: "flex-end",
+              alignItems: "center",
+            }}
+          >
             <Stack
               direction="column"
               spacing={0}
               sx={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 1200,
+                ml: 0,
+                alignItems: "center",
+                justifyContent: "flex-end",
+                position: "relative",
+                width: "100%",
+                height: "auto",
               }}
             >
-              <Stack
-                direction="column"
-                spacing={0}
-                sx={{
-                  ml: 0,
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  position: "relative",
-                  width: "100%",
-                  height: "auto",
-                }}
-              >
-                {dateReady && (
-                  <DateSlider
-                    initialDate={new Date(startDate.current.latest_date)}
-                    range={10}
-                    setDate={setDate}
-                    date={date}
-                    open={open}
-                  />
-                )}
-                <ForecastContainer
-                  serverToken={serverToken}
-                  map={map}
-                  open={open}
-                  setOpen={setOpen}
-                  location={location}
-                  setLocation={setLocation}
-                  markerLayer={markerLayer}
-                  overlay={overlay}
-                  setOverlay={setOverlay}
-                  setIsMenuOpen={setIsMenuOpen}
-                  temp={temp}
-                  setTemp={setTemp}
-                  setActiveTooltip={setActiveTooltip}
-                  units={units}
-                  setUnits={setUnits}
-                  date={date}
-                  setDate={setDate}
-                  isDiscrete={isDiscrete}
-                  arcgisToken={arcgisToken}
-                  selectedPolygon={selectedPolygon}
-                  interactive={false}
-                />
-              </Stack>
+              {dateReady && (
+                <Slide direction="up" in={!open} mountOnEnter unmountOnExit>
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      zIndex: 1200,
+                    }}
+                  >
+                    <DateSlider
+                      initialDate={new Date(startDate.current.latest_date)}
+                      range={10}
+                      setDate={setDate}
+                      date={date}
+                      open={open}
+                    />
+                  </Box>
+                </Slide>
+              )}
+              <ForecastContainer
+                serverToken={serverToken}
+                map={map}
+                open={open}
+                setOpen={setOpen}
+                location={location}
+                setLocation={setLocation}
+                markerLayer={markerLayer}
+                overlay={overlay}
+                setOverlay={setOverlay}
+                setIsMenuOpen={setIsMenuOpen}
+                temp={temp}
+                setTemp={setTemp}
+                setActiveTooltip={setActiveTooltip}
+                units={units}
+                setUnits={setUnits}
+                date={date}
+                setDate={setDate}
+                isDiscrete={isDiscrete}
+                arcgisToken={arcgisToken}
+                selectedPolygon={selectedPolygon}
+                interactive={false}
+              />
+            </Stack>
+            {!open && (
               <Legend
                 overlay={overlay}
                 isDiscrete={isDiscrete}
                 units={units}
                 setUnits={setUnits}
               />
-            </Stack>
-          </>
+            )}
+          </Stack>
         )}
 
-        {dateReady && <Issuance startDate={startDate} />}
-
-        <MapControl map={map} />
+        {!isMobile && <MapControl map={map} />}
         <LayerMenu
           overlay={overlay}
           setOverlay={setOverlay}

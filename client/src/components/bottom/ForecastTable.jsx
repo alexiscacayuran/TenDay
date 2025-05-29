@@ -4,9 +4,11 @@ import { Typography, Link } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
-import { getColorScale } from "./OverlayList";
-import ToggleUnits from "./ToggleUnits";
-import ForecastValue from "./ForecastValue";
+import { getColorScale } from "../utils/OverlayList";
+import ToggleUnits from "../utils/ToggleUnits";
+import ForecastValue from "../utils/ForecastValue";
+import { useTheme } from "@mui/joy/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 // Weather parameters configuration
 const weatherParams = [
@@ -61,6 +63,9 @@ const ForecastTable = ({
   isDiscrete,
   isClickValid,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_mean"); // Stores last selected temperature overlay
   const [hovered, setHovered] = useState(false);
@@ -167,7 +172,10 @@ const ForecastTable = ({
                   color="neutral"
                   size="sm"
                   variant="plain"
-                  sx={{ fontSize: "0.8rem", minHeight: 0 }}
+                  sx={{
+                    fontSize: !isMobile ? "0.8rem" : "0.6rem",
+                    minHeight: 0,
+                  }}
                   context="container"
                   overlay={overlayRef}
                   units={units}
@@ -196,7 +204,7 @@ const ForecastTable = ({
                           getMedian(current, right)
                         ).css()})`
                     : hoveredColumn === index + 2
-                    ? "var(--joy-palette-primary-200, #C7DFF7)"
+                    ? "var(--joy-palette-neutral-200, #DDE7EE)"
                     : "#FFF";
 
                 const color =

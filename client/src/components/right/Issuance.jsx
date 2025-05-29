@@ -51,7 +51,7 @@ const Issuance = ({ startDate }) => {
             textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
           }}
         >
-          Next update: {format(nextUpdate, "MMM d")}
+          Expect next update on {format(nextUpdate, "MMM d")}
         </Typography>
       </Stack>
     </Box>

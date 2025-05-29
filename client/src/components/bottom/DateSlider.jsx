@@ -34,7 +34,7 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
       setSelectedIndex(index);
 
       const container = scrollRef.current;
-      const scrollTo = index * 100 + 67;
+      const scrollTo = index * 100 + 80;
 
       container.scrollTo({
         left: scrollTo,
@@ -149,9 +149,9 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
           icon={faCaretDown}
           style={{
             fontSize: "2rem",
-            color: "red",
+            color: "#3e7bff",
+            filter: "drop-shadow(0px 2px 4px 0px rgba(21 21 21 / 0.08)",
           }}
-          onClick={() => {}}
         />
       </Box>
 
@@ -187,6 +187,7 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
           const isSelected = index === selectedIndex;
           return (
             <Box
+              key={index}
               sx={{
                 backgroundColor: "neutral.500",
                 boxSizing: "border-box",
