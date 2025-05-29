@@ -184,8 +184,14 @@ export const GIZLogo = (props) => (
   <img
     alt="GIZ logo"
     src={GIZ}
+    style={{
+      width: "clamp(50px, 20vw, 90px)",
+      height: "auto",
+      objectFit: "contain",
+      margin: 0,
+      flexShrink: 1,
+    }}
     {...props}
-    style={{ width: "100px", margin: "-25px 0" }}
   ></img>
 );
 
@@ -193,8 +199,13 @@ export const BMUVIKILogo = (props) => (
   <img
     alt="BMUV-IKI logo"
     src={BMUVIK}
+    style={{
+      width: "clamp(40px, 15vw, 200px)",
+      height: "auto",
+      objectFit: "contain",
+      flexShrink: 1,
+    }}
     {...props}
-    style={{ width: "200px" }}
   ></img>
 );
 

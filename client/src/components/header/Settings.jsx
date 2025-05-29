@@ -16,6 +16,7 @@ import {
   FormLabel,
   FormHelperText,
   Box,
+  ListItemButton,
 } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
@@ -28,9 +29,18 @@ db.version(1).stores({
   vectors: "url, vectorData",
 });
 
-const Settings = ({ units, setUnits, scale, setScale }) => {
+const Settings = ({
+  units,
+  setUnits,
+  scale,
+  setScale,
+  openSidebar,
+  setOpenSidebar,
+}) => {
   const theme = useTheme();
-  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+  const isLaptop = useMediaQuery(theme.breakpoints.up("lg"));
+  const isTablet = useMediaQuery(theme.breakpoints.up("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [open, setOpen] = useState(false);
 
   const clearCache = async () => {
@@ -39,7 +49,7 @@ const Settings = ({ units, setUnits, scale, setScale }) => {
   };
 
   const renderUnitSelector = (label, options, value, onChange) => (
-    <FormControl orientation={!isBelowLaptop ? "horizontal" : "vertical"}>
+    <FormControl orientation={isLaptop ? "horizontal" : "vertical"}>
       <Box sx={{ display: "flex", flex: 1, pr: 1 }}>
         <FormLabel sx={{ typography: "title-sm" }}>{label}</FormLabel>
       </Box>
@@ -65,9 +75,17 @@ const Settings = ({ units, setUnits, scale, setScale }) => {
     </FormControl>
   );
 
-  return (
-    <>
-      {!isBelowLaptop ? (
+  const renderButton = () => {
+    const size = isLaptop
+      ? "laptop"
+      : isTablet
+      ? "tablet"
+      : isMobile
+      ? "mobile"
+      : null;
+
+    const buttons = {
+      laptop: (
         <Button
           size="lg"
           color="inherit"
@@ -82,7 +100,8 @@ const Settings = ({ units, setUnits, scale, setScale }) => {
         >
           Settings
         </Button>
-      ) : (
+      ),
+      tablet: (
         <IconButton
           size="lg"
           color="inherit"
@@ -94,17 +113,35 @@ const Settings = ({ units, setUnits, scale, setScale }) => {
             style={{ fontSize: "1.25rem", color: "#32383E" }}
           />
         </IconButton>
-      )}
+      ),
+      mobile: (
+        <ListItemButton onClick={() => setOpen(true)}>Settings</ListItemButton>
+      ),
+    };
 
+    return buttons[size] || null;
+  };
+
+  return (
+    <>
+      {renderButton()}
       <Drawer
+        size={isTablet ? "md" : "sm"}
         anchor="right"
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          if (openSidebar) setOpenSidebar(false);
+          setOpen(false);
+        }}
+        sx={{
+          "--Drawer-transitionDuration": "0s",
+          // "--Drawer-transitionFunction": "cubic-bezier(0.79,0.14,0.15,0.86)",
+        }}
         slotProps={{
           content: {
             sx: {
               bgcolor: "transparent",
-              p: { md: 1, sm: 0 },
+              p: { md: 1, xs: 0 },
               boxShadow: "none",
             },
           },
@@ -118,7 +155,7 @@ const Settings = ({ units, setUnits, scale, setScale }) => {
       >
         <Sheet
           sx={{
-            borderRadius: "md",
+            borderRadius: { md: "md", xs: 0 },
             p: 2,
             display: "flex",
             flexDirection: "column",
@@ -127,17 +164,9 @@ const Settings = ({ units, setUnits, scale, setScale }) => {
             overflow: "auto",
           }}
         >
-          <DialogTitle>
-            <Typography
-              startDecorator={
-                <FontAwesomeIcon icon={faGear} style={{ color: "#32383E" }} />
-              }
-            >
-              Settings
-            </Typography>
-          </DialogTitle>
+          <DialogTitle>Settings</DialogTitle>
           <ModalClose color="inherit" />
-          <Divider sx={{ mt: "auto" }} />
+
           <DialogContent sx={{ gap: 2 }}>
             <Typography level="title-md" sx={{ fontWeight: "bold", mt: 1 }}>
               Units and Measurements
@@ -203,9 +232,7 @@ const Settings = ({ units, setUnits, scale, setScale }) => {
             <Typography level="title-md" sx={{ fontWeight: "bold", mt: 2 }}>
               Data Management
             </Typography>
-            <FormControl
-              orientation={!isBelowLaptop ? "horizontal" : "vertical"}
-            >
+            <FormControl orientation={isLaptop ? "horizontal" : "vertical"}>
               <Box sx={{ flex: 1, pr: 1 }}>
                 <FormLabel sx={{ typography: "title-sm" }}>
                   Clear App Cache

@@ -1,5 +1,6 @@
 import React from "react";
 import "leaflet/dist/leaflet.css";
+import "./styles.css";
 import Map from "./components/Map";
 import { joyTheme, muiTheme } from "./theme";
 import {

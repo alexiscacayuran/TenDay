@@ -25,6 +25,7 @@ import {
   faSearch,
   faBars,
 } from "@fortawesome/free-solid-svg-icons";
+import Sidebar from "./Sidebar";
 
 // Use existing Dexie instance for OverlayCache
 const db = new Dexie("WeatherLayerCache");
@@ -237,6 +238,12 @@ const Navbar = ({
                 onClick={() => {}}
               />
             </IconButton>
+            <PAGASALogo
+              style={{
+                height: !isBelowLaptop ? "40px" : "35px",
+                marginRight: 10,
+              }}
+            />
             <img
               src={Logo}
               style={{
@@ -302,27 +309,12 @@ const Navbar = ({
                 </DialogContent>
               </ModalDialog>
             </Modal>
-            <IconButton
-              size="lg"
-              sx={{
-                backgroundColor: "rgba(255, 255, 255, 0.4)",
-                backdropFilter: "blur(7px)",
-                borderRadius: "25px",
-                boxShadow: "sm",
-                "&:hover": {
-                  backgroundColor: "neutral.700",
-                  color: "common.white",
-                },
-              }}
-              onClick={() => {}}
-            >
-              <FontAwesomeIcon
-                icon={faBars}
-                style={{
-                  fontSize: "1.25rem",
-                }}
-              />
-            </IconButton>
+            <Sidebar
+              units={units}
+              setUnits={setUnits}
+              scale={scale}
+              setScale={setScale}
+            />
           </Stack>
         </Box>
       )}

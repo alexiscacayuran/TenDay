@@ -230,9 +230,12 @@ const WeatherLayer = ({
         vf = new VectorField(cached.vf);
         renderVectorAnim(vf);
       } else {
-        const worker = new Worker(new URL(vectorWorkerPath, import.meta.url), {
-          type: "module",
-        });
+        const worker = new Worker(
+          `${process.env.PUBLIC_URL}/worker/vector-worker.js`,
+          {
+            type: "classic",
+          }
+        );
 
         const handleAbort = () => {
           worker.terminate();
