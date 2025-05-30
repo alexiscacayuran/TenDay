@@ -9,7 +9,7 @@ import {
   Font,
   PDFViewer,
 } from "@react-pdf/renderer";
-import { format } from "date-fns";
+import { format, isAfter } from "date-fns";
 import PAGASA from "../../assets/logo/pagasa-logo.png";
 import BagongPilipinas from "../../assets/logo/bagong-pilipinas-logo.png";
 import {
@@ -811,11 +811,12 @@ const ForecastReportPDF = ({
       ? styles.weatherParamsContainerAlt
       : styles.weatherParamsContainer;
 
-  const todayForecast = forecast.forecasts.find(
-    (f) =>
-      format(new Date(f.date), "yyyy-MM-dd") ===
-      format(new Date(), "yyyy-MM-dd")
-  );
+  const todayForecast =
+    forecast.forecasts.find(
+      (f) =>
+        format(new Date(f.date), "yyyy-MM-dd") ===
+        format(new Date(), "yyyy-MM-dd")
+    ) || forecast.forecasts[9];
 
   const renderWeatherIcon = () => {
     if (!todayForecast) return null;
@@ -982,7 +983,13 @@ const ForecastReportPDF = ({
 
             <View style={todayContainerStyle}>
               <Text style={styles.todayDate}>
-                {"TODAY " + format(new Date(), "MMM d").toUpperCase()}
+                {"TODAY " +
+                  format(
+                    isAfter(new Date(), new Date(forecast.forecasts[9].date))
+                      ? new Date(forecast.forecasts[9].date)
+                      : new Date(),
+                    "MMM d"
+                  ).toUpperCase()}
               </Text>
               <View style={weatherParamsContainerStyle}>
                 <View style={styles.weatherParamContainer}>

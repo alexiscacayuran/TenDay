@@ -16,6 +16,7 @@ import {
   DialogContent,
   Modal,
   ModalDialog,
+  Chip,
 } from "@mui/joy";
 
 import Logo from "../../assets/logo/logo-rgb-light.png";
@@ -177,16 +178,14 @@ const Navbar = ({
               boxShadow: "sm",
             }}
           >
-            <Button color="inherit" variant="plain">
+            <Button color="inherit">
               <Typography
                 level="title-md"
                 sx={{
-                  // color: "var(--joy-palette-neutral-700, #32383E)",
-                  background: " #3E7BFF",
                   background:
                     "-webkit-linear-gradient(320deg,rgba(62, 123, 255, 1) 0%, #5C33E1)",
-                  fontWeight: "bolder",
-                  letterSpacing: "1px",
+                  fontWeight: 900,
+                  letterSpacing: "2px",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}

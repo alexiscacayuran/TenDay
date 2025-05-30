@@ -200,7 +200,7 @@ export const BMUVIKILogo = (props) => (
     alt="BMUV-IKI logo"
     src={BMUVIK}
     style={{
-      width: "clamp(40px, 15vw, 200px)",
+      width: "clamp(180px, 15vw, 200px)",
       height: "auto",
       objectFit: "contain",
       flexShrink: 1,

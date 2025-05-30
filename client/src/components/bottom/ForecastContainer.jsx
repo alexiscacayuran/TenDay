@@ -777,9 +777,9 @@ const ForecastContainer = ({
                   spacing={0}
                   sx={{
                     position: "relative",
-                    justifyContent: "flex-end",
+                    justifyContent: "space-between",
                     alignItems: "flex-start",
-                    ml: 1,
+
                     mb: !isMobile ? 1 : 0,
                   }}
                 >
@@ -791,10 +791,10 @@ const ForecastContainer = ({
                       onClick={() => setOpenDownload(true)}
                       sx={{
                         fontSize: "0.7rem",
-                        fontWeight: 300,
+
                         color: "neutral.700",
                         paddingInline: 0,
-                        mr: 1,
+                        mr: 1.5,
                       }}
                       startDecorator={
                         <DownloadIcon

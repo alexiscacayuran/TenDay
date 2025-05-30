@@ -13,8 +13,8 @@ import VectorFieldAnim from "../../layer/VectorFieldAnim";
 import { buffer } from "d3";
 import Dexie from "dexie";
 import Box from "@mui/joy/Box";
-
-const vectorWorkerPath = "../../worker/vector-worker.js";
+import { useTheme } from "@mui/joy/styles";
+import { useMediaQuery } from "@mui/material";
 
 const TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const db = new Dexie("WeatherLayerCache");
@@ -91,6 +91,10 @@ const WeatherLayer = ({
   open,
   zoomLevel,
 }) => {
+  const theme = useTheme();
+  const isLaptop = useMediaQuery(theme.breakpoints.up("lg"));
+  const isTablet = useMediaQuery(theme.breakpoints.up("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const map = useMap();
   const localOverlay = useRef(overlayList.find((o) => o.name === overlay));
   const colorScale = useRef(null);
@@ -348,7 +352,7 @@ const WeatherLayer = ({
       <Box
         sx={{
           position: "fixed",
-          bottom: open ? 310 : 80,
+          bottom: open ? (isTablet ? 260 : 250) : isTablet ? 80 : 90,
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 999,
