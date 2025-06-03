@@ -386,6 +386,13 @@ const Map = () => {
           setActiveTooltip={setActiveTooltip}
           isLayerClipped={isLayerClipped}
           setIsLayerClipped={setIsLayerClipped}
+          arcgisToken={arcgisToken}
+          setLocation={setLocation}
+          map={map}
+          setIsLocationReady={setIsLocationReady}
+          selectedPolygon={selectedPolygon}
+          openContainer={open}
+          setOpenContainer={setOpen}
         />
       </>
     ),

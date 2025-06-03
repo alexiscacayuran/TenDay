@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 import { format } from "date-fns";
 import parseGeoraster from "georaster";
 import GeorasterLayer from "georaster-layer-for-leaflet";
@@ -9,7 +8,6 @@ import chroma from "chroma-js";
 import overlayList from "../utils/OverlayList";
 import VectorField from "../../raster/VectorField";
 import VectorFieldAnim from "../../layer/VectorFieldAnim";
-// import "ih-leaflet-canvaslayer-field/dist/leaflet.canvaslayer.field.js";
 import { buffer } from "d3";
 import Dexie from "dexie";
 import Box from "@mui/joy/Box";
@@ -32,17 +30,17 @@ const baseParticleOption = {
   maxAge: 50,
 };
 
-const particleOptions = [
-  { zoom: 5, width: 2.3, paths: 3600, maxAge: 125 },
-  { zoom: 6, width: 2.5, paths: 4800, maxAge: 120 },
-  { zoom: 7, width: 3.0, paths: 5400, maxAge: 115 },
-  { zoom: 8, width: 3.3, paths: 7500, maxAge: 110 },
-  { zoom: 9, width: 3.5, paths: 12000, maxAge: 95 },
-  { zoom: 10, width: 3.7, paths: 30000, maxAge: 75 },
-  { zoom: 11, width: 3.9, paths: 60000, maxAge: 60 },
-  { zoom: 12, width: 4.1, paths: 90000, maxAge: 55 },
-  { zoom: 13, width: 4.3, paths: 210000, maxAge: 50 },
-];
+// const particleOptions = [
+//   { zoom: 5, width: 2.3, paths: 3600, maxAge: 125 },
+//   { zoom: 6, width: 2.5, paths: 4800, maxAge: 120 },
+//   { zoom: 7, width: 3.0, paths: 5400, maxAge: 115 },
+//   { zoom: 8, width: 3.3, paths: 7500, maxAge: 110 },
+//   { zoom: 9, width: 3.5, paths: 12000, maxAge: 95 },
+//   { zoom: 10, width: 3.7, paths: 30000, maxAge: 75 },
+//   { zoom: 11, width: 3.9, paths: 60000, maxAge: 60 },
+//   { zoom: 12, width: 4.1, paths: 90000, maxAge: 55 },
+//   { zoom: 13, width: 4.3, paths: 210000, maxAge: 50 },
+// ];
 
 const writeURL = (startDate, overlay, date, isVector, isLayerClipped) => {
   const formattedStartDate = format(startDate, "yyyyMMdd");
@@ -92,9 +90,7 @@ const WeatherLayer = ({
   zoomLevel,
 }) => {
   const theme = useTheme();
-  const isLaptop = useMediaQuery(theme.breakpoints.up("lg"));
   const isTablet = useMediaQuery(theme.breakpoints.up("md"));
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const map = useMap();
   const localOverlay = useRef(overlayList.find((o) => o.name === overlay));
   const colorScale = useRef(null);

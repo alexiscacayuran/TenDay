@@ -36,6 +36,7 @@ const Search = ({
   selectedPolygon,
   searchLayout,
   setSearchLayout,
+  isLocateOnly,
 }) => {
   const theme = useTheme();
   const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
@@ -163,189 +164,208 @@ const Search = ({
   };
 
   return (
-    <Stack
-      direction="row"
-      spacing={1}
-      sx={{
-        mr: { md: "1.25rem", lg: 0 },
-
-        flexGrow: 1,
-        flexShrink: 1,
-        justifyContent: "flex-start",
-        alignItems: !searchLayout ? "center" : "flex-start",
-      }}
-    >
-      <Stack
-        direction="column"
-        spacing={0}
-        sx={{
-          flexGrow: 1,
-          flexShrink: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          minWidth: 100,
-        }}
-      >
-        <Input
-          placeholder={
-            location?.municity
-              ? `${location.municity}, ${location.province}`
-              : "Search for location..."
-          }
-          value={input}
-          onChange={handleInputChange}
-          startDecorator={
-            <FontAwesomeIcon
-              icon={faSearch}
-              style={{ fontSize: "1.25rem", color: "white" }}
-            />
-          }
-          size={isBelowLaptop ? "lg" : "md"}
-          variant="solid"
+    <>
+      {!isLocateOnly ? (
+        <Stack
+          direction="row"
+          spacing={1}
           sx={{
-            flexShrink: 1,
+            mr: { md: "1.25rem", lg: 0 },
+
             flexGrow: 1,
-            width: "100%",
-            minWidth: 0,
-            "--Input-radius": "24px",
-            backgroundColor: { xs: "neutral.500", lg: "neutral.600" },
-            color: "common.white",
-            border: !searchLayout ? "none" : "2px solid white",
+            flexShrink: 1,
+            justifyContent: "flex-start",
+            alignItems: !searchLayout ? "center" : "flex-start",
           }}
-          endDecorator={
-            input && (
-              <IconButton
-                size="sm"
-                color="inherit"
-                onClick={() => {
-                  setSuggestions([]);
-                  setInput("");
-                }}
-                sx={{ bgcolor: "transparent", color: "white" }}
-              >
-                <FontAwesomeIcon
-                  icon={faTimes}
-                  style={{ fontSize: "1.25rem" }}
-                />
-              </IconButton>
-            )
-          }
-        />
-        {suggestions.length > 0 && (
-          <Sheet
-            color="neutral"
-            variant="solid"
+        >
+          <Stack
+            direction="column"
+            spacing={0}
             sx={{
-              width: !searchLayout ? "max-content" : "91vw",
-              borderRadius: "sm",
-              position: "absolute",
-              top: { lg: 70, md: 50, xs: 70 },
-              left: { lg: 160, md: 280, xs: 25 },
-              userSelect: "none",
+              flexGrow: 1,
+              flexShrink: 1,
+              justifyContent: "center",
+              alignItems: "center",
+              minWidth: 100,
             }}
           >
-            <Box sx={{ mx: 1, mt: 1 }}>
-              <List
+            <Input
+              placeholder={
+                location?.municity
+                  ? `${location.municity}, ${location.province}`
+                  : "Search for location..."
+              }
+              value={input}
+              onChange={handleInputChange}
+              startDecorator={
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  style={{ fontSize: "1.25rem", color: "white" }}
+                />
+              }
+              size={isBelowLaptop ? "lg" : "md"}
+              variant="solid"
+              sx={{
+                flexShrink: 1,
+                flexGrow: 1,
+                width: "100%",
+                minWidth: 0,
+                "--Input-radius": "24px",
+                backgroundColor: { xs: "neutral.500", lg: "neutral.600" },
+                color: "common.white",
+                border: !searchLayout ? "none" : "2px solid white",
+              }}
+              endDecorator={
+                input && (
+                  <IconButton
+                    size="sm"
+                    color="inherit"
+                    onClick={() => {
+                      setSuggestions([]);
+                      setInput("");
+                    }}
+                    sx={{ bgcolor: "transparent", color: "white" }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faTimes}
+                      style={{ fontSize: "1.25rem" }}
+                    />
+                  </IconButton>
+                )
+              }
+            />
+            {suggestions.length > 0 && (
+              <Sheet
+                color="neutral"
+                variant="solid"
                 sx={{
-                  minWidth: 280,
+                  width: !searchLayout ? "max-content" : "91vw",
+                  borderRadius: "sm",
+                  position: "absolute",
+                  top: { lg: 70, md: 50, xs: 70 },
+                  left: { lg: 160, md: 280, xs: 25 },
+                  userSelect: "none",
                 }}
               >
-                {suggestions.map((s, i) => (
-                  <div key={i}>
-                    <ListItem
-                      endAction={
-                        <Tooltip title="See on map">
-                          <IconButton
-                            color="inherit"
+                <Box sx={{ mx: 1, mt: 1 }}>
+                  <List
+                    sx={{
+                      minWidth: 280,
+                    }}
+                  >
+                    {suggestions.map((s, i) => (
+                      <div key={i}>
+                        <ListItem
+                          endAction={
+                            <Tooltip title="See on map">
+                              <IconButton
+                                color="inherit"
+                                sx={{
+                                  fontSize: "1.25rem",
+                                  color: "white",
+                                }}
+                                onClick={() => handleFlyToLocation(s.text)}
+                              >
+                                <MapIcon />
+                              </IconButton>
+                            </Tooltip>
+                          }
+                        >
+                          <ListItemButton
                             sx={{
-                              fontSize: "1.25rem",
-                              color: "white",
+                              '&:not(.Mui-selected, [aria-selected="true"]):hover':
+                                {
+                                  backgroundColor: "neutral.700",
+                                  borderRadius: "sm",
+                                },
+                              '&:not(.Mui-selected, [aria-selected="true"]):active':
+                                {
+                                  backgroundColor: "neutral.700",
+                                  borderRadius: "sm",
+                                },
                             }}
-                            onClick={() => handleFlyToLocation(s.text)}
+                            onClick={() => handleSelectSuggestion(s.text)}
                           >
-                            <MapIcon />
-                          </IconButton>
-                        </Tooltip>
-                      }
-                    >
-                      <ListItemButton
-                        sx={{
-                          '&:not(.Mui-selected, [aria-selected="true"]):hover':
-                            {
-                              backgroundColor: "neutral.700",
-                              borderRadius: "sm",
-                            },
-                          '&:not(.Mui-selected, [aria-selected="true"]):active':
-                            {
-                              backgroundColor: "neutral.700",
-                              borderRadius: "sm",
-                            },
-                        }}
-                        onClick={() => handleSelectSuggestion(s.text)}
-                      >
-                        <Stack spacing={0}>
-                          <Typography
-                            level="title-lg"
-                            sx={{ color: "primary.400" }}
-                          >
-                            {s.text.split(", ")[0]}
-                          </Typography>
-                          <Typography level="title-sm" sx={{ color: "white" }}>
-                            {s.text.split(", ")[1]}
-                            {s.text.split(", ").length > 3
-                              ? ", " + s.text.split(", ")[2]
-                              : ""}
-                          </Typography>
-                        </Stack>
-                      </ListItemButton>
-                    </ListItem>
-                    {i < suggestions.length - 1 && (
-                      <ListDivider
-                        sx={{ backgroundColor: "white" }}
-                        inset="gutter"
-                      />
-                    )}
-                  </div>
-                ))}
-              </List>
-            </Box>
-          </Sheet>
-        )}
-      </Stack>
+                            <Stack spacing={0}>
+                              <Typography
+                                level="title-lg"
+                                sx={{ color: "primary.400" }}
+                              >
+                                {s.text.split(", ")[0]}
+                              </Typography>
+                              <Typography
+                                level="title-sm"
+                                sx={{ color: "white" }}
+                              >
+                                {s.text.split(", ")[1]}
+                                {s.text.split(", ").length > 3
+                                  ? ", " + s.text.split(", ")[2]
+                                  : ""}
+                              </Typography>
+                            </Stack>
+                          </ListItemButton>
+                        </ListItem>
+                        {i < suggestions.length - 1 && (
+                          <ListDivider
+                            sx={{ backgroundColor: "white" }}
+                            inset="gutter"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </List>
+                </Box>
+              </Sheet>
+            )}
+          </Stack>
 
-      {!searchLayout ? (
-        <IconButton
-          color="neutral"
-          variant="solid"
-          onClick={handleLocate}
-          size={isBelowLaptop ? "lg" : "md"}
-          sx={{
-            borderRadius: "24px",
-            backgroundColor: isBelowLaptop ? "neutral.500" : "neutral.600",
-          }}
-        >
+          {!searchLayout ? (
+            <IconButton
+              color="neutral"
+              variant="solid"
+              onClick={handleLocate}
+              size={isBelowLaptop ? "lg" : "md"}
+              sx={{
+                borderRadius: "24px",
+                backgroundColor: isBelowLaptop ? "neutral.500" : "neutral.600",
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faLocationCrosshairs}
+                style={{ fontSize: "1.25rem", color: "white" }}
+              />
+            </IconButton>
+          ) : (
+            <Button
+              size="lg"
+              color="inherit"
+              sx={{
+                color: "common.white",
+                border: "2px solid white",
+                borderRadius: "20px",
+              }}
+              onClick={() => {
+                setSearchLayout(undefined);
+              }}
+            >
+              esc
+            </Button>
+          )}
+        </Stack>
+      ) : (
+        <IconButton color="inherit" onClick={handleLocate} size="lg">
           <FontAwesomeIcon
             icon={faLocationCrosshairs}
-            style={{ fontSize: "1.25rem", color: "white" }}
+            style={{
+              fontSize: "1.5rem",
+              color: "white",
+              WebkitFilter: "drop-shadow(1px 1px 2px rgba(21, 21, 21, 0.2)",
+              filter: "drop-shadow(1px 1px 2px rgba(21, 21, 21, 0.2)",
+            }}
           />
         </IconButton>
-      ) : (
-        <Button
-          size="lg"
-          color="inherit"
-          sx={{
-            color: "common.white",
-            border: "2px solid white",
-            borderRadius: "20px",
-          }}
-          onClick={() => {
-            setSearchLayout(undefined);
-          }}
-        >
-          esc
-        </Button>
       )}
-    </Stack>
+    </>
   );
 };
 

@@ -150,7 +150,8 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
           style={{
             fontSize: "2rem",
             color: "#3e7bff",
-            filter: "drop-shadow(0px 2px 4px 0px rgba(21 21 21 / 0.08)",
+            WebkitFilter: "drop-shadow(1px 1px 2px rgba(21, 21, 21, 0.2)",
+            filter: "drop-shadow(1px 1px 2px rgba(21, 21, 21, 0.2)",
           }}
         />
       </Box>
@@ -205,7 +206,7 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
                   height: "83%",
                   flex: "0 0 auto",
                   backgroundColor: isSelected ? "neutral.700" : "neutral.500",
-                  borderRadius: isSelected ? "sm" : "0",
+                  borderRadius: isSelected ? "lg" : "0",
                   color: "white",
                   display: "flex",
                   alignItems: "center",
