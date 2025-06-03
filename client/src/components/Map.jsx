@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup } from "react-leaflet";
 // import { CssVarsProvider } from "@mui/joy/styles";
 import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import L from "leaflet";
 import axios from "axios";
