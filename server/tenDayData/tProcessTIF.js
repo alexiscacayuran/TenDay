@@ -103,6 +103,7 @@ export const uploadForecastTIF = async (year, month, day) => {
   const BUCKET_NAME = 'tendayforecast';
 
   const processFolder = async (year, month, day) => {
+    try {
     const startTime = Date.now();
     const monthNumber = String(month).padStart(2, '0');
     const monthName = moment().month(month - 1).format('MMMM');
@@ -110,8 +111,9 @@ export const uploadForecastTIF = async (year, month, day) => {
     const dayPath = path.join(SOURCE_PATH, year, `${monthNumber}_${monthName}`, dayFolder);
 
     if (!fs.existsSync(dayPath)) {
-      console.error(`Day folder not found: ${dayPath}`);
-      return;
+      const msg = `Day folder not found: ${dayPath}`;
+      console.error(msg);
+      return { success: false, message: msg };
     }
 
     const folders = ['MAX', 'MIN', 'MEAN', 'RH', 'TCC', 'TP', 'WS'];
@@ -220,8 +222,12 @@ ${messagePlain}
 👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍👍
 `;
     console.log(messageDecorated);
-    return messagePlain;
-  };
+    return { success: true, message: messagePlain };
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return { success: false, message: `Unexpected error: ${error.message}` };
+  }
+};
 
   return await processFolder(year, month, day);
 };

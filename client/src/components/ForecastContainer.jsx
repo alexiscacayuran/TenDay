@@ -256,6 +256,7 @@ const ForecastContainer = ({
     } else {
       const fetchFullForecast = async () => {
         try {
+          console.log("serverToken", serverToken); // make sure it's not undefined or null
           const response = await axios.get("/fullInternal", {
             params: {
               municity: location.municity,
