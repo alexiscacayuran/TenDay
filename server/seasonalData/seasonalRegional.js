@@ -1,5 +1,7 @@
 import express from "express";
 import { pool, redisClient } from "../db.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
+import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
@@ -38,8 +40,11 @@ const regionMap = {
   "13": "Caraga (Region XIII)",
 };
 
-router.get("/regSeasonal", async (req, res) => {
+router.get("/regSeasonal", authenticateToken(7), async (req, res) => {
   try {
+    const api_id = 7;
+    await logApiRequest(req, api_id); // 📝 Log API usage
+
     const { region, value, month, year } = req.query;
     console.log("Received query:", req.query);
 
@@ -72,11 +77,10 @@ router.get("/regSeasonal", async (req, res) => {
       return res.status(404).json({ error: "No provinces found for the region" });
     }
 
-    // Generate correct YYYY-MM-01 dates
     const startMonth = parseInt(month, 10);
     const startYear = parseInt(year, 10);
-
     const selectedDates = [];
+
     for (let i = 0; i < 6; i++) {
       const monthIndex = startMonth - 1 + i;
       const yearOffset = Math.floor(monthIndex / 12);
@@ -176,7 +180,7 @@ router.get("/regSeasonal", async (req, res) => {
     res.json(formattedData);
 
   } catch (error) {
-    console.error("Error in /seasonal-reg:", error);
+    console.error("Error in /regSeasonal:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
