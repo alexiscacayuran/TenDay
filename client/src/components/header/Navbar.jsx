@@ -49,8 +49,8 @@ const Navbar = ({
   selectedPolygon,
 }) => {
   const theme = useTheme();
-  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   const [searchLayout, setSearchLayout] = useState(undefined);
 

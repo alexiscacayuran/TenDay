@@ -33,10 +33,10 @@ import LogoDark from "../../assets/logo/logo-rgb-dark.png";
 const About = ({ openSidebar, setOpenSidebar }) => {
   const [open, setOpen] = useState(false);
   const theme = useTheme();
-  const isLaptop = useMediaQuery(theme.breakpoints.up("lg"));
-  const isTablet = useMediaQuery(theme.breakpoints.up("md"));
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+  const isLaptop = useMediaQuery((theme) => theme.breakpoints.up("lg"));
+  const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
+  const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
 
   const renderButton = () => {
     const size = isLaptop
@@ -128,7 +128,9 @@ const About = ({ openSidebar, setOpenSidebar }) => {
             overflow: "auto",
           }}
         >
-          <DialogTitle>About</DialogTitle>
+          <DialogTitle sx={{ fontSize: "1.4rem", fontWeight: 900 }}>
+            About
+          </DialogTitle>
           <ModalClose color="inherit" />
 
           <DialogContent sx={{ gap: 2, p: 1 }}>

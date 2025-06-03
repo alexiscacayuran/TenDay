@@ -30,8 +30,8 @@ import { Slide } from "@mui/material";
 
 const Map = () => {
   const theme = useTheme();
-  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   useEffect(() => {
     document.body.style.overflow = "hidden";

@@ -38,9 +38,9 @@ const Settings = ({
   setOpenSidebar,
 }) => {
   const theme = useTheme();
-  const isLaptop = useMediaQuery(theme.breakpoints.up("lg"));
-  const isTablet = useMediaQuery(theme.breakpoints.up("md"));
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isLaptop = useMediaQuery((theme) => theme.breakpoints.up("lg"));
+  const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
   const [open, setOpen] = useState(false);
 
   const clearCache = async () => {
@@ -164,7 +164,9 @@ const Settings = ({
             overflow: "auto",
           }}
         >
-          <DialogTitle>Settings</DialogTitle>
+          <DialogTitle sx={{ fontSize: "1.4rem", fontWeight: 900 }}>
+            Settings
+          </DialogTitle>
           <ModalClose color="inherit" />
 
           <DialogContent sx={{ gap: 2 }}>

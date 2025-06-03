@@ -16,7 +16,7 @@ const MunicitySelector = ({
   selectedPolygon,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   const [municities, setMunicities] = useState([]);
   const [loading, setLoading] = useState(true);

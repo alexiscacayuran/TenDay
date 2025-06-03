@@ -18,8 +18,8 @@ function generateDateRange(startDate, range) {
 
 const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
   const theme = useTheme();
-  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   const [localDate, setlocalDate] = useState(new Date());
   const [dateRange] = useState(generateDateRange(initialDate, range));
@@ -137,6 +137,7 @@ const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
             "--ButtonGroup-separatorColor": "transparent",
             maxWidth: "85vw",
             boxShadow: "sm",
+            borderRadius: "lg",
           }}
         >
           <IconButton

@@ -140,7 +140,7 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
           top: 15,
           left: "50%",
           transform: "translateX(-50%)",
-          borderRadius: "5px",
+          borderRadius: "lg",
           zIndex: 10,
           pointerEvents: "none",
         }}

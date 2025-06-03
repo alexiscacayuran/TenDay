@@ -60,9 +60,9 @@ const LayerMenu = ({
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [localTemp, setLocalTemp] = useState();
   const theme = useTheme();
-  const isLaptop = useMediaQuery(theme.breakpoints.up("lg"));
-  const isTablet = useMediaQuery(theme.breakpoints.up("md"));
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isLaptop = useMediaQuery((theme) => theme.breakpoints.up("lg"));
+  const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   const [open, setOpen] = useState(false);
 

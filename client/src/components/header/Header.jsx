@@ -7,7 +7,7 @@ import Logo from "../../assets/logo/logo-rgb-light.png";
 
 const Header = (props) => {
   const theme = useTheme();
-  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+  const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
 
   return (
     <Box sx={{ pointerEvents: "auto", width: "600px", flexShrink: 1 }}>

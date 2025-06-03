@@ -31,7 +31,7 @@ const ForecastPopup = ({
   const [loading, setLoading] = useState(true);
   const [forecastRetrieval, setForecastRetrieval] = useState(false);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   useEffect(() => {
     const handleKeyPress = (event) => {

@@ -45,8 +45,7 @@ export const handleToggle = (prevUnits, overlay) => {
 };
 
 const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
   const adaptiveColor = !isMobile
     ? "var(--joy-palette-neutral-700, #32383E)"
     : "common.white";
