@@ -1,7 +1,6 @@
 import express from "express";
 import fs from "fs";
 import cors from "cors";
-import multer from "multer";
 import jwtAuth from "./route/jwtAuth.js";
 import dashboard from "./route/dashboard.js";
 import bodyParser from "body-parser";
@@ -297,7 +296,7 @@ app.get("/seasonal-date", authenticate, async (req, res) => {
     }
 
     // Process seasonal data
-    await processSeasonalData(batch, folderPath, userId); // Pass userID to track the user
+    await processSeasonalData(batch, folderPath, userId); 
     res.send("Seasonal data processed successfully.");
   } catch (error) {
     console.error("Error processing seasonal data:", error);
@@ -403,7 +402,7 @@ app.get("/seasonalprocess", async (req, res) => {
 app.use("/api", tokenRoutes);
 app.use("/api", seasonalRoutes);
 
-app.use("/seasonal-reg", seasonalDataRegional);
+app.use("/api/v1", seasonalDataRegional);
 
 //Admin
 app.use("/api", apiOrg);
