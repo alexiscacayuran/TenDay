@@ -16,7 +16,6 @@ import {
   DialogContent,
   Modal,
   ModalDialog,
-  Chip,
 } from "@mui/joy";
 
 import Logo from "../../assets/logo/logo-rgb-light.png";
@@ -100,43 +99,17 @@ const Navbar = ({
               }}
             />
             {!isBelowLaptop ? (
-              <Stack
-                direction="column"
-                spacing={0}
+              <Typography
                 sx={{
-                  justifyContent: "center",
-                  alignItems: "flex-start",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  maxWidth: "100%", // Optional: ensures it doesn't overflow parent
-                  userSelect: "none",
+                  color: "white",
+                  lineHeight: 1.2,
+                  fontWeight: "bold",
+                  fontSize: "1rem",
+                  textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
                 }}
               >
-                <Typography
-                  sx={{
-                    color: "white",
-                    lineHeight: 1.3,
-                    fontSize: "0.7rem",
-                    textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
-                  }}
-                >
-                  Department of Science and Technology
-                </Typography>
-                <Typography
-                  sx={{
-                    color: "white",
-                    lineHeight: 1.2,
-                    fontWeight: "bold",
-                    fontSize: "0.8rem",
-                    textShadow: "1.5px 1.5px 2px rgba(0, 0, 0, 0.5)",
-                  }}
-                >
-                  Philippine Atmospheric, Geophysical, and
-                  <br />
-                  Astronomical Services Administration
-                </Typography>
-              </Stack>
+                DOST-PAGASA
+              </Typography>
             ) : null}
           </Stack>
 

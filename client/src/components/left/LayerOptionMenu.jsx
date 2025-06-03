@@ -36,10 +36,9 @@ const LayerOptionMenu = ({
         {(popupState) => (
           <>
             <IconButton
-              color="neutral"
-              variant="plain"
               size="lg"
               sx={{
+                borderRadius: "lg",
                 boxShadow: "sm",
                 fontSize: "1.5rem",
                 "--IconButton-size": "3.25rem",
