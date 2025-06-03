@@ -3,7 +3,7 @@ import { pool } from "../db.js";
 import Redis from 'ioredis';
 const redis = new Redis();
 
-// Function to delete expired records based on start_date + 6 days
+// Function to delete expired records based on start_date + 7 days
 async function deleteOldRecords() {
   try {
     // Delete from dependent table first
@@ -11,14 +11,14 @@ async function deleteOldRecords() {
       DELETE FROM rainfall
       WHERE date_id IN (
         SELECT id FROM date
-        WHERE start_date + interval '6 days' <= CURRENT_DATE
+        WHERE start_date + interval '7 days' <= CURRENT_DATE
       );
     `);
 
     // Then delete from date table
     const result = await pool.query(`
       DELETE FROM date
-      WHERE start_date + interval '6 days' <= CURRENT_DATE;
+      WHERE start_date + interval '7 days' <= CURRENT_DATE;
     `);
 
     console.log(`✅ Deleted ${result.rowCount} expired records from date table.`);

@@ -66,6 +66,8 @@ import apiOrg from "./admin/apiOrg.js";
 
 //CERAM
 import { uploadCeramCSV } from "./ceram/uploadCSV.js";
+import {getCeramData } from './ceram/getCeram.js';
+import ceramRoute from "./ceram/ceram.js";
 
 //Extemes
 import { uploadTIF } from "./ceram/uploadTIF.js";
@@ -416,6 +418,15 @@ app.get("/uploadCeramCSV", async (req, res) => {
     res.status(500).json({ error: "Failed to upload CSV files" });
   }
 });
+
+app.get('/api/get-ceram', authenticate, async (req, res) => {
+  const userId = req.user;
+  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  await getCeramData(userId, res);
+});
+
+app.use("/api/v1", ceramRoute); 
+
 
 //CERAM
 app.get("/uploadExtremesTIF", async (req, res) => {

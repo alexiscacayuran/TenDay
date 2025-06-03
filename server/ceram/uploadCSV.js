@@ -4,7 +4,7 @@ import s3 from '../aws.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 export const uploadCeramCSV = async () => {
-  const SOURCE_PATH = '\\\\172.17.17.35\\iaas\\CERAM\\CMIP6\\CSV';
+  const SOURCE_PATH = '\\\\172.17.17.35\\iaas\\CERAM\\CMIP6\\CSV\\SSPs 126_245_585\\Province';
   const BUCKET_NAME = 'ceram';
   const S3_FOLDER = 'CSV';
 
