@@ -105,7 +105,7 @@ const ForecastContainer = ({
   const [selectedMunicities, setSelectedMunicities] = useState([]);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   useEffect(() => {
     setDocUnits(units);
@@ -139,7 +139,7 @@ const ForecastContainer = ({
   const isTableCollapsed = useMediaQuery("(max-width:1295px)");
   const [shadowLeft, setShadowLeft] = useState(false);
   const [shadowRight, setShadowRight] = useState(isTableCollapsed);
-  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+  const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
 
   useEffect(() => {
     setShadowLeft(false);

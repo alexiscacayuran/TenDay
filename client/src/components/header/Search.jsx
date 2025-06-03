@@ -39,7 +39,7 @@ const Search = ({
   isLocateOnly,
 }) => {
   const theme = useTheme();
-  const isBelowLaptop = useMediaQuery(theme.breakpoints.down("lg"));
+  const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
 
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
