@@ -206,7 +206,7 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
                   height: "83%",
                   flex: "0 0 auto",
                   backgroundColor: isSelected ? "neutral.700" : "neutral.500",
-                  borderRadius: isSelected ? "lg" : "0",
+                  borderRadius: isSelected ? "20px" : "0",
                   color: "white",
                   display: "flex",
                   alignItems: "center",

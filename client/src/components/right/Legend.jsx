@@ -99,6 +99,7 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
           >
             <List
               sx={{
+                userSelect: "none",
                 display: "flex",
                 alignItems: "center",
                 p: 0,
