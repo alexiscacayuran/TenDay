@@ -70,9 +70,18 @@ const Navbar = ({
           }}
         >
           <Stack
+            component="span"
+            onClick={() =>
+              window.open(
+                "https://www.pagasa.dost.gov.ph/",
+                "_blank",
+                "noopener,noreferrer"
+              )
+            }
             direction="row"
             spacing={0}
             sx={{
+              cursor: "pointer",
               ml: "1.25rem",
               mr: !isBelowLaptop ? "1.25rem" : 0,
               justifyContent: "flex-end",
@@ -81,7 +90,7 @@ const Navbar = ({
               pointerEvents: "auto",
             }}
           >
-            <IconButton color="inherit" sx={{ mr: 1 }}>
+            {/* <IconButton color="inherit" sx={{ mr: 1 }}>
               <FontAwesomeIcon
                 icon={faChevronLeft}
                 style={{
@@ -90,7 +99,7 @@ const Navbar = ({
                 }}
                 onClick={() => {}}
               />
-            </IconButton>
+            </IconButton> */}
 
             <PAGASALogo
               style={{
@@ -98,6 +107,7 @@ const Navbar = ({
                 marginRight: 10,
               }}
             />
+
             {!isBelowLaptop ? (
               <Typography
                 sx={{
@@ -189,9 +199,18 @@ const Navbar = ({
           }}
         >
           <Stack
+            component="span"
+            onClick={() =>
+              window.open(
+                "https://www.pagasa.dost.gov.ph/",
+                "_blank",
+                "noopener,noreferrer"
+              )
+            }
             direction="row"
             spacing={0}
             sx={{
+              cursor: "pointer",
               ml: "1.25rem",
               mr: !isBelowLaptop ? "1.25rem" : 0,
               justifyContent: "flex-start",
@@ -200,16 +219,6 @@ const Navbar = ({
               pointerEvents: "auto",
             }}
           >
-            <IconButton color="inherit">
-              <FontAwesomeIcon
-                icon={faChevronLeft}
-                style={{
-                  fontSize: "1.25rem",
-                  color: "white",
-                }}
-                onClick={() => {}}
-              />
-            </IconButton>
             <PAGASALogo
               style={{
                 height: !isBelowLaptop ? "40px" : "35px",
