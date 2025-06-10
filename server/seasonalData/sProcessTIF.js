@@ -30,7 +30,7 @@ const getMonthYear = (batch) => {
 const uploadToS3 = async (filePath, batch, newFileName) => {
     const bucketName = 'seasonalforecast';
     if (!bucketName) {
-        throw new Error("❌ S3 Bucket name is missing in .env file!");
+        throw new Error("❌ S3 Bucket name is missing in the environment!");
     }
 
     try {
