@@ -3,6 +3,7 @@ import fs from "fs";
 import cors from "cors";
 import jwtAuth from "./route/jwtAuth.js";
 import dashboard from "./route/dashboard.js";
+import dashboardAdmin from "./route/dashboardAdmin.js";
 import bodyParser from "body-parser";
 import municitiesRoutes from "./controller/municities.js";
 import filesRoutes from "./controller/files.js";
@@ -77,6 +78,17 @@ import { checkWebsiteStatus } from "./backgroundJob/healthCheck.js";
 //Upload Check
 import checkValidRouter from './admin/checkValid.js';
 
+import { DateTime } from "luxon";
+
+// Show time in Manila
+const manilaTime = DateTime.now().setZone("Asia/Manila").toFormat("yyyy-MM-dd HH:mm:ss");
+console.log("🇵🇭 Manila Time:", manilaTime);
+
+// Show UTC time
+const utcTime = DateTime.utc().toFormat("yyyy-MM-dd HH:mm:ss");
+console.log("🌐 UTC Time:", utcTime);
+
+
 const app = express();
 const port = 5000;
 
@@ -108,6 +120,9 @@ app.use("/", barChart);
 
 // Route for dashboard
 app.use("/dashboard", dashboard);
+
+// Route for dashboard
+app.use("/dashboardAdmin", dashboardAdmin);
 
 // Route to handle data retrieval
 app.use("/api/files", filesRoutes);
