@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useMap } from "react-leaflet";
+import { useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { format } from "date-fns";
 import parseGeoraster from "georaster";
@@ -30,17 +30,17 @@ const baseParticleOption = {
   maxAge: 50,
 };
 
-// const particleOptions = [
-//   { zoom: 5, width: 2.3, paths: 3600, maxAge: 125 },
-//   { zoom: 6, width: 2.5, paths: 4800, maxAge: 120 },
-//   { zoom: 7, width: 3.0, paths: 5400, maxAge: 115 },
-//   { zoom: 8, width: 3.3, paths: 7500, maxAge: 110 },
-//   { zoom: 9, width: 3.5, paths: 12000, maxAge: 95 },
-//   { zoom: 10, width: 3.7, paths: 30000, maxAge: 75 },
-//   { zoom: 11, width: 3.9, paths: 60000, maxAge: 60 },
-//   { zoom: 12, width: 4.1, paths: 90000, maxAge: 55 },
-//   { zoom: 13, width: 4.3, paths: 210000, maxAge: 50 },
-// ];
+const particleOptions = [
+  { zoom: 5, width: 2.3, paths: 3600, maxAge: 125 },
+  { zoom: 6, width: 2.5, paths: 4800, maxAge: 120 },
+  { zoom: 7, width: 3.0, paths: 5400, maxAge: 115 },
+  { zoom: 8, width: 3.3, paths: 7500, maxAge: 110 },
+  { zoom: 9, width: 3.5, paths: 12000, maxAge: 95 },
+  { zoom: 10, width: 3.7, paths: 30000, maxAge: 75 },
+  { zoom: 11, width: 3.9, paths: 60000, maxAge: 60 },
+  { zoom: 12, width: 4.1, paths: 90000, maxAge: 55 },
+  { zoom: 13, width: 4.3, paths: 210000, maxAge: 50 },
+];
 
 const writeURL = (startDate, overlay, date, isVector, isLayerClipped) => {
   const formattedStartDate = format(startDate, "yyyyMMdd");
@@ -123,11 +123,13 @@ const WeatherLayer = ({
   }, []);
 
   const colorScaleFn = (value) => {
-    if (value[0] <= 0) {
-      return colorScale.current(value).alpha(0).css();
+    const inverted = value[0] * (localOverlay.current.max / 255); // inverse mapping of pixel values (Byte) to color scale
+
+    if (inverted <= 0) {
+      return colorScale.current(inverted).alpha(0).css();
     }
 
-    return colorScale.current(value).css();
+    return colorScale.current(inverted).css();
   };
 
   // const renderScalar = (buffer) => {};
@@ -142,6 +144,7 @@ const WeatherLayer = ({
       false,
       isLayerClipped
     );
+
     if (!url || signal?.aborted) return;
 
     try {
@@ -159,12 +162,12 @@ const WeatherLayer = ({
       }
 
       const georaster = await parseGeoraster(_buffer);
-      //console.log("Georaster", georaster);
+      // console.dir(georaster);
       colorScale.current = getColorScale(overlay, isDiscrete);
 
       let scalarLayer = new GeorasterLayer({
         georaster: georaster,
-        resolution: 64,
+        resolution: 128,
         pixelValuesToColorFn: colorScaleFn,
         // keepBuffer: 100,
         pane: "tilePane",
@@ -191,7 +194,7 @@ const WeatherLayer = ({
   const renderVectorAnim = (vf) => {
     const options = {
       ...baseParticleOption,
-      // ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
+      ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
     };
 
     const vectorLayer = new VectorFieldAnim(vf, options);

@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { MapContainer, LayerGroup } from "react-leaflet";
 // import { CssVarsProvider } from "@mui/joy/styles";
 import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
-import useMediaQuery from '@mui/material/useMediaQuery';
-
+import { useMediaQuery } from "@mui/material";
 import L from "leaflet";
 import axios from "axios";
 import Navbar from "./header/Navbar";
@@ -98,7 +97,7 @@ const Map = () => {
   const [activeTooltip, setActiveTooltip] = useState("Temperature");
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
-  const [isLayerClipped, setIsLayerClipped] = useState(true);
+  const [isLayerClipped, setIsLayerClipped] = useState(false);
 
   const [units, setUnits] = useState({
     temperature: "°C",

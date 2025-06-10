@@ -106,6 +106,7 @@ const ForecastContainer = ({
 
   const theme = useTheme();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
+  const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
   useEffect(() => {
     setDocUnits(units);
@@ -784,29 +785,45 @@ const ForecastContainer = ({
                   }}
                 >
                   <Fragment>
-                    <Button
-                      size="sm"
-                      color="inherit"
-                      aria-label="download"
-                      onClick={() => setOpenDownload(true)}
-                      sx={{
-                        fontSize: "0.7rem",
+                    {isTablet ? (
+                      <Button
+                        size="sm"
+                        color="inherit"
+                        aria-label="download"
+                        onClick={() => setOpenDownload(true)}
+                        sx={{
+                          fontSize: "0.7rem",
 
-                        color: "neutral.700",
-                        paddingInline: 0,
-                        mr: 1.5,
-                      }}
-                      startDecorator={
+                          color: "neutral.700",
+                          paddingInline: 0,
+                          mr: 1.5,
+                        }}
+                        startDecorator={
+                          <DownloadIcon
+                            sx={{
+                              fontSize: "1.5rem",
+                              color: "var(--joy-palette-neutral-700, #32383E)",
+                            }}
+                          />
+                        }
+                      >
+                        Download
+                      </Button>
+                    ) : (
+                      <IconButton
+                        size="sm"
+                        color="inherit"
+                        aria-label="download"
+                        onClick={() => setOpenDownload(true)}
+                      >
                         <DownloadIcon
                           sx={{
                             fontSize: "1.5rem",
                             color: "var(--joy-palette-neutral-700, #32383E)",
                           }}
                         />
-                      }
-                    >
-                      Download
-                    </Button>
+                      </IconButton>
+                    )}
                     <Modal
                       open={openDownload}
                       onClose={() => setOpenDownload(false)}
