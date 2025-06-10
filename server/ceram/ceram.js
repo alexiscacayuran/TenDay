@@ -1,9 +1,11 @@
 import express from "express";
 import { pool } from "../db.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
+import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-router.get("/ceram", async (req, res) => {
+router.get("/ceram", authenticateToken(8), async (req, res) => {
   const {
     province,
     indicator_code,
@@ -93,6 +95,7 @@ router.get("/ceram", async (req, res) => {
     const dataResult = await pool.query(dataQuery, dataValues);
 
     if (dataResult.rows.length === 0) {
+      await logApiRequest(req, 8); // ✅ Log not-found request too
       return res.status(404).json({
         metadata: { api: "CERAM" },
         data: [],
@@ -110,7 +113,6 @@ router.get("/ceram", async (req, res) => {
       });
     }
 
-    // Extract province name from first row
     const provinceName = dataResult.rows[0].province;
 
     const response = {
@@ -129,11 +131,11 @@ router.get("/ceram", async (req, res) => {
                 ranges: {}
               };
             }
-      
+
             if (!acc[key].ranges[row.range]) {
               acc[key].ranges[row.range] = [];
             }
-      
+
             acc[key].ranges[row.range].push({
               scenario: row.scenario,
               start_period: row.start_period,
@@ -141,7 +143,7 @@ router.get("/ceram", async (req, res) => {
               projected_value: parseFloat(row.projected_value),
               change: parseFloat(row.change)
             });
-      
+
             return acc;
           }, {})
         ).map(indicator => ({
@@ -151,7 +153,7 @@ router.get("/ceram", async (req, res) => {
             values
           }))
         }))
-      },      
+      },
       misc: {
         version: "1.0",
         total_count,
@@ -164,6 +166,8 @@ router.get("/ceram", async (req, res) => {
         description: "OK"
       }
     };
+
+    await logApiRequest(req, 8); // ✅ Log successful request
 
     return res.status(200).json(response);
   } catch (error) {

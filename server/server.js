@@ -1,9 +1,9 @@
 import express from "express";
 import fs from "fs";
 import cors from "cors";
-import multer from "multer";
 import jwtAuth from "./route/jwtAuth.js";
 import dashboard from "./route/dashboard.js";
+import dashboardAdmin from "./route/dashboardAdmin.js";
 import bodyParser from "body-parser";
 import municitiesRoutes from "./controller/municities.js";
 import filesRoutes from "./controller/files.js";
@@ -78,6 +78,17 @@ import { checkWebsiteStatus } from "./backgroundJob/healthCheck.js";
 //Upload Check
 import checkValidRouter from './admin/checkValid.js';
 
+import { DateTime } from "luxon";
+
+// Show time in Manila
+const manilaTime = DateTime.now().setZone("Asia/Manila").toFormat("yyyy-MM-dd HH:mm:ss");
+console.log("🇵🇭 Manila Time:", manilaTime);
+
+// Show UTC time
+const utcTime = DateTime.utc().toFormat("yyyy-MM-dd HH:mm:ss");
+console.log("🌐 UTC Time:", utcTime);
+
+
 const app = express();
 const port = 5000;
 
@@ -109,6 +120,9 @@ app.use("/", barChart);
 
 // Route for dashboard
 app.use("/dashboard", dashboard);
+
+// Route for dashboard
+app.use("/dashboardAdmin", dashboardAdmin);
 
 // Route to handle data retrieval
 app.use("/api/files", filesRoutes);
@@ -297,7 +311,7 @@ app.get("/seasonal-date", authenticate, async (req, res) => {
     }
 
     // Process seasonal data
-    await processSeasonalData(batch, folderPath, userId); // Pass userID to track the user
+    await processSeasonalData(batch, folderPath, userId); 
     res.send("Seasonal data processed successfully.");
   } catch (error) {
     console.error("Error processing seasonal data:", error);
@@ -403,7 +417,7 @@ app.get("/seasonalprocess", async (req, res) => {
 app.use("/api", tokenRoutes);
 app.use("/api", seasonalRoutes);
 
-app.use("/seasonal-reg", seasonalDataRegional);
+app.use("/api/v1", seasonalDataRegional);
 
 //Admin
 app.use("/api", apiOrg);
