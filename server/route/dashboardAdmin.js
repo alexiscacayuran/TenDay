@@ -5,7 +5,8 @@ import { BetaAnalyticsDataClient } from "@google-analytics/data";
 
 const router = Router();
 
-const propertyId = "484898570";
+const propertyId = process.env.propertyId;
+;
 
 const analyticsDataClient = new BetaAnalyticsDataClient({
   keyFilename: "./tenDayAnalytics.json",
