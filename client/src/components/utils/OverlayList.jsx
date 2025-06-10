@@ -39,6 +39,7 @@ const overlayList = [
     classes: 15,
     units: "°C", //needs to be a toggle, should be a switch statement
     height: "320px",
+    max: 40,
   },
   {
     name: "temperature_minimum",
@@ -70,6 +71,7 @@ const overlayList = [
     classes: 15,
     units: "°C",
     height: "320px",
+    max: 40,
   },
   {
     name: "temperature_maximum",
@@ -101,6 +103,7 @@ const overlayList = [
     classes: 15,
     units: "°C",
     height: "320px",
+    max: 40,
   },
   {
     name: "humidity",
@@ -122,6 +125,7 @@ const overlayList = [
     classes: 15,
     units: "%",
     height: "320px",
+    max: 100,
   },
   {
     name: "wind",
@@ -147,6 +151,7 @@ const overlayList = [
     classes: 15,
     units: "m/s",
     height: "320px",
+    max: 42,
   },
   {
     name: "rainfall",
@@ -167,6 +172,7 @@ const overlayList = [
     classes: 35,
     units: "mm/24h",
     height: "320px",
+    max: 500,
   },
 
   {
@@ -183,6 +189,7 @@ const overlayList = [
     classes: 15,
     units: "%",
     height: "320px",
+    max: 100,
   },
 ];
 
