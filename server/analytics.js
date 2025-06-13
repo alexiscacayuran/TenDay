@@ -4,7 +4,7 @@ const client = new BetaAnalyticsDataClient({
   keyFilename: './tenDayAnalytics.json',
 });
 
-const propertyId = `properties/${process.env.propertyId}`;
+const propertyId = 'properties/484898570';
 
 // Daily Active Users (7 days)
 async function getDailyActiveUsers() {

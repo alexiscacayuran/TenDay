@@ -80,6 +80,9 @@ import checkValidRouter from './admin/checkValid.js';
 
 import { DateTime } from "luxon";
 
+//Report
+import report from './report/getReport.js';
+
 // Show time in Manila
 const manilaTime = DateTime.now().setZone("Asia/Manila").toFormat("yyyy-MM-dd HH:mm:ss");
 console.log("🇵🇭 Manila Time:", manilaTime);
@@ -460,6 +463,9 @@ app.get("/health", async (req, res) => {
     status: isActive ? "ACTIVE" : "OFFLINE",
   });
 });
+
+//REPORT
+app.use('/api', report);
 
 // Start the server
 app.listen(port, "0.0.0.0", () => {
