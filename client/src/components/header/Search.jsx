@@ -38,7 +38,6 @@ const Search = ({
   setSearchLayout,
   isLocateOnly,
 }) => {
-  const theme = useTheme();
   const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
 
   const [input, setInput] = useState("");

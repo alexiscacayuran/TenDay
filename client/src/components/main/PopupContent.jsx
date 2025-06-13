@@ -222,7 +222,12 @@ const PopupContent = React.memo(
         <CardOverflow color="neutral" variant="soft">
           <CardContent
             orientation="horizontal"
-            sx={{ alignItems: "center", p: "5px 0" }}
+            sx={{
+              alignItems: "center",
+              p: "5px 0",
+              flexWrap: "nowrap",
+              overflow: "hidden",
+            }}
           >
             {OVERLAY_CONFIG[overlay].icon}
 
