@@ -24,23 +24,23 @@ db.version(2).stores({
 const baseParticleOption = {
   velocityScale: 1 / 1000,
   fade: 0.94,
-  color: chroma("white").alpha(0.25),
-  width: 2.5,
-  paths: 15000,
-  maxAge: 50,
+  color: chroma("white").alpha(0.5),
+  width: 1.2,
+  paths: 6000,
+  maxAge: 100,
 };
 
-const particleOptions = [
-  { zoom: 5, width: 2.3, paths: 3600, maxAge: 125 },
-  { zoom: 6, width: 2.5, paths: 4800, maxAge: 120 },
-  { zoom: 7, width: 3.0, paths: 5400, maxAge: 115 },
-  { zoom: 8, width: 3.3, paths: 7500, maxAge: 110 },
-  { zoom: 9, width: 3.5, paths: 12000, maxAge: 95 },
-  { zoom: 10, width: 3.7, paths: 30000, maxAge: 75 },
-  { zoom: 11, width: 3.9, paths: 60000, maxAge: 60 },
-  { zoom: 12, width: 4.1, paths: 90000, maxAge: 55 },
-  { zoom: 13, width: 4.3, paths: 210000, maxAge: 50 },
-];
+// const particleOptions = [
+//   { zoom: 5, width: 1.5, paths: 3500, maxAge: 150 },
+//   { zoom: 6, width: 2.5, paths: 4500, maxAge: 120 },
+//   { zoom: 7, width: 3.0, paths: 5500, maxAge: 115 },
+//   { zoom: 8, width: 3.3, paths: 7500, maxAge: 110 },
+//   { zoom: 9, width: 3.5, paths: 12000, maxAge: 95 },
+//   { zoom: 10, width: 3.7, paths: 30000, maxAge: 75 },
+//   { zoom: 11, width: 3.9, paths: 60000, maxAge: 60 },
+//   { zoom: 12, width: 4.1, paths: 90000, maxAge: 55 },
+//   { zoom: 13, width: 4.3, paths: 210000, maxAge: 50 },
+// ];
 
 const writeURL = (startDate, overlay, date, isVector, isLayerClipped) => {
   const formattedStartDate = format(startDate, "yyyyMMdd");
@@ -89,7 +89,7 @@ const WeatherLayer = ({
   open,
   zoomLevel,
 }) => {
-  const theme = useTheme();
+  console.log(zoomLevel);
   const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
   const map = useMap();
   const localOverlay = useRef(overlayList.find((o) => o.name === overlay));
@@ -132,8 +132,6 @@ const WeatherLayer = ({
     return colorScale.current(inverted).css();
   };
 
-  // const renderScalar = (buffer) => {};
-
   const loadScalar = async (signal) => {
     if (!map) return;
 
@@ -169,12 +167,13 @@ const WeatherLayer = ({
         georaster: georaster,
         resolution: 128,
         pixelValuesToColorFn: colorScaleFn,
-        // keepBuffer: 100,
+        keepBuffer: 10000000,
         pane: "tilePane",
         zIndex: 100,
         opacity: 0.8,
         updateWhenIdle: true,
         caching: true,
+        resampleMethod: "nearest",
       });
 
       //console.dir(scalarLayer);
@@ -194,7 +193,7 @@ const WeatherLayer = ({
   const renderVectorAnim = (vf) => {
     const options = {
       ...baseParticleOption,
-      ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
+      // ...(particleOptions.find((opt) => opt.zoom === zoomLevel) || {}),
     };
 
     const vectorLayer = new VectorFieldAnim(vf, options);

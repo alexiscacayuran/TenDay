@@ -29,6 +29,7 @@ import ZoomLevel from "./utils/ZoomLevel";
 
 import { Stack, Box } from "@mui/joy";
 import { Slide } from "@mui/material";
+import Feedback from "./right/Feedback";
 
 const Map = () => {
   const theme = useTheme();
@@ -153,7 +154,7 @@ const Map = () => {
           center={[13, 122]}
           zoom={!isMobile ? 8 : 6}
           minZoom={5}
-          maxZoom={20}
+          maxZoom={15}
           maxBounds={bounds}
           maxBoundsViscosity={0.5}
           zoomControl={false}
@@ -227,16 +228,8 @@ const Map = () => {
               pointerEvents: "none", //Let clicks pass through by default
             }}
           >
-            <Box
-              sx={{
-                minWidth: "100px",
-                backgroundColor: "red",
-                display: "inline",
-                [theme.breakpoints.down("lg")]: {
-                  display: "none",
-                },
-              }}
-            ></Box>
+            <Feedback />
+
             <Stack
               direction="column"
               spacing={0}

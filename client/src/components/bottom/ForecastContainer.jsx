@@ -1,7 +1,6 @@
 import React, { useState, useEffect, Fragment, useRef } from "react";
 import axios from "axios";
 import { format } from "date-fns";
-import { useTheme } from "@mui/joy/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { Slide, Fade } from "@mui/material";
 import {
@@ -11,22 +10,9 @@ import {
   Typography,
   IconButton,
   Table,
-  Modal,
-  ModalDialog,
-  DialogTitle,
-  DialogContent,
-  FormControl,
-  FormLabel,
   Button,
-  Radio,
-  ToggleButtonGroup,
-  Select,
-  Option,
-  Chip,
-  Switch,
 } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
-import DownloadIcon from "@mui/icons-material/Download";
 import {
   SunnyIcon,
   NoRainParCloudyIcon,
@@ -62,11 +48,9 @@ import {
 } from "../utils/CustomIcons";
 
 import ForecastTable from "./ForecastTable";
-import ForecastDownload from "./ForecastDownload";
 import MunicitySelector from "./MunicitySelector";
-import MunicitiesSelector from "./MunicitiesSelector";
-
 import ToggleUnits from "../utils/ToggleUnits";
+import DownloadDialog from "./DownloadDialog";
 
 let isInitial = true;
 
@@ -96,29 +80,8 @@ const ForecastContainer = ({
   const [activeColumn, setActiveColumn] = useState(null);
   const [todayColumn, setTodayColumn] = useState(null);
   const [hoveredColumn, setHoveredColumn] = useState(null);
-  const [openDownload, setOpenDownload] = useState(false);
-  const [selectedUnits, setSelectedUnits] = useState("current");
-  const [docUnits, setDocUnits] = useState(units);
-  const [docFormat, setDocFormat] = useState("pdf");
-  const [docColored, setDocColored] = useState(true);
-  const [docExtendForecast, setDocExtendForecast] = useState(false);
-  const [selectedMunicities, setSelectedMunicities] = useState([]);
 
-  const theme = useTheme();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
-  const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
-
-  useEffect(() => {
-    setDocUnits(units);
-  }, [units]);
-
-  const handleChange = (event, value) => {
-    setDocFormat(value);
-  };
-
-  const handleUnitChange = (event, value) => {
-    setSelectedUnits(event.target.value);
-  };
 
   // Handles column highlight
   const handleMouseEnter = (index) => {
@@ -784,342 +747,12 @@ const ForecastContainer = ({
                     mb: !isMobile ? 1 : 0,
                   }}
                 >
-                  <Fragment>
-                    {isTablet ? (
-                      <Button
-                        size="sm"
-                        color="inherit"
-                        aria-label="download"
-                        onClick={() => setOpenDownload(true)}
-                        sx={{
-                          fontSize: "0.7rem",
-
-                          color: "neutral.700",
-                          paddingInline: 0,
-                          mr: 1.5,
-                        }}
-                        startDecorator={
-                          <DownloadIcon
-                            sx={{
-                              fontSize: "1.5rem",
-                              color: "var(--joy-palette-neutral-700, #32383E)",
-                            }}
-                          />
-                        }
-                      >
-                        Download
-                      </Button>
-                    ) : (
-                      <IconButton
-                        size="sm"
-                        color="inherit"
-                        aria-label="download"
-                        onClick={() => setOpenDownload(true)}
-                      >
-                        <DownloadIcon
-                          sx={{
-                            fontSize: "1.5rem",
-                            color: "var(--joy-palette-neutral-700, #32383E)",
-                          }}
-                        />
-                      </IconButton>
-                    )}
-                    <Modal
-                      open={openDownload}
-                      onClose={() => setOpenDownload(false)}
-                    >
-                      <ModalDialog
-                        sx={{
-                          width: "450px",
-                          "--ModalDialog-maxWidth": "450px",
-                        }}
-                      >
-                        <DialogTitle sx={{ mb: 2 }}>
-                          Download forecast for
-                          <Typography
-                            level="title-lg"
-                            sx={{
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {location.municity}
-                          </Typography>
-                        </DialogTitle>
-                        <DialogContent>Select your preferences:</DialogContent>
-
-                        <Stack spacing={3}>
-                          <FormControl size="md">
-                            <FormLabel>Set units</FormLabel>
-                            <Stack
-                              direction="row"
-                              spacing={2}
-                              sx={{
-                                justifyContent: "flex-start",
-                                alignItems: "center",
-                              }}
-                            >
-                              <Radio
-                                checked={selectedUnits === "current"}
-                                onChange={handleUnitChange}
-                                value="current"
-                                name="radio-buttons"
-                                slotProps={{
-                                  input: { "aria-label": "current" },
-                                }}
-                                label="Current"
-                                size="sm"
-                              />
-                              <Radio
-                                checked={selectedUnits === "custom"}
-                                onChange={handleUnitChange}
-                                value="custom"
-                                name="radio-buttons"
-                                slotProps={{
-                                  input: { "aria-label": "custom" },
-                                }}
-                                label="Custom"
-                                size="sm"
-                              />
-                            </Stack>
-                            {selectedUnits === "custom" ? (
-                              <Box
-                                sx={{
-                                  p: 1,
-                                  mt: 1,
-                                  backgroundColor: "neutral.100",
-                                }}
-                              >
-                                <FormControl size="sm" orientation="horizontal">
-                                  <FormLabel sx={{ flexGrow: 1 }}>
-                                    Temperature
-                                  </FormLabel>
-                                  <ToggleButtonGroup
-                                    size="sm"
-                                    variant="plain"
-                                    value={docUnits.temperature}
-                                    exclusive
-                                    onChange={(e, value) =>
-                                      value &&
-                                      setDocUnits({
-                                        ...docUnits,
-                                        temperature: value,
-                                      })
-                                    }
-                                  >
-                                    <Button value="°C">
-                                      <Typography level="body-xs">
-                                        °C
-                                      </Typography>
-                                    </Button>
-                                    <Button value="°F">
-                                      <Typography level="body-xs">
-                                        °F
-                                      </Typography>
-                                    </Button>
-                                  </ToggleButtonGroup>
-                                </FormControl>
-
-                                <FormControl
-                                  size="sm"
-                                  orientation="horizontal"
-                                  sx={{ mt: 2 }}
-                                >
-                                  <Box sx={{ display: "flex", flex: 1, pr: 1 }}>
-                                    <FormLabel>Rainfall</FormLabel>
-                                  </Box>
-                                  <ToggleButtonGroup
-                                    size="sm"
-                                    variant="plain"
-                                    value={docUnits.rainfall}
-                                    exclusive
-                                    onChange={(e, value) =>
-                                      value &&
-                                      setDocUnits({
-                                        ...docUnits,
-                                        rainfall: value,
-                                      })
-                                    }
-                                  >
-                                    <Button value="mm/day">
-                                      <Typography level="body-xs">
-                                        mm/day
-                                      </Typography>
-                                    </Button>
-                                    <Button value="in/day">
-                                      <Typography level="body-xs">
-                                        in/day
-                                      </Typography>
-                                    </Button>
-                                  </ToggleButtonGroup>
-                                </FormControl>
-
-                                <FormControl
-                                  size="sm"
-                                  orientation="horizontal"
-                                  sx={{ mt: 2 }}
-                                >
-                                  <Box sx={{ display: "flex", flex: 1, pr: 1 }}>
-                                    <FormLabel>Wind speed</FormLabel>
-                                  </Box>
-                                  <ToggleButtonGroup
-                                    size="sm"
-                                    variant="plain"
-                                    value={docUnits.windSpeed}
-                                    exclusive
-                                    onChange={(e, value) =>
-                                      value &&
-                                      setDocUnits({
-                                        ...docUnits,
-                                        windSpeed: value,
-                                      })
-                                    }
-                                  >
-                                    <Button value="m/s">
-                                      <Typography level="body-xs">
-                                        m/s
-                                      </Typography>
-                                    </Button>
-                                    <Button value="km/h">
-                                      <Typography level="body-xs">
-                                        km/h
-                                      </Typography>
-                                    </Button>
-                                    <Button value="kt">
-                                      <Typography level="body-xs">
-                                        knot
-                                      </Typography>
-                                    </Button>
-                                  </ToggleButtonGroup>
-                                </FormControl>
-
-                                {docUnits === "pdf" ? (
-                                  <FormControl
-                                    size="sm"
-                                    orientation="horizontal"
-                                    sx={{ mt: 2 }}
-                                  >
-                                    <Box
-                                      sx={{ display: "flex", flex: 1, pr: 1 }}
-                                    >
-                                      <FormLabel>Wind direction</FormLabel>
-                                    </Box>
-                                    <ToggleButtonGroup
-                                      size="sm"
-                                      variant="plain"
-                                      value={docUnits.windDirection}
-                                      exclusive
-                                      onChange={(e, value) =>
-                                        value &&
-                                        setDocUnits({
-                                          ...docUnits,
-                                          windDirection: value,
-                                        })
-                                      }
-                                    >
-                                      <Button value="arrow">
-                                        <Typography level="body-xs">
-                                          arrow
-                                        </Typography>
-                                      </Button>
-                                      <Button value="desc">
-                                        <Typography level="body-xs">
-                                          description
-                                        </Typography>
-                                      </Button>
-                                    </ToggleButtonGroup>
-                                  </FormControl>
-                                ) : null}
-                              </Box>
-                            ) : null}
-                          </FormControl>
-
-                          {docFormat === "pdf" && (
-                            <>
-                              <FormControl orientation="horizontal">
-                                <FormLabel sx={{ mr: "auto" }}>
-                                  Show colors for visualization
-                                </FormLabel>
-                                <Switch
-                                  size="sm"
-                                  checked={docColored}
-                                  onChange={(event) =>
-                                    setDocColored(event.target.checked)
-                                  }
-                                  variant={docColored ? "solid" : "outlined"}
-                                  endDecorator={docColored ? "On" : "Off"}
-                                  slotProps={{
-                                    endDecorator: {
-                                      sx: {
-                                        minWidth: 24,
-                                        fontWeight: 400,
-                                      },
-                                    },
-                                  }}
-                                />
-                              </FormControl>
-                            </>
-                          )}
-
-                          <FormControl
-                            orientation="horizontal"
-                            sx={{ flexWrap: "wrap" }}
-                          >
-                            <FormLabel sx={{ flexGrow: 1 }}>
-                              Add other forecast data
-                            </FormLabel>
-                            <Switch
-                              sx={{ flexGrow: 0 }}
-                              size="sm"
-                              checked={docExtendForecast}
-                              onChange={(event) => {
-                                setDocExtendForecast(event.target.checked);
-                              }}
-                              variant={docExtendForecast ? "solid" : "outlined"}
-                              endDecorator={docExtendForecast ? "Yes" : "No"}
-                              slotProps={{
-                                endDecorator: {
-                                  sx: {
-                                    minWidth: 24,
-                                    fontWeight: 400,
-                                  },
-                                },
-                              }}
-                            />
-                            {docExtendForecast && (
-                              <MunicitiesSelector
-                                forecast={forecast}
-                                serverToken={serverToken}
-                                selectedMunicities={selectedMunicities}
-                                setSelectedMunicities={setSelectedMunicities}
-                                setDocExtendForecast={setDocExtendForecast}
-                              />
-                            )}
-                          </FormControl>
-
-                          <FormControl>
-                            <FormLabel>File format</FormLabel>
-                            <Select defaultValue="pdf" onChange={handleChange}>
-                              <Option value="pdf">PDF</Option>
-                              <Option value="csv">CSV</Option>
-                              <Option value="txt">TXT</Option>
-                            </Select>
-                          </FormControl>
-
-                          <ForecastDownload
-                            serverToken={serverToken}
-                            location={location}
-                            forecast={forecast}
-                            docFormat={docFormat}
-                            docUnits={docUnits}
-                            docColored={docColored}
-                            docExtendForecast={docExtendForecast}
-                            selectedMunicities={selectedMunicities}
-                          />
-                        </Stack>
-                      </ModalDialog>
-                    </Modal>
-                  </Fragment>
-
+                  <DownloadDialog
+                    serverToken={serverToken}
+                    location={location}
+                    forecast={forecast}
+                    units={units}
+                  />
                   <IconButton
                     size="sm"
                     color="inherit"
