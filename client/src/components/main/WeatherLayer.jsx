@@ -177,7 +177,7 @@ const WeatherLayer = ({
         caching: true,
       });
 
-      console.dir(scalarLayer);
+      //console.dir(scalarLayer);
 
       if (scalarLayerRef.current) {
         overlayLayer.current.removeLayer(scalarLayerRef.current);

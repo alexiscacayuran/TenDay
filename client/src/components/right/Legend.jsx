@@ -41,7 +41,8 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
       <Tooltip
         title="Click to change units"
         variant="solid"
-        placement={isTablet ? "left" : "top"}
+        placement={"left"}
+        sx={{ display: isMobile ? "none" : "inline" }}
       >
         <Box
           className={!isMobile ? "glass" : ""}
@@ -95,6 +96,8 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
               flex: 1,
               bgcolor: "#696969",
               cursor: "pointer",
+              borderBottomLeftRadius: 6,
+              borderBottomRightRadius: 6,
             }}
           >
             <List
@@ -108,6 +111,9 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
                 height: !isMobile ? 300 : 22,
                 width: !isMobile ? 36 : "100%",
                 flexDirection: !isMobile ? "column-reverse" : "row",
+                borderBottomLeftRadius: 6,
+                borderBottomRightRadius: 6,
+                overflow: "hidden",
               }}
             >
               {overlayData.domain.map((value, index) => (
@@ -127,8 +133,6 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
                     backgroundColor: isDiscrete
                       ? colorScale(value).alpha(0.8).css()
                       : "transparent",
-                    borderBottomLeftRadius: index === 0 ? 6 : 0,
-                    borderBottomRightRadius: index === 0 ? 6 : 0,
                   }}
                 >
                   <ForecastValue
