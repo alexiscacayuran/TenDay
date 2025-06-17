@@ -11,13 +11,15 @@ function generateDateRange(startDate, range) {
 
 const DateSlider = ({ initialDate, range, date, setDate, open }) => {
   const [dateRange] = useState(generateDateRange(initialDate, range));
-  const [localDate, setlocalDate] = useState(new Date());
+
   const scrollRef = useRef(null);
   const itemWidth = 100;
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const startX = useRef(0);
   const scrollLeftStart = useRef(0);
+
+  console.dir(scrollLeftStart.current);
 
   useEffect(() => {
     setDate(dateRange[selectedIndex]);
@@ -34,14 +36,15 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
       setSelectedIndex(index);
 
       const container = scrollRef.current;
-      const scrollTo = index * 100 + 80;
+      const scrollTo = index * itemWidth + 50;
+      console.log(scrollTo);
 
       container.scrollTo({
         left: scrollTo,
         behavior: "smooth", // makes it scroll smoothly on load
       });
     }
-  }, [dateRange, localDate]);
+  }, [dateRange]);
 
   const updateSelectedIndex = useCallback(
     debounce(() => {
@@ -194,7 +197,6 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
                 boxSizing: "border-box",
                 height: "55px",
                 p: 0.1,
-                border: "1px solid #636B74",
               }}
             >
               <Sheet

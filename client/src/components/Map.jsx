@@ -12,9 +12,11 @@ import Labels from "./main/Labels";
 import WeatherLayer from "./main/WeatherLayer";
 import ReverseGeocode from "./main/ReverseGeocode";
 import ForecastPopup from "./main/ForecastPopup";
+import Domain from "./main/Domain";
 
 import DateNavigation from "./bottom/DateNavigation";
 import ForecastContainer from "./bottom/ForecastContainer";
+import Feedback from "./bottom/Feedback";
 
 import LayerMenu from "./left/LayerMenu";
 import ScaleNautic from "react-leaflet-nauticsale";
@@ -98,6 +100,7 @@ const Map = () => {
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
   const [isLayerClipped, setIsLayerClipped] = useState(false);
+  const [isBoundaryHidden, setIsBoundaryHidden] = useState(false);
 
   const [units, setUnits] = useState({
     temperature: "°C",
@@ -126,7 +129,7 @@ const Map = () => {
     };
 
     fetchDate();
-  }, []); //
+  }, []);
 
   const displayMap = useMemo(
     () => (
@@ -151,7 +154,7 @@ const Map = () => {
           center={[13, 122]}
           zoom={!isMobile ? 8 : 6}
           minZoom={5}
-          maxZoom={20}
+          maxZoom={15}
           maxBounds={bounds}
           maxBoundsViscosity={0.5}
           zoomControl={false}
@@ -204,7 +207,10 @@ const Map = () => {
             setIsLocationReady={setIsLocationReady}
             selectedPolygon={selectedPolygon}
           />
-          {dateReady && !isMobile && <Issuance startDate={startDate} />}
+          {dateReady && !isMobile && (
+            <Issuance context="laptop" startDate={startDate} />
+          )}
+          {isBoundaryHidden && <Domain />}
         </MapContainer>
 
         {!isMobile && (
@@ -222,16 +228,8 @@ const Map = () => {
               pointerEvents: "none", //Let clicks pass through by default
             }}
           >
-            <Box
-              sx={{
-                minWidth: "100px",
-                backgroundColor: "red",
-                display: "inline",
-                [theme.breakpoints.down("lg")]: {
-                  display: "none",
-                },
-              }}
-            ></Box>
+            <Feedback />
+
             <Stack
               direction="column"
               spacing={0}
@@ -372,29 +370,34 @@ const Map = () => {
         )}
 
         {!isMobile && <MapControl map={map} />}
-        <LayerMenu
-          overlay={overlay}
-          setOverlay={setOverlay}
-          isDiscrete={isDiscrete}
-          setIsDiscrete={setIsDiscrete}
-          isAnimHidden={isAnimHidden}
-          setIsAnimHidden={setIsAnimHidden}
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen}
-          temp={temp}
-          setTemp={setTemp}
-          activeTooltip={activeTooltip}
-          setActiveTooltip={setActiveTooltip}
-          isLayerClipped={isLayerClipped}
-          setIsLayerClipped={setIsLayerClipped}
-          arcgisToken={arcgisToken}
-          setLocation={setLocation}
-          map={map}
-          setIsLocationReady={setIsLocationReady}
-          selectedPolygon={selectedPolygon}
-          openContainer={open}
-          setOpenContainer={setOpen}
-        />
+        {dateReady && (
+          <LayerMenu
+            overlay={overlay}
+            setOverlay={setOverlay}
+            isDiscrete={isDiscrete}
+            setIsDiscrete={setIsDiscrete}
+            isAnimHidden={isAnimHidden}
+            setIsAnimHidden={setIsAnimHidden}
+            isMenuOpen={isMenuOpen}
+            setIsMenuOpen={setIsMenuOpen}
+            temp={temp}
+            setTemp={setTemp}
+            activeTooltip={activeTooltip}
+            setActiveTooltip={setActiveTooltip}
+            isLayerClipped={isLayerClipped}
+            setIsLayerClipped={setIsLayerClipped}
+            arcgisToken={arcgisToken}
+            setLocation={setLocation}
+            map={map}
+            setIsLocationReady={setIsLocationReady}
+            selectedPolygon={selectedPolygon}
+            openContainer={open}
+            setOpenContainer={setOpen}
+            isBoundaryHidden={isBoundaryHidden}
+            setIsBoundaryHidden={setIsBoundaryHidden}
+            startDate={startDate}
+          />
+        )}
       </>
     ),
 
@@ -419,6 +422,7 @@ const Map = () => {
       isLocationReady,
       isBelowLaptop,
       isMobile,
+      isBoundaryHidden,
     ]
   );
 

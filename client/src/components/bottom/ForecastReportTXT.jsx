@@ -52,7 +52,7 @@ const ForecastReportTXT = ({
     const blob = new Blob([markdown], {
       type: "text/plain;charset=utf-8",
     });
-    const filename = `tanawPH_${format(new Date(), "yyyyMMdd_HHmmss")}.txt`;
+    const filename = `tenday-${format(new Date(), "yyyyMMdd-HHmmss")}.txt`;
     saveAs(blob, filename);
   };
 
