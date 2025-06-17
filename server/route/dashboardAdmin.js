@@ -58,16 +58,20 @@ router.post("/", authorization, async (req, res) => {
     const dailyvisit = dailyReport.rows?.[0]?.metricValues?.[0]?.value || "0";
 
     const platformData = { Desktop: 0, Tablet: 0, Mobile: 0 };
+
     platformReport.rows?.forEach(row => {
       const platformDim = row.dimensionValues[0]?.value?.toLowerCase() || "";
       const deviceDim = row.dimensionValues[1]?.value?.toLowerCase() || "";
       const combined = `${platformDim} / ${deviceDim}`;
       const count = parseInt(row.metricValues[0].value, 10) || 0;
-
+    
       if (combined === "web / desktop") platformData.Desktop += count;
       else if (combined === "web / tablet") platformData.Tablet += count;
       else if (combined === "web / mobile") platformData.Mobile += count;
     });
+    
+    platformData["All Devices"] = platformData.Desktop + platformData.Tablet + platformData.Mobile;
+    
 
     const activeUsersTotal = (realtimeReport.rows || []).reduce((sum, row) => {
       return sum + (parseInt(row.metricValues[0].value, 10) || 0);
