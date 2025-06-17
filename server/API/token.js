@@ -82,7 +82,7 @@ router.post("/generate-token", async (req, res) => {
     });
 
     await transporter.sendMail({
-      from: `"tanawPH" <${'gabrielbesmontelopez100900@gmail.com'}>`,
+      from: `"TenDay" <${'gabrielbesmontelopez100900@gmail.com'}>`,
       to: email,
       subject: "Your API Access Token",
       html: `
