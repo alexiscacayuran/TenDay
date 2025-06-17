@@ -16,7 +16,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   map.createPane("activeFeaturePane");
-  map.getPane("activeFeaturePane").style.zIndex = 500;
+  map.getPane("activeFeaturePane").style.zIndex = 400;
 
   useEffect(() => {
     if (!arcgisToken) return;
@@ -37,7 +37,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
       precision: 4,
       style: () => ({
         color: "white",
-        weight: 2.5,
+        weight: 3,
         opacity: 0.5,
         fillOpacity: 0,
       }),
@@ -97,9 +97,9 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
       where: whereClause,
       style: () => ({
         color: "white",
-        weight: 2.5,
+        weight: 3,
         opacity: 0.5,
-        fillOpacity: 0.2,
+        fillOpacity: isMobile ? 0 : 0.2,
       }),
       onEachFeature: (feature, layer) => {
         // Always add click event (for both mobile and desktop)
@@ -117,7 +117,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
                 weight: 3,
                 opacity: 1,
                 fillColor: "#3E7BFF",
-                fillOpacity: 0.3,
+                fillOpacity: 0.2,
                 interactive: false,
                 pane: "activeFeaturePane",
               },

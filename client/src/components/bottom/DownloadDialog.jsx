@@ -20,6 +20,9 @@ import {
   Sheet,
 } from "@mui/joy";
 
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import {} from "@fortawesome/free-solid-svg-icons";
+
 import DownloadIcon from "@mui/icons-material/Download";
 import ForecastDownload from "./ForecastDownload";
 import MunicitiesSelector from "./MunicitiesSelector";
@@ -59,6 +62,7 @@ const DownloadDialog = ({ units, location, forecast, serverToken }) => {
             fontSize: "0.7rem",
 
             color: "neutral.700",
+            p: 0,
             paddingInline: 0,
             mr: 1.5,
           }}

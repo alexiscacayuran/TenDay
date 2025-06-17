@@ -151,7 +151,6 @@ const MunicitySelector = ({
         button: {
           sx: {
             flexShrink: 1,
-
             fontWeight: "600",
             color: "neutral.800",
             fontSize: !isMobile ? "larger" : "small",

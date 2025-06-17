@@ -12,6 +12,8 @@ import {
   Table,
   Button,
 } from "@mui/joy";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBookmark } from "@fortawesome/free-solid-svg-icons";
 import CloseIcon from "@mui/icons-material/Close";
 import {
   SunnyIcon,
@@ -402,7 +404,7 @@ const ForecastContainer = ({
 
     // table border adjustments
     "& thead tr:first-of-type > td:first-of-type": {
-      borderTopLeftRadius: "6px",
+      borderTopLeftRadius: "lg",
     },
 
     "& tbody tr:last-of-type > th:first-of-type": {
@@ -491,11 +493,11 @@ const ForecastContainer = ({
   return (
     <Slide direction="up" in={open} mountOnEnter unmountOnExit>
       <Sheet
-        className="glass"
+        className={!isMobile ? "glass" : ""}
         sx={{
           userSelect: "none",
           pointerEvents: "auto",
-          borderRadius: 6,
+          borderRadius: "lg",
           alignItems: "center",
           justifyContent: "center",
           width: "100%",
@@ -537,7 +539,7 @@ const ForecastContainer = ({
                     scrollbarWidth: "none",
                     "&::-webkit-scrollbar": { display: "none" },
                     cursor: isDragging ? "grabbing" : "grab",
-                    borderRadius: !isMobile ? "6px" : "none",
+                    borderRadius: !isMobile ? "lg" : "none",
                     "--TableCell-height": !isMobile ? "20px" : "20px",
                     "--TableColumn-activeBorder":
                       "3px solid var(--joy-palette-primary-500, #0B6BCB)",
@@ -718,7 +720,7 @@ const ForecastContainer = ({
                       background:
                         "linear-gradient(to left, rgba(0,0,0,0.2), transparent)",
                       zIndex: 1,
-                      borderRadius: !isMobile ? "6px" : "none",
+                      borderRadius: !isMobile ? "lg" : "none",
                     }}
                   />
                 </Fade>
@@ -747,12 +749,36 @@ const ForecastContainer = ({
                     mb: !isMobile ? 1 : 0,
                   }}
                 >
-                  <DownloadDialog
-                    serverToken={serverToken}
-                    location={location}
-                    forecast={forecast}
-                    units={units}
-                  />
+                  <Stack
+                    direction="row"
+                    spacing={0}
+                    sx={{
+                      position: "relative",
+                      justifyContent: "flex-start",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <IconButton
+                      size="sm"
+                      color="inherit"
+                      aria-label="favorite"
+                      onClick={() => {}}
+                    >
+                      <FontAwesomeIcon
+                        icon={faBookmark}
+                        style={{
+                          fontSize: "1rem",
+                          color: "var(--joy-palette-neutral-700, #32383E)",
+                        }}
+                      />
+                    </IconButton>
+                    <DownloadDialog
+                      serverToken={serverToken}
+                      location={location}
+                      forecast={forecast}
+                      units={units}
+                    />
+                  </Stack>
                   <IconButton
                     size="sm"
                     color="inherit"
@@ -834,7 +860,7 @@ const ForecastContainer = ({
                 maxWidth: "1200px",
                 height: "231.81px",
                 bgcolor: "common.white",
-                borderRadius: !isMobile ? "6px" : "none",
+                borderRadius: !isMobile ? "lg" : "none",
                 boxSizing: "border-box",
               }}
             >

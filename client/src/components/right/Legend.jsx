@@ -96,8 +96,8 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
               flex: 1,
               bgcolor: "#696969",
               cursor: "pointer",
-              borderBottomLeftRadius: 6,
-              borderBottomRightRadius: 6,
+              borderBottomLeftRadius: isMobile ? 0 : 6,
+              borderBottomRightRadius: isMobile ? 0 : 6,
             }}
           >
             <List
@@ -111,8 +111,8 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
                 height: !isMobile ? 300 : 22,
                 width: !isMobile ? 36 : "100%",
                 flexDirection: !isMobile ? "column-reverse" : "row",
-                borderBottomLeftRadius: 6,
-                borderBottomRightRadius: 6,
+                borderBottomLeftRadius: isMobile ? 0 : 6,
+                borderBottomRightRadius: isMobile ? 0 : 6,
                 overflow: "hidden",
               }}
             >

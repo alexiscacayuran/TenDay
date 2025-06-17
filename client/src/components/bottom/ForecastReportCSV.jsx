@@ -4,7 +4,7 @@ import { Button } from "@mui/joy";
 import { format } from "date-fns";
 import { convertValue } from "../utils/ForecastValue";
 
-const timestamp = `tanawPH_${format(new Date(), "yyyyMMdd_HHmmss")}.csv`;
+const timestamp = `tenday-${format(new Date(), "yyyyMMdd-HHmmss")}.csv`;
 
 const headers = [
   { label: "municity", key: "municity" },
@@ -123,7 +123,7 @@ const ForecastReportCSV = ({
     docExtendForecast,
     forecastExtended
   );
-  console.log("csvData", csvData);
+
   return (
     <CSVLink data={csvData} headers={headers} filename={timestamp}>
       <Button
