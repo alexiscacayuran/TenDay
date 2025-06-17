@@ -5,10 +5,11 @@ export const authenticateToken = (api_id) => {
   return async (req, res, next) => {
     const token = req.headers["token"];
     let api_name = "Unknown API"; 
+    let forecast_label = "Forecast";
 
     const baseMetadata = {
       api: api_name,
-      forecast: "10-day Forecast"
+      forecast: forecast_label
     };
 
     const baseMisc = {
@@ -22,16 +23,17 @@ export const authenticateToken = (api_id) => {
     };
 
     try {
-      const apiResult = await pool.query(`SELECT name FROM api WHERE id = $1`, [api_id]);
+      const apiResult = await pool.query(`SELECT name, forecast FROM api WHERE id = $1`, [api_id]);
       if (apiResult.rows.length > 0) {
         api_name = apiResult.rows[0].name;
+        forecast_label = apiResult.rows[0].forecast;
         baseMetadata.api = api_name;
+        baseMetadata.forecast = forecast_label;
       }
     } catch (err) {
       console.error("⚠️ Error fetching API name:", err.message);
     }
 
-    // If token is missing, return error response
     if (!token) {
       return res.status(498).json({
         metadata: baseMetadata,
@@ -64,7 +66,6 @@ export const authenticateToken = (api_id) => {
 
       const { organization, expires_at, api_ids } = result.rows[0];
 
-      // Check if token has expired
       const tokenExpired = expires_at && new Date(expires_at) < new Date();
       if (tokenExpired) {
         return res.status(498).json({
@@ -82,57 +83,47 @@ export const authenticateToken = (api_id) => {
         organization,
         api_ids: Array.isArray(api_ids) ? api_ids : [],
         api_id,
-        api_name
+        api_name,
+        forecast: forecast_label
       };
 
-      // Skip rate limiting for organization '10-Day Forecast'
+      // Bypass rate limiting for internal orgs
       if (organization === "10-Day Forecast") {
         return next();
       }
 
-      // Rate limiting: Check the number of requests from the user/IP
-      const ip = req.ip || req.headers["x-forwarded-for"] || "unknown_ip";
-      const rateLimitKey = `rate_limit:${ip}:${api_id}`;
+      // Rate limit settings (per token)
+      const rateLimitKey = `rate_limit:${token}:${api_id}`;
+      const cooldownKey = `last_request_time:${token}:${api_id}`;
+      const MAX_REQUESTS = 1000;
+      const COOL_DOWN_TIME = 60; // seconds
 
-      // Maximum requests allowed per hour
-      const MAX_REQUESTS = 1;
-      // Cooldown time in seconds
-      const COOL_DOWN_TIME = 60;
+      const currentCount = parseInt(await redisClient.get(rateLimitKey)) || 0;
 
-      // Get the current request count for the user/IP
-      const currentRequestCount = await redisClient.get(rateLimitKey);
-
-      // If the rate limit is exceeded, return an error
-      if (currentRequestCount >= MAX_REQUESTS) {
-        // Check if cooldown time has passed
-        const lastRequestTime = await redisClient.get(`last_request_time:${ip}:${api_id}`);
-
+      if (currentCount >= MAX_REQUESTS) {
+        const lastRequestTime = await redisClient.get(cooldownKey);
         if (lastRequestTime) {
           const timeElapsed = Date.now() - parseInt(lastRequestTime);
-
           if (timeElapsed < COOL_DOWN_TIME * 1000) {
             return res.status(429).json({
-              metadata: {
-                ...baseMetadata,
-                api: api_name 
-              },
+              metadata: baseMetadata,
               forecast: [],
               misc: {
                 ...baseMisc,
                 status_code: 429,
-                description: `Too many requests. Please wait for ${COOL_DOWN_TIME} seconds.`
+                description: `Too many requests. Please wait ${COOL_DOWN_TIME} seconds.`
               }
             });
           }
         }
       }
 
-      // If the rate limit is not exceeded, proceed with the request:
+      // Increment and set cooldown
       await redisClient.multi()
-        .incr(rateLimitKey) 
-        .expire(rateLimitKey, 3600)  // TTL of 1 hour
-        .set(`last_request_time:${ip}:${api_id}`, Date.now())  // Store the last request time
-        .expire(`last_request_time:${ip}:${api_id}`, COOL_DOWN_TIME)  // TTL of cooldown time (1 minute)
+        .incr(rateLimitKey)
+        .expire(rateLimitKey, 3600) // 1 hour bucket
+        .set(cooldownKey, Date.now())
+        .expire(cooldownKey, COOL_DOWN_TIME)
         .exec();
 
       next();

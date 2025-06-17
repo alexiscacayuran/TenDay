@@ -63,12 +63,13 @@ import markSolvedRoute from './API/markSolved.js';
 import { processSeasonalData } from "./seasonalData/uploadSeasonal.js";
 import { processSeasonalFiles } from "./seasonalData/sProcessTIF.js";
 
-import seasonalDataRegional from "./seasonalData/seasonalRegional.js"; // Import the route
+import regionalDataRoute from "./seasonalData/regional.js";
+import provinceDataRoute from "./seasonalData/province.js";
+import seasonalValidRoute from "./seasonalData/valid.js"; 
 
 //API
 
 import tokenRoutes from "./API/tokenRoutes.js";
-import seasonalRoutes from "./API/seasonalRoutes.js";
 
 //Admin
 import apiOrg from "./admin/apiOrg.js";
@@ -448,9 +449,10 @@ app.get("/seasonalprocess", async (req, res) => {
 
 // Use API routes
 app.use("/api", tokenRoutes);
-app.use("/api", seasonalRoutes);
 
-app.use("/api/v1", seasonalDataRegional);
+app.use("/api/v1/seasonal", regionalDataRoute);
+app.use("/api/v1/seasonal", provinceDataRoute); 
+app.use("/api/v1/seasonal", seasonalValidRoute);
 
 //Admin
 app.use("/api", apiOrg);
