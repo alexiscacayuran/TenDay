@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import {
   Box,
   Button,
@@ -13,16 +14,42 @@ import {
   Select,
   Option,
   Textarea,
+  Snackbar,
 } from "@mui/joy";
 
-import Add from "@mui/icons-material/Add";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
 
 const Feedback = () => {
+  const submitFeedback = async (category, comment, email) => {
+    setLoading(true);
+    try {
+      const response = await axios.post("api/getReport", {
+        category: category,
+        location: "",
+        comment: comment,
+        email: email,
+      });
+
+      console.log("Feedback submitted:", response.data.feedback);
+    } catch (err) {
+      if (err.response) {
+        console.error("Server error:", err.response.data.error);
+      } else {
+        console.error("Network error:", err.message);
+      }
+    } finally {
+      setLoading(false); // ✅ Reset loading state
+      setOpenSnackbar(true);
+    }
+  };
+
+  const [loading, setLoading] = useState(false);
+
   const theme = useTheme();
   const [open, setOpen] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
   return (
     <Box
       sx={{
@@ -47,6 +74,21 @@ const Feedback = () => {
         >
           Feedback
         </Button>
+        {/* <Snackbar
+          autoHideDuration={2000}
+          open={openSnackbar}
+          onClose={(event, reason) => {
+            if (reason === "clickaway") {
+              return;
+            }
+            setOpenSnackbar(false);
+          }}
+          size="md"
+          variant="solid"
+          sx={{ zIndex: 9999 }}
+        >
+          Feedback submitted successfully. Thank you for helping us improve!
+        </Snackbar> */}
         <Modal open={open} onClose={() => setOpen(false)}>
           <ModalDialog
             variant="solid"
@@ -60,13 +102,15 @@ const Feedback = () => {
               Let us know your thoughts about the app.
             </DialogContent>
             <form
-              onSubmit={(event) => {
+              onSubmit={async (event) => {
                 event.preventDefault();
                 const formData = new FormData(event.currentTarget);
-                // const formJson = Object.fromEntries(formData.entries());
-                // const concern = JSON.parse(formJson.comment);
+                const category = parseInt(formData.get("concern"), 10);
+                const comment = formData.get("comment");
+                const email = formData.get("email");
 
-                alert(formData);
+                await submitFeedback(category, comment, email);
+
                 setOpen(false);
               }}
             >
@@ -75,15 +119,15 @@ const Feedback = () => {
                   <FormLabel sx={{ color: "common.white" }}>Concern</FormLabel>
                   <Select
                     variant="solid"
-                    defaultValue="forecast"
+                    defaultValue={2}
                     name="concern"
                     required
                     sx={{ minWidth: 200, backgroundColor: "neutral.600" }}
                   >
-                    <Option value="forecast">Forecast data</Option>
-                    <Option value="bug">Bugs</Option>
-                    <Option value="ui">UI</Option>
-                    <Option value="others">Others</Option>
+                    <Option value={2}>Incorrect data</Option>
+                    <Option value={3}>Bugs</Option>
+                    <Option value={4}>UI</Option>
+                    <Option value={5}>Others</Option>
                   </Select>
                 </FormControl>
                 <FormControl>
@@ -109,7 +153,9 @@ const Feedback = () => {
                   />
                 </FormControl>
 
-                <Button type="submit">Confirm</Button>
+                <Button loading={loading} type="submit">
+                  Confirm
+                </Button>
               </Stack>
             </form>
           </ModalDialog>

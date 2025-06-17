@@ -16,6 +16,7 @@ import Domain from "./main/Domain";
 
 import DateNavigation from "./bottom/DateNavigation";
 import ForecastContainer from "./bottom/ForecastContainer";
+import Feedback from "./bottom/Feedback";
 
 import LayerMenu from "./left/LayerMenu";
 import ScaleNautic from "react-leaflet-nauticsale";
@@ -29,7 +30,6 @@ import ZoomLevel from "./utils/ZoomLevel";
 
 import { Stack, Box } from "@mui/joy";
 import { Slide } from "@mui/material";
-import Feedback from "./right/Feedback";
 
 const Map = () => {
   const theme = useTheme();
