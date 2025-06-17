@@ -10,28 +10,32 @@ const client = new BetaAnalyticsDataClient({
 
 const propertyId = "properties/484898570";
 
-const getCityData = async (startDate, endDate) => {
+const getcountryData = async (startDate, endDate) => {
   const [response] = await client.runReport({
     property: propertyId,
     dateRanges: [{ startDate, endDate }],
-    dimensions: [{ name: "city" }],
+    dimensions: [{ name: "country" }],
     metrics: [{ name: "activeUsers" }],
     limit: 10000,
   });
 
-  const cityData = {};
+  const countryData = {};
 
-  response.rows?.forEach(row => {
-    let city = row.dimensionValues[0].value || "Unknown";
-    if (city.toLowerCase() === "(not set)") city = "Others";
-    const sessions = parseInt(row.metricValues[0].value, 10) || 0;
-    cityData[city] = (cityData[city] || 0) + sessions;
-  });
+response.rows?.forEach(row => {
+  let country = row.dimensionValues[0].value || "Unknown";
+  if (country.toLowerCase() === "(not set)") country = "Others";
 
-  return cityData;
+  const sessions = parseInt(row.metricValues[0].value, 10) || 0;
+  countryData[country] = (countryData[country] || 0) + sessions;
+});
+
+return countryData;
+
 };
 
-router.get("/cityChart", async (req, res) => {
+
+
+router.get("/countryChart", async (req, res) => {
   try {
     const today = dayjs().format("YYYY-MM-DD");
     const startOfWeek = dayjs().startOf("week").format("YYYY-MM-DD");
@@ -39,10 +43,10 @@ router.get("/cityChart", async (req, res) => {
     const allTimeStart = "2020-01-01"; // Adjust based on GA4 setup
 
     const [daily, weekly, monthly, allTime] = await Promise.all([
-      getCityData(today, today),
-      getCityData(startOfWeek, today),
-      getCityData(startOfMonth, today),
-      getCityData(allTimeStart, today),
+      getcountryData(today, today),
+      getcountryData(startOfWeek, today),
+      getcountryData(startOfMonth, today),
+      getcountryData(allTimeStart, today),
     ]);
 
     const allCities = new Set([
@@ -52,18 +56,18 @@ router.get("/cityChart", async (req, res) => {
       ...Object.keys(allTime),
     ]);
 
-    const results = Array.from(allCities).map(city => ({
-      city,
-      daily_count: daily[city] || 0,
-      weekly_count: weekly[city] || 0,
-      monthly_count: monthly[city] || 0,
-      all_time_count: allTime[city] || 0,
+    const results = Array.from(allCities).map(country => ({
+      country,
+      daily_count: daily[country] || 0,
+      weekly_count: weekly[country] || 0,
+      monthly_count: monthly[country] || 0,
+      all_time_count: allTime[country] || 0,
     }));
 
     res.json({ data: results });
   } catch (error) {
-    console.error("Error fetching GA city analytics:", error);
-    res.status(500).json({ error: "Failed to fetch city analytics" });
+    console.error("Error fetching GA country analytics:", error);
+    res.status(500).json({ error: "Failed to fetch country analytics" });
   }
 });
 

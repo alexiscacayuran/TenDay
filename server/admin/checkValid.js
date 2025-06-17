@@ -1,12 +1,13 @@
 import express from 'express';
 import axios from 'axios';
 import moment from 'moment-timezone';
+import { baseURL } from '../config.js';
 
 const router = express.Router();
 
 router.get('/checkValid', async (req, res) => {
   try {
-    const response = await axios.get('http://localhost:5000/api/v1/valid');
+    const response = await axios.get(`${baseURL}/api/v1/valid`);
     const { latest_date, latest_time } = response.data;
 
     const latestDateTimePH = moment.tz(`${latest_date} ${latest_time}`, 'YYYY-MM-DD hh:mm:ss A', 'Asia/Manila');
