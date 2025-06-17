@@ -25,7 +25,7 @@ const Feedback = () => {
   const submitFeedback = async (category, comment, email) => {
     setLoading(true);
     try {
-      const response = await axios.post("api/getReport", {
+      const response = await axios.post("api/postFeedback", {
         category: category,
         location: "",
         comment: comment,

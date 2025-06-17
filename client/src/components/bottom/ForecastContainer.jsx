@@ -490,6 +490,32 @@ const ForecastContainer = ({
     }),
   };
 
+  const [loading, setLoading] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const submitFeedback = async (location) => {
+    setLoading(true);
+    try {
+      const response = await axios.post("api/postFeedback", {
+        category: 1,
+        location: location,
+        comment: "",
+        email: "",
+      });
+
+      console.log("Feedback submitted:", response.data.feedback);
+    } catch (err) {
+      if (err.response) {
+        console.error("Server error:", err.response.data.error);
+      } else {
+        console.error("Network error:", err.message);
+      }
+    } finally {
+      setLoading(false); // ✅ Reset loading state
+      setOpenSnackbar(true);
+    }
+  };
+
   return (
     <Slide direction="up" in={open} mountOnEnter unmountOnExit>
       <Sheet
@@ -967,13 +993,40 @@ const ForecastContainer = ({
                         >
                           Close
                         </Button>
-                        <Button
-                          color="neutral"
-                          onClick={function () {}}
-                          variant="soft"
+                        <form
+                          onSubmit={async (event) => {
+                            event.preventDefault();
+                            const formData = new FormData(event.currentTarget);
+                            const location = formData.get("location");
+                            await submitFeedback(location);
+
+                            markerLayer.current.eachLayer((layer) => {
+                              layer.remove();
+                            });
+
+                            markerLayer.current = null;
+
+                            if (selectedPolygon.current) {
+                              map.removeLayer(selectedPolygon.current);
+                              selectedPolygon.current = null;
+                            }
+                            setOpen(false);
+                          }}
                         >
-                          Report
-                        </Button>
+                          <input
+                            type="hidden"
+                            name="location"
+                            value={location.municity + ", " + location.province}
+                          />
+                          <Button
+                            type="submit"
+                            color="neutral"
+                            onClick={() => {}}
+                            variant="soft"
+                          >
+                            Report
+                          </Button>
+                        </form>
                       </Stack>
                     </Stack>
                   </Stack>
