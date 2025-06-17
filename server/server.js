@@ -90,7 +90,7 @@ import checkValidRouter from './admin/checkValid.js';
 import { DateTime } from "luxon";
 
 //Report
-import report from './report/getReport.js';
+import report from './report/postFeedback.js';
 import getFeedbackRouter from './report/getFeedback.js';
 
 // Show time in Manila

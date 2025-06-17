@@ -3,7 +3,7 @@ import { pool } from '../db.js';
 
 const router = express.Router();
 
-router.post('/getreport', async (req, res) => {
+router.post('/postFeedback', async (req, res) => {
   const { category, location, comment, email } = req.body;
 
   if (!category) {
