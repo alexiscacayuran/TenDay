@@ -8,15 +8,7 @@ import MyLocationIcon from "@mui/icons-material/MyLocation";
 import Tooltip from "@mui/joy/Tooltip";
 import { Box, Stack } from "@mui/joy";
 
-const CustomZoomControl = ({ map }) => {
-  // const [zoomLevel, setZoomLevel] = useState(null);
-  // const map = useMap();
-  // console.log(zoomLevel);
-
-  // useEffect(() => {
-  //   map.on("zoomend", () => setZoomLevel(map.getZoom()));
-  // }, [map]);
-
+const MapControl = ({ map }) => {
   return (
     <Box sx={{ position: "absolute", top: 70, right: 10, zIndex: 1000 }}>
       <Stack
@@ -65,4 +57,4 @@ const CustomZoomControl = ({ map }) => {
   );
 };
 
-export default CustomZoomControl;
+export default MapControl;

@@ -1,18 +1,22 @@
 import { useEffect, useState, useRef } from "react";
 import { vectorBasemapLayer } from "esri-leaflet-vector";
 import { featureLayer } from "esri-leaflet";
-import { useMap } from "react-leaflet";
+import { useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+import { useMediaQuery } from "@mui/material";
 
 const Base = ({ arcgisToken, selectedPolygon }) => {
   const map = useMap();
   const [provinceId, setProvinceId] = useState(null);
+  const [showMunicity, setShowMunicity] = useState(false);
   const municityLayerRef = useRef(null);
   const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
   const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
 
+  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
+
   map.createPane("activeFeaturePane");
-  map.getPane("activeFeaturePane").style.zIndex = 500;
+  map.getPane("activeFeaturePane").style.zIndex = 400;
 
   useEffect(() => {
     if (!arcgisToken) return;
@@ -24,36 +28,34 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
       apiKey: arcgisToken,
       pane: "overlayPane",
       zIndex: 200,
-    });
-    weatherBasemap.addTo(map);
+    }).addTo(map);
 
     const provinceBoundaries = featureLayer({
       token: arcgisToken,
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/2",
       simplifyFactor: 0.5,
       precision: 4,
-      style: (feature) => ({
+      style: () => ({
         color: "white",
-        weight: 2.5,
+        weight: 3,
         opacity: 0.5,
         fillOpacity: 0,
       }),
       onEachFeature: (feature, layer) => {
         layer.on({
           mouseover: () => {
-            setProvinceId(feature.properties.ID);
+            if (!isMobile) {
+              setProvinceId(feature.properties.ID);
+            }
           },
         });
       },
-    });
-
-    provinceBoundaries.addTo(map);
+    }).addTo(map);
 
     const hillshade = vectorBasemapLayer(hilshadeEnum, {
       apiKey: arcgisToken,
       pane: "hillshadePane",
-    });
-    hillshade.addTo(map);
+    }).addTo(map);
 
     map.attributionControl.setPrefix(false);
     map.attributionControl.setPosition("bottomleft");
@@ -61,50 +63,47 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
     return () => {
       map.removeLayer(weatherBasemap);
       map.removeLayer(provinceBoundaries);
+      map.removeLayer(hillshade);
     };
-  }, [map, arcgisToken]);
+  }, [map, arcgisToken, isMobile]);
+
+  // Mobile-specific map zoom event
+  useMapEvents({
+    zoomend: () => {
+      if (isMobile) {
+        const currentZoom = map.getZoom();
+        setShowMunicity(currentZoom >= 10);
+      }
+    },
+  });
 
   useEffect(() => {
-    if (!provinceId) return;
+    if (!arcgisToken || (!provinceId && !isMobile)) return;
 
-    const where = `ID LIKE '${provinceId}%'`;
-
-    // Remove previous layer if exists
     if (municityLayerRef.current) {
       map.removeLayer(municityLayerRef.current);
     }
+
+    // On mobile: only show if zoom is sufficient
+    if (isMobile && !showMunicity) return;
+
+    const whereClause = isMobile ? "1=1" : `ID LIKE '${provinceId}%'`;
+
     const municityBoundaries = featureLayer({
       token: arcgisToken,
       url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/3",
       simplifyFactor: 0.5,
       precision: 4,
-      where: where,
-      style: (feature) => ({
+      where: whereClause,
+      style: () => ({
         color: "white",
-        weight: 2.5,
-        opacity: 0.5,
-        fillOpacity: 0.2,
         weight: 3,
-        stroke: true,
+        opacity: 0.5,
+        fillOpacity: isMobile ? 0 : 0.2,
       }),
       onEachFeature: (feature, layer) => {
+        // Always add click event (for both mobile and desktop)
         layer.on({
-          mouseover: () => {
-            setProvinceId(feature.properties.ID.substring(0, 4));
-            layer.setStyle({
-              fillColor: "white",
-              fillOpacity: 0.4,
-            });
-          },
-
-          mouseout: () => {
-            setProvinceId(null);
-            layer.setStyle({
-              fillColor: "white",
-              fillOpacity: 0.2,
-            });
-          },
-
           click: (event) => {
             const clickedFeature = event.target.feature;
 
@@ -118,7 +117,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
                 weight: 3,
                 opacity: 1,
                 fillColor: "#3E7BFF",
-                fillOpacity: 0.3,
+                fillOpacity: 0.2,
                 interactive: false,
                 pane: "activeFeaturePane",
               },
@@ -128,11 +127,30 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
             selectedPolygon.current = selectedMunicity;
           },
         });
+
+        // Only add mouseover/mouseout on non-mobile
+        if (!isMobile) {
+          layer.on({
+            mouseover: () => {
+              setProvinceId(feature.properties.ID.substring(0, 4));
+              layer.setStyle({
+                fillColor: "white",
+                fillOpacity: 0.4,
+              });
+            },
+            mouseout: () => {
+              setProvinceId(null);
+              layer.setStyle({
+                fillColor: "white",
+                fillOpacity: 0.2,
+              });
+            },
+          });
+        }
       },
     });
 
     municityBoundaries.addTo(map);
-
     municityLayerRef.current = municityBoundaries;
 
     return () => {
@@ -140,7 +158,7 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
         map.removeLayer(municityBoundaries);
       }
     };
-  }, [map, arcgisToken, provinceId]);
+  }, [map, arcgisToken, provinceId, isMobile, showMunicity]);
 
   return null;
 };

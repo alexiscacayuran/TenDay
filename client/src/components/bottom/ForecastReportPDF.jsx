@@ -948,7 +948,7 @@ const ForecastReportPDF = ({
   };
 
   return (
-    <Document title="tanawPH 10-Day Climate Forecast" author="PAGASA">
+    <Document title="TenDay: Weather Forecast" author="PAGASA">
       <Page size="A4" style={styles.page}>
         <View style={styles.header} fixed>
           <Image src={PAGASA} style={styles.logo} />

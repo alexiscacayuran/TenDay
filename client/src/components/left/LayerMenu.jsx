@@ -7,7 +7,6 @@ import {
   faCloudShowersHeavy,
   faCloud,
   faChevronDown,
-  faLocationCrosshairs,
 } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "@mui/joy/styles";
 import { useMediaQuery } from "@mui/material";
@@ -20,8 +19,6 @@ import {
   Tooltip,
   Stack,
   Drawer,
-  DialogTitle,
-  ModalClose,
   List,
   ListItem,
   ListItemButton,
@@ -32,7 +29,9 @@ import LayerOptionMenu from "./LayerOptionMenu";
 import { useAnimation, motion } from "framer-motion";
 
 import { TMaxIcon, TMeanIcon, TMinIcon } from "../utils/CustomIcons";
+
 import Search from "../header/Search";
+import Issuance from "../right/Issuance";
 
 const LayerMenu = ({
   overlay,
@@ -56,10 +55,12 @@ const LayerMenu = ({
   map,
   setIsLocationReady,
   selectedPolygon,
+  isBoundaryHidden,
+  setIsBoundaryHidden,
+  startDate,
 }) => {
   const [localOverlay, setLocalOverlay] = useState(overlay);
-  const [localTemp, setLocalTemp] = useState();
-  const theme = useTheme();
+  const [localTemp, setLocalTemp] = useState(temp);
   const isLaptop = useMediaQuery((theme) => theme.breakpoints.up("lg"));
   const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -154,13 +155,9 @@ const LayerMenu = ({
     },
   ];
 
-  useEffect(() => {
-    setLocalOverlay(overlay);
-  }, [overlay]);
-
-  useEffect(() => {
-    setLocalTemp(temp);
-  }, [temp]);
+  const handleInfo = () => {
+    return null;
+  };
 
   return (
     <>
@@ -336,6 +333,8 @@ const LayerMenu = ({
             isAnimHidden={isAnimHidden}
             setIsLayerClipped={setIsLayerClipped}
             isLayerClipped={isLayerClipped}
+            isBoundaryHidden={isBoundaryHidden}
+            setIsBoundaryHidden={setIsBoundaryHidden}
           />
         </Box>
       ) : (
@@ -440,21 +439,22 @@ const LayerMenu = ({
                       <ListItemButton
                         color="neutral"
                         variant="solid"
+                        selected={value === localOverlay}
                         onClick={() => {
                           setLocalOverlay(value);
                           setOverlay(value);
                           setOpen(false);
                         }}
                         sx={{
+                          userSelect: "none",
                           borderRadius: "sm",
-                          '&:not(.Mui-selected, [aria-selected="true"]):hover':
-                            {
-                              backgroundColor: "neutral.700",
-                              borderRadius: "sm",
-                            },
+                          // backgroundColor:
+                          //   localOverlay === value
+                          //     ? "neutral.700"
+                          //     : "transparent",
                           '&:not(.Mui-selected, [aria-selected="true"]):active':
                             {
-                              backgroundColor: "neutral.700",
+                              backgroundColor: "neutral.600",
                               borderRadius: "sm",
                             },
                         }}
@@ -484,6 +484,7 @@ const LayerMenu = ({
               zIndex: 1200,
             }}
           >
+            <Issuance context="mobile" startDate={startDate} />
             <Search
               arcgisToken={arcgisToken}
               setLocation={setLocation}
@@ -493,7 +494,6 @@ const LayerMenu = ({
               selectedPolygon={selectedPolygon}
               isLocateOnly="true"
             />
-
             <LayerOptionMenu
               setIsDiscrete={setIsDiscrete}
               isDiscrete={isDiscrete}
@@ -501,6 +501,8 @@ const LayerMenu = ({
               isAnimHidden={isAnimHidden}
               setIsLayerClipped={setIsLayerClipped}
               isLayerClipped={isLayerClipped}
+              isBoundaryHidden={isBoundaryHidden}
+              setIsBoundaryHidden={setIsBoundaryHidden}
             />
           </MotionStack>
         </>

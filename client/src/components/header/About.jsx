@@ -156,7 +156,7 @@ const About = ({ openSidebar, setOpenSidebar }) => {
               >
                 TenDay is a{" "}
                 <Typography sx={{ fontWeight: "bold" }}>
-                  10-day climate forecast visualization app
+                  10-day weather forecast app
                 </Typography>{" "}
                 developed by DOST-PAGASA that provides advance notice of
                 potential hazards related to weather, climate, and hydrological

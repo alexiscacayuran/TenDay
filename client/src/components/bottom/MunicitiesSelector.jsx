@@ -49,6 +49,7 @@ const MunicitiesSelector = ({
   return (
     <Box sx={{ flexBasis: "100%", width: "100%", mt: 1 }}>
       <Select
+        variant="solid"
         placeholder={municities.length > 0 ? "ex. " + municities[0] : ""}
         multiple
         onClose={handleClose}
@@ -63,13 +64,13 @@ const MunicitiesSelector = ({
             }}
           >
             {selectedMunicities.map((selectedOption) => (
-              <Chip variant="soft" color="primary">
+              <Chip variant="solid" color="primary">
                 {selectedOption.label}
               </Chip>
             ))}
           </Box>
         )}
-        sx={{ minWidth: "15rem", color: "neutral.500" }}
+        sx={{ minWidth: "15rem", backgroundColor: "neutral.600" }}
         slotProps={{
           listbox: {
             sx: {
@@ -82,14 +83,13 @@ const MunicitiesSelector = ({
           // when user has selected a value
           endDecorator: (
             <IconButton
+              color="inherit"
               size="sm"
-              variant="plain"
-              color="neutral"
               onMouseDown={(event) => {
                 // don't open the popup when clicking on this button
                 event.stopPropagation();
               }}
-              sx={{ fontSize: "1.25rem" }}
+              sx={{ fontSize: "1.25rem", color: "common.white" }}
               onClick={() => {
                 setLocalSelected([]);
                 setSelectedMunicities([]);
