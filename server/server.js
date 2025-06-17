@@ -3,6 +3,8 @@ import fs from "fs";
 import cors from "cors";
 import jwtAuth from "./route/jwtAuth.js";
 import dashboard from "./route/dashboard.js";
+import reportPage from "./route/report.js";
+import tokenPage from "./route/token.js";
 import dashboardAdmin from "./route/dashboardAdmin.js";
 import bodyParser from "body-parser";
 import municitiesRoutes from "./controller/municities.js";
@@ -19,9 +21,12 @@ import archiver from "archiver";
 import moment from "moment";
 
 import authRoutes from "./API/token.js";
+import { port } from './config.js';
 
 import pieChart from "./route/pieChart.js";
 import barChart from "./route/barChart.js";
+import cityChart from "./route/cityChart.js";
+import countryChart from "./route/countryChart.js";
 
 // //Background job
 import "./backgroundJob/cleanUpDB.js";
@@ -49,6 +54,10 @@ import getCurrentForecast from "./tenDayData/getCurrentForecast.js"; // Import t
 import getFullForecastInternal from "./tenDayData/internal/getFullForecast.js";
 import getDateForecastInternal from "./tenDayData/internal/getDateForecast.js";
 import getMunicities from "./tenDayData/internal/getMunicities.js";
+
+import analyticsRoutes from "./analytics.js";
+
+import markSolvedRoute from './API/markSolved.js';
 
 //API seasonal (internal)
 import { processSeasonalData } from "./seasonalData/uploadSeasonal.js";
@@ -82,6 +91,7 @@ import { DateTime } from "luxon";
 
 //Report
 import report from './report/getReport.js';
+import getFeedbackRouter from './report/getFeedback.js';
 
 // Show time in Manila
 const manilaTime = DateTime.now().setZone("Asia/Manila").toFormat("yyyy-MM-dd HH:mm:ss");
@@ -93,7 +103,6 @@ console.log("🌐 UTC Time:", utcTime);
 
 
 const app = express();
-const port = 5000;
 
 // MIDDLEWARE:
 app.use(express.json());
@@ -104,8 +113,12 @@ app.use(
 );
 app.use(bodyParser.json());
 
+//app.use(express.json());
+//app.use(cors());
+
 // ROUTES:
 app.use("/serverToken", getTokenRoute);
+
 
 app.use("/api/auth", authRoutes); // Token API
 
@@ -115,14 +128,28 @@ app.get("/api/token", (req, res) => {
 
 app.use("/auth", jwtAuth);
 
+//Mark Solved
+app.use('/api', markSolvedRoute);
+
 // PieChart
 app.use("/", pieChart);
 
 // BarChart
 app.use("/", barChart);
 
+// CityChart
+app.use("/", cityChart);
+
+// CountryChart
+app.use("/", countryChart);
+
 // Route for dashboard
 app.use("/dashboard", dashboard);
+app.use("/api/token", tokenPage);
+
+//report
+app.use("/api/report", reportPage);
+app.use('/api', getFeedbackRouter);
 
 // Route for dashboard
 app.use("/dashboardAdmin", dashboardAdmin);
@@ -175,6 +202,9 @@ app.use("/fullInternal", getFullForecastInternal);
 app.use("/municitiesInternal", getMunicities);
 
 app.use('/api/', checkValidRouter);
+
+  //Analytics
+  app.use('/api', analyticsRoutes);
 
 // Route for uploading Ten Day Data
 app.get("/uploadForecastData", authenticate, async (req, res) => {
