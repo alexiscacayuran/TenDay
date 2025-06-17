@@ -76,13 +76,13 @@ router.post("/generate-token", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: 'gabrielbesmontelopez100900@gmail.com',
-        pass: 'qjrf fjcg ytqh btwe',
+        user: 'tenday.pagasa@gmail.com',
+        pass: 'lnio apew yaup fqds',
       },
     });
 
     await transporter.sendMail({
-      from: `"TenDay" <${'gabrielbesmontelopez100900@gmail.com'}>`,
+      from: `"TenDay" <${'tenday.pagasa@gmail.com'}>`,
       to: email,
       subject: "Your API Access Token",
       html: `
