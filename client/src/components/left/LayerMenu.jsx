@@ -7,7 +7,6 @@ import {
   faCloudShowersHeavy,
   faCloud,
   faChevronDown,
-  faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "@mui/joy/styles";
 import { useMediaQuery } from "@mui/material";
@@ -440,21 +439,22 @@ const LayerMenu = ({
                       <ListItemButton
                         color="neutral"
                         variant="solid"
+                        selected={value === localOverlay}
                         onClick={() => {
                           setLocalOverlay(value);
                           setOverlay(value);
                           setOpen(false);
                         }}
                         sx={{
+                          userSelect: "none",
                           borderRadius: "sm",
-                          '&:not(.Mui-selected, [aria-selected="true"]):hover':
-                            {
-                              backgroundColor: "neutral.700",
-                              borderRadius: "sm",
-                            },
+                          // backgroundColor:
+                          //   localOverlay === value
+                          //     ? "neutral.700"
+                          //     : "transparent",
                           '&:not(.Mui-selected, [aria-selected="true"]):active':
                             {
-                              backgroundColor: "neutral.700",
+                              backgroundColor: "neutral.600",
                               borderRadius: "sm",
                             },
                         }}

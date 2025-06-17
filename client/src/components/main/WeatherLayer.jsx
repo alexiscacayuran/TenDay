@@ -167,7 +167,7 @@ const WeatherLayer = ({
         georaster: georaster,
         resolution: 128,
         pixelValuesToColorFn: colorScaleFn,
-        keepBuffer: 10000000,
+        keepBuffer: 1000,
         pane: "tilePane",
         zIndex: 100,
         opacity: 0.8,

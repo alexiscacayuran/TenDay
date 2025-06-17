@@ -7,7 +7,7 @@ import ForecastReportPDF, { ReportViewer } from "./ForecastReportPDF";
 import ForecastReportCSV from "./ForecastReportCSV";
 import ForecastReportTXT from "./ForecastReportTXT";
 
-const timestamp = `tanawPH_${format(new Date(), "yyyyMMdd_HHmmss")}.pdf`;
+const timestamp = `tenday-${format(new Date(), "yyyyMMdd-HHmmss")}.pdf`;
 
 const ForecastDownload = ({
   serverToken,
@@ -100,22 +100,7 @@ const ForecastDownload = ({
         );
     }
   };
-  return (
-    <>
-      {/* {docFormat === "pdf" ? (
-        <ReportViewer
-          location={location}
-          forecast={forecast}
-          docUnits={docUnits}
-          docColored={docColored}
-          docExtendForecast={docExtendForecast}
-          forecastExtended={forecastExtended}
-        />
-      ) : null} */}
-
-      {downloadButton()}
-    </>
-  );
+  return <>{downloadButton()}</>;
 };
 
 export default ForecastDownload;

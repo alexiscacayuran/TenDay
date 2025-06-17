@@ -58,7 +58,6 @@ const Settings = ({
         size="sm"
         variant="outlined"
         value={value}
-        exclusive
         onChange={onChange}
         sx={{ minWidth: 200 }}
       >
