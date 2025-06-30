@@ -16,7 +16,7 @@ router.get('/apiOrg', async (req, res) => {
     if (page && limit) {
       const offset = (page - 1) * limit;
       tokens = await pool.query(
-        `SELECT id, organization, expires_at, created_at, api_ids
+        `SELECT id, organization, expires_at, created_at, api_ids, status, activated_at
          FROM api_tokens
          WHERE id <> 1
          ORDER BY organization
@@ -33,7 +33,7 @@ router.get('/apiOrg', async (req, res) => {
     } else {
       // No pagination – return all
       tokens = await pool.query(
-        `SELECT id, organization, expires_at, created_at, api_ids
+        `SELECT id, organization, expires_at, created_at, api_ids, status, activated_at
          FROM api_tokens
          WHERE id <> 1
          ORDER BY organization`
@@ -61,7 +61,7 @@ router.put('/apiOrg/:id', async (req, res) => {
     const result = await pool.query(
       `UPDATE api_tokens 
        SET organization = $1, expires_at = $2, api_ids = $3
-       WHERE id = $4 
+       WHERE id = $4
        RETURNING *`,
       [organization, expires_at, api_ids, id]
     );
