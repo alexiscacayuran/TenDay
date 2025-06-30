@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get("/valid", async (req, res) => {
   try {
-    const dateRes = await pool.query(`SELECT MAX(date) AS latest_date FROM sf_date`);
+    const dateRes = await pool.query(`SELECT TO_CHAR(MIN(date) - INTERVAL '1 month', 'YYYY-MM') AS latest_date  FROM sf_date  WHERE batch = (SELECT MAX(batch) FROM sf_date)`);
     const batchRes = await pool.query(`SELECT MAX(batch) AS latest_batch FROM sf_date`);
     const timeRes = await pool.query(`SELECT MAX(logdate) AS latest_time FROM activity_log WHERE forecast = 'Seasonal Forecast'`);
 

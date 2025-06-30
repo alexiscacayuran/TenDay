@@ -1,5 +1,5 @@
 import express from "express";
-import { pool } from "../db.js";
+import { pool, redisClient } from "../db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
 import dayjs from "dayjs";
@@ -26,101 +26,107 @@ const regionMap = {
   "armm": "Autonomous Region of Muslim Mindanao (ARMM)"
 };
 
-const valueLabel = {
-  mm: "Rainfall (mm)",
-  pn: "Percent Normal",
-  all: "Rainfall + Percent Normal"
-};
+router.get("/region", authenticateToken(), async (req, res) => {
+  await logApiRequest(req, 7);
 
-router.get("/region", authenticateToken(7), async (req, res) => {
-  const request_id = await logApiRequest(req, 7);
   const {
     region,
     value = "mm",
-    issuance_date,
-    batch,
-    page = 1,
-    per_page = 10
+    page = "1",
+    per_page = "10"
   } = req.query;
+
+  const { api_ids } = req.user;
+  const isPageNone = page === "none";
+  const currentPage = isPageNone ? null : parseInt(page) || 1;
+  const pageLimit = isPageNone ? null : parseInt(per_page) || 10;
+  const timestamp = dayjs().format("M/D/YYYY h:mm:ss A");
+
+  if (!Array.isArray(api_ids) || !api_ids.includes(7)) {
+    return res.status(403).json({
+      metadata: {
+        api: "Regional Forecast",
+        forecast: "Seasonal Forecast"
+      },
+      data: [],
+      misc: {
+        version: "1.0",
+        timestamp,
+        method: "GET",
+        current_page: currentPage,
+        per_page: pageLimit,
+        total_count: 0,
+        total_pages: 0,
+        status_code: 403,
+        description: "Forbidden: You are not authorized to access this API."
+      }
+    });
+  }
 
   const normalizedRegion = region?.toLowerCase();
   const regionName = regionMap[normalizedRegion];
 
-  const misc = {
-    version: "1.0",
-    timestamp: new Date().toISOString(),
-    method: "GET",
-    status_code: 200,
-    description: "OK",
-    current_page: parseInt(page),
-    per_page: parseInt(per_page),
-    total_count: 0,
-    total_pages: 0
-  };
-
-  if (!regionName) {
+  if (region && !regionName) {
     return res.status(400).json({
       metadata: {
         api: "Regional Forecast",
-        forecast: valueLabel[value] || value
+        forecast: "Seasonal Forecast"
       },
-      forecast: [],
-      misc: { ...misc, status_code: 400, description: "Invalid region parameter" }
+      data: [],
+      misc: {
+        version: "1.0",
+        timestamp,
+        method: "GET",
+        status_code: 404,
+        description: "Bad Request: Invalid region parameter"
+      }
     });
   }
 
+  // Cache key based on params
+  const cacheKey = `forecast:region:${region || "all"}:value:${value}:page:${page}:limit:${per_page}`;
+
   try {
-    const provinces = await pool.query(
-      `SELECT id, name FROM province WHERE region = $1 AND id < 84 ORDER BY name ASC`,
-      [regionName]
-    );
-
-    const provinceIds = provinces.rows.map(p => p.id);
-    const total_count = provinceIds.length;
-    const total_pages = Math.ceil(total_count / per_page);
-    const offset = (page - 1) * per_page;
-    const paginatedProvinces = provinceIds.slice(offset, offset + parseInt(per_page));
-
-    let baseDate = null;
-    let effectiveStartMonthLabel = null;
-
-    // Determine global base date
-    if (issuance_date) {
-      const [mm, yyyy] = issuance_date.split("/").map(str => parseInt(str));
-      baseDate = baseDate = dayjs(`${yyyy}-${mm.toString().padStart(2, "0")}-01`).add(1, "month");
-      effectiveStartMonthLabel = baseDate.subtract(1, "month").format("MMMM YYYY");
-    } else if (batch) {
-      // Pick any province for batch date lookup
-      const anyProvince = provinceIds[0];
-      const first = await pool.query(
-        `SELECT date FROM sf_date WHERE province_id = $1 AND batch = $2 ORDER BY date ASC LIMIT 1`,
-        [anyProvince, batch]
-      );
-      if (first.rows.length > 0) {
-        baseDate = dayjs(first.rows[0].date);
-        effectiveStartMonthLabel = baseDate.subtract(1, "month").format("MMMM YYYY");
-      }
+    // Try to fetch from cache
+    const cached = await redisClient.get(cacheKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      parsed.misc.timestamp = timestamp; // update live timestamp
+      return res.json(parsed);
     }
 
-    let forecast = [];
+    const provinceQuery = regionName
+      ? `SELECT id, name, region FROM province WHERE region = $1 AND id < 84 ORDER BY name ASC`
+      : `SELECT id, name, region FROM province WHERE id < 84 ORDER BY name ASC`;
+
+    const provinces = await pool.query(provinceQuery, regionName ? [regionName] : []);
+    const provinceIds = provinces.rows.map(p => p.id);
+    const total_count = provinceIds.length;
+    const total_pages = isPageNone ? 1 : Math.ceil(total_count / pageLimit);
+    const offset = isPageNone ? 0 : (currentPage - 1) * pageLimit;
+    const paginatedProvinces = isPageNone
+      ? provinceIds
+      : provinceIds.slice(offset, offset + pageLimit);
+
+    const batchRes = await pool.query("SELECT MAX(batch) AS batch FROM sf_date");
+    const maxBatch = batchRes.rows[0]?.batch;
+
+    const dateRes = await pool.query("SELECT MIN(date) AS date FROM sf_date WHERE batch = $1", [maxBatch]);
+    const baseDate = dayjs(dateRes.rows[0]?.date);
+    const issuance_month = baseDate.subtract(1, "month").format("MMMM YYYY");
+    const start_month = baseDate.format("MMMM YYYY");
+    const end_month = baseDate.add(5, "month").format("MMMM YYYY");
+
+    const data = [];
 
     for (const province_id of paginatedProvinces) {
-      const provinceInfo = provinces.rows.find(p => p.id === province_id);
-      if (!provinceInfo) continue;
+      const prov = provinces.rows.find(p => p.id === province_id);
+      const result = await pool.query(
+        `SELECT id, date FROM sf_date WHERE province_id = $1 AND batch = $2 ORDER BY date ASC LIMIT 6`,
+        [province_id, maxBatch]
+      );
 
-      let dates = [];
-
-      if (baseDate) {
-        const result = await pool.query(
-          `SELECT id, date FROM sf_date WHERE province_id = $1 AND date >= $2 ORDER BY date ASC LIMIT 6`,
-          [province_id, baseDate.toISOString()]
-        );
-        dates = result.rows;
-      }
-
-      const data = [];
-
-      for (const row of dates) {
+      for (const row of result.rows) {
         const date_id = row.id;
         const label = dayjs(row.date).format("MMMM YYYY");
 
@@ -132,10 +138,14 @@ router.get("/region", authenticateToken(7), async (req, res) => {
 
         data.push({
           month: label,
+          province: prov.name,
+          region: prov.region,
+          ...(value === "mm" || value === "all" || value === "pn" ? {
+            mean_mm: rain.mean ? parseFloat(rain.mean) : null
+          } : {}),
           ...(value === "mm" || value === "all" ? {
             min_mm: rain.min ? parseFloat(rain.min) : null,
-            max_mm: rain.max ? parseFloat(rain.max) : null,
-            mean_mm: rain.mean ? parseFloat(rain.mean) : null
+            max_mm: rain.max ? parseFloat(rain.max) : null
           } : {}),
           ...(value === "pn" || value === "all" ? {
             percent_normal: percent.mean ? parseFloat(percent.mean) : null,
@@ -143,36 +153,63 @@ router.get("/region", authenticateToken(7), async (req, res) => {
           } : {})
         });
       }
-
-      forecast.push({
-        province: provinceInfo.name,
-        data
-      });
     }
 
-    misc.total_count = total_count;
-    misc.total_pages = total_pages;
+    const metadata = {
+      api: "Regional Forecast",
+      forecast: "Seasonal Forecast",
+      issuance_month,
+      start_month,
+      end_month,
+      ...(regionName ? { region: regionName } : {})
+    };
 
-    return res.status(200).json({
-      metadata: {
-        api: "Regional Forecast",
-        forecast: "Seasonal Forecast",
-        region: regionName,
-        issuance_month: effectiveStartMonthLabel
-      },
-      forecast,
+    const misc = isPageNone
+      ? {
+          version: "1.0",
+          timestamp,
+          method: "GET",
+          status_code: 200,
+          description: "OK"
+        }
+      : {
+          version: "1.0",
+          timestamp,
+          method: "GET",
+          current_page: currentPage,
+          per_page: pageLimit,
+          total_count,
+          total_pages,
+          status_code: 200,
+          description: "OK"
+        };
+
+    const finalResult = {
+      metadata,
+      data,
       misc
-    });
+    };
+
+    // Save to Redis (expire after 10 mins)
+    await redisClient.setEx(cacheKey, 600, JSON.stringify(finalResult));
+
+    return res.json(finalResult);
 
   } catch (error) {
     console.error("❌ Regional Forecast Error:", error);
     return res.status(500).json({
       metadata: {
         api: "Regional Forecast",
-        forecast: valueLabel[value] || value
+        forecast: "Seasonal Forecast"
       },
-      forecast: [],
-      misc: { ...misc, status_code: 500, description: "Internal Server Error" }
+      data: [],
+      misc: {
+        version: "1.0",
+        timestamp,
+        method: "GET",
+        status_code: 500,
+        description: "Internal Server Error"
+      }
     });
   }
 });

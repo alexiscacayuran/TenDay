@@ -20,15 +20,19 @@ import getTokenRoute from "./API/serverToken.js";
 import archiver from "archiver";
 import moment from "moment";
 
+//Ports
 import authRoutes from "./API/token.js";
 import { port } from './config.js';
+import { pool} from "./db.js";
+import { logApiRequest } from "./middleware/logMiddleware.js";
 
+// Chart
 import pieChart from "./route/pieChart.js";
 import barChart from "./route/barChart.js";
 import cityChart from "./route/cityChart.js";
 import countryChart from "./route/countryChart.js";
 
-// //Background job
+// Background job
 import "./backgroundJob/cleanUpDB.js";
 import "./backgroundJob/cleanUpS3.js";
 
@@ -39,7 +43,12 @@ import { uploadForecastXLSX } from "./tenDayData/tProcessXLSX.js";
 import {
   retrieveForecastFile,
   streamForecastFile,
-} from "./tenDayData/retrieveFile.js";
+} from "./retrieveFile/tenDay.js";
+
+import {
+  retrieveSeasonalFile,
+  streamSeasonalFile,
+} from "./retrieveFile/seasonal.js";
 
 //import { processWindFiles } from "./tenDayData/uploadWind.js";
 import { uploadForecastWind } from "./tenDayData/uploadWind.js";
@@ -54,6 +63,7 @@ import getCurrentForecast from "./tenDayData/getCurrentForecast.js"; // Import t
 import getFullForecastInternal from "./tenDayData/internal/getFullForecast.js";
 import getDateForecastInternal from "./tenDayData/internal/getDateForecast.js";
 import getMunicities from "./tenDayData/internal/getMunicities.js";
+import getLocation from "./tenDayData/getLocation.js";
 
 import analyticsRoutes from "./analytics.js";
 
@@ -70,6 +80,9 @@ import seasonalValidRoute from "./seasonalData/valid.js";
 //API
 
 import tokenRoutes from "./API/tokenRoutes.js";
+
+//activateToken
+import activateTokenRoute from "./API/activate.js";
 
 //Admin
 import apiOrg from "./admin/apiOrg.js";
@@ -119,6 +132,7 @@ app.use(bodyParser.json());
 
 // ROUTES:
 app.use("/serverToken", getTokenRoute);
+app.use("/api", activateTokenRoute);
 
 
 app.use("/api/auth", authRoutes); // Token API
@@ -202,6 +216,9 @@ app.use("/fullInternal", getFullForecastInternal);
 // Route for fetching municities - internal
 app.use("/municitiesInternal", getMunicities);
 
+// Route for fetching location
+app.use("/api/v1/", getLocation);
+
 app.use('/api/', checkValidRouter);
 
   //Analytics
@@ -270,17 +287,56 @@ app.get("/uploadForecastXLSX", authenticate, async (req, res) => {
   }
 });
 
-app.get("/retrievefile", async (req, res) => {
-  const { year, month, day, file, offset, masked, target } = req.query;
+app.get("/api/v1/file/tenday", async (req, res) => {
+  const { issuance_date, file, offset, masked, target, token } = req.query;
 
-  if (!year || !month || !day || !file) {
-    return res
-      .status(400)
-      .send("Error: Missing required parameters (year, month, day, file)");
+  const timestamp = new Date().toLocaleString("en-PH");
+
+  // 🔒 Validate params
+  if (!issuance_date || !file || !token) {
+    return res.status(400).send("Missing required params: issuance_date, file, or token");
   }
 
+  // 🔒 Validate issuance_date format
+  if (!/^\d{8}$/.test(issuance_date)) {
+    return res.status(400).send("issuance_date must be in YYYYMMDD format");
+  }
+
+  // 🔒 Validate token
   try {
-    const result = await retrieveForecastFile(
+    const tokenQuery = `
+      SELECT id, organization, status, expires_at, api_ids
+      FROM api_tokens
+      WHERE token = $1
+      LIMIT 1
+    `;
+    const result = await pool.query(tokenQuery, [token]);
+
+    if (result.rows.length === 0) {
+      return res.status(403).send("Invalid token.");
+    }
+
+    const { id: token_id, status, expires_at, api_ids } = result.rows[0];
+
+    if (status !== 1) {
+      return res.status(403).send("Token not activated.");
+    }
+
+    if (expires_at && new Date(expires_at) < new Date()) {
+      return res.status(403).send("Token expired.");
+    }
+
+    if (!api_ids.includes(5)) {
+      return res.status(403).send("Unauthorized to access this API.");
+    }
+
+    // Extract year/month/day
+    const year = issuance_date.substring(0, 4);
+    const month = issuance_date.substring(4, 6);
+    const day = issuance_date.substring(6, 8);
+
+    // 📥 Retrieve file(s)
+    const resultFiles = await retrieveForecastFile(
       year,
       month,
       day,
@@ -290,16 +346,23 @@ app.get("/retrievefile", async (req, res) => {
       target
     );
 
-    // If only one file to download, redirect to presigned URL
-    if (result.length === 1) {
-      return res.redirect(result[0].url);
+    if (!resultFiles || resultFiles.length === 0) {
+      return res.status(404).send("No files found for the given parameters.");
     }
 
-    // Prepare filename based on fileType + target date
-    const zipDate =
-      target || moment(`${year}-${month}-${day}`).format("YYYYMMDD");
+    const zipDate = target || issuance_date;
     const zipFilename = `${file.toUpperCase()}_${zipDate}.zip`;
 
+    // 🎯 Log the request
+    const request_no = await logApiRequest(req, 5);
+    console.log(`📘 Logged request #${request_no}`);
+
+    // 🎁 If only one file, redirect to download
+    if (resultFiles.length === 1 && file !== "all") {
+      return res.redirect(resultFiles[0].url);
+    }
+
+    // 📦 Zip and stream multiple files
     res.setHeader("Content-Type", "application/zip");
     res.setHeader(
       "Content-Disposition",
@@ -309,16 +372,97 @@ app.get("/retrievefile", async (req, res) => {
     const archive = archiver("zip", { zlib: { level: 9 } });
     archive.pipe(res);
 
-    for (const file of result) {
-      const stream = await streamForecastFile(file.key);
-      archive.append(stream, { name: file.file });
+    for (const f of resultFiles) {
+      const stream = await streamForecastFile(f.key);
+      archive.append(stream, { name: f.file });
     }
 
     archive.finalize();
   } catch (error) {
-    console.error("❌ Error retrieving files:", error);
+    console.error("❌ Error:", error);
     if (!res.headersSent) {
-      res.status(500).send(`Error retrieving files: ${error.message}`);
+      return res.status(500).send(`Internal Server Error: ${error.message}`);
+    }
+  }
+});
+
+app.get("/api/v1/file/seasonal", async (req, res) => {
+  const { batch, value, token } = req.query;
+  const timestamp = new Date().toLocaleString("en-PH");
+
+  // 🔒 Validate required params
+  if (!batch || !value || !token) {
+    return res.status(400).send("Missing required params: batch, value, token");
+  }
+
+  // 🔒 Validate batch format
+  if (!/^\d{3}$/.test(batch)) {
+    return res.status(400).send("Batch must be a 3-digit number (e.g. 180)");
+  }
+
+  try {
+    // 🔒 Validate token
+    const tokenQuery = `
+      SELECT id, organization, status, expires_at, api_ids
+      FROM api_tokens
+      WHERE token = $1
+      LIMIT 1
+    `;
+    const result = await pool.query(tokenQuery, [token]);
+
+    if (result.rows.length === 0) return res.status(403).send("Invalid token.");
+
+    const { id: token_id, status, expires_at, api_ids } = result.rows[0];
+
+    if (status !== 1) return res.status(403).send("Token not activated.");
+    if (expires_at && new Date(expires_at) < new Date())
+      return res.status(403).send("Token expired.");
+    if (!api_ids.includes(10)) return res.status(403).send("Unauthorized to access this API.");
+
+    // 📥 Retrieve file(s)
+    const resultFiles = await retrieveSeasonalFile(batch, value);
+
+    if (!resultFiles || resultFiles.length === 0) {
+      return res.status(404).send("No files found for the given parameters.");
+    }
+
+    const zipFilename = `${value.toUpperCase()}_${batch}.zip`;
+
+    // 📝 Log request
+    const request_no = await logApiRequest(req, 10);
+    console.log(`📘 Logged request #${request_no}`);
+
+    // 🎁 If only one file and value isn't "all", redirect
+    if (resultFiles.length === 1 && value !== "all") {
+      return res.redirect(resultFiles[0].url);
+    }
+
+    // 📦 Zip and stream files
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${zipFilename}"`
+    );
+
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    for (const f of resultFiles) {
+      const stream = await streamSeasonalFile(f.key);
+      let subfolder = value;
+
+      if (value === "pn") subfolder = `PN_${batch}`;
+      else if (value === "mm") subfolder = `MM_${batch}`;
+      else if (value === "all") subfolder = `ALL_${batch}`;
+
+      archive.append(stream, { name: `${subfolder}/${f.file}` });
+    }
+
+    archive.finalize();
+  } catch (error) {
+    console.error("❌ Error:", error);
+    if (!res.headersSent) {
+      res.status(500).send(`Internal Server Error: ${error.message}`);
     }
   }
 });

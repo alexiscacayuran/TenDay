@@ -6,7 +6,7 @@ import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-router.get("/date", authenticateToken(4), async (req, res) => {
+router.get("/tenday/date", authenticateToken(4), async (req, res) => {
   const { municity, province, date } = req.query;
   const token = req.headers["token"];
 
@@ -28,11 +28,11 @@ router.get("/date", authenticateToken(4), async (req, res) => {
         api: "Forecast by Date",
         forecast: "10-day Forecast",
       },
-      data: [],
-      footer: {
+      data: {},
+      misc: {
         ...baseFooter,
         status_code: 400,
-        description: "Missing query parameters: municity, province, and date are required",
+        description: "Bad Request: municity, province, and date param is required",
       },
     });
   }
@@ -49,11 +49,11 @@ router.get("/date", authenticateToken(4), async (req, res) => {
           api: "Forecast by Date",
           forecast: "10-day Forecast",
         },
-        data: [],
-        footer: {
+        data: {},
+        misc: {
           ...baseFooter,
           status_code: 401,
-          description: "Unauthorized: Invalid token",
+          description: "Unauthorized: Invalid token or expired token",
         },
       });
     }
@@ -66,18 +66,16 @@ router.get("/date", authenticateToken(4), async (req, res) => {
           api: "Forecast by Date",
           forecast: "10-day Forecast",
         },
-        data: [],
-        footer: {
+        data: {},
+        misc: {
           ...baseFooter,
           status_code: 403,
-          description: "Forbidden: Unauthorized API ID",
+          description: "Forbidden: You are not authorized to access this API.",
         },
       });
     }
 
-    // Log individual request number (not tied to Redis counter)
     const requestNo = await logApiRequest(req, 4);
-
     const cacheKey = `dateForecast:${token}:${municity}:${province}:${date}`;
     const cachedData = await redisClient.get(cacheKey);
 
@@ -85,18 +83,18 @@ router.get("/date", authenticateToken(4), async (req, res) => {
       console.log(chalk.bgGray.black(" Cache hit ") + " " + chalk.bgGreen.black(" Returning data from Redis "));
       const response = JSON.parse(cachedData);
       response.metadata.request_no = requestNo;
-      response.footer.timestamp = new Date().toLocaleString("en-PH", {
+      response.misc.timestamp = new Date().toLocaleString("en-PH", {
         timeZone: "Asia/Manila",
-      }).replace(",", ""); // Dynamically update timestamp
+      }).replace(",", "");
       return res.json(response);
     }
-    
 
     const query = `
       SELECT 
         m.id AS location_id, 
         m.municity, 
-        m.province, 
+        m.province,
+        m.region,
         d.id AS date_id, 
         d.date,
         d.start_date AS issuance_date,
@@ -121,7 +119,7 @@ router.get("/date", authenticateToken(4), async (req, res) => {
         AND d.date = $3 
       ORDER BY 
         d.start_date DESC 
-      LIMIT 10`;
+      LIMIT 1`;
 
     const values = [municity, province, date];
     const result = await pool.query(query, values);
@@ -133,47 +131,43 @@ router.get("/date", authenticateToken(4), async (req, res) => {
           api: "Forecast by Date",
           forecast: "10-day Forecast",
         },
-        data: [],
-        footer: {
+        data: {},
+        misc: {
           ...baseFooter,
-          status_code: 204,
-          description: "No forecast data found",
+          status_code: 404,
+          description: "No content: No forecast data found",
         },
       });
     }
 
-    const issuanceDate = result.rows[0].issuance_date.toLocaleString("en-PH").split(", ")[0];
-
-    const data = result.rows.map((row) => ({
-      date: row.date.toLocaleString("en-PH").split(", ")[0],
-      rainfall_desc: row.rainfall,
-      rainfall_total: row.total_rainfall,
-      cloud_cover: row.cloud_cover,
-      tmean: row.mean,
-      tmin: row.min,
-      tmax: row.max,
-      humidity: row.humidity,
-      wind_speed: row.speed,
-      wind_direction: row.direction,
-    }));
+    const row = result.rows[0];
+    const issuanceDate = row.issuance_date.toLocaleString("en-PH").split(", ")[0];
 
     const response = {
       metadata: {
         request_no: requestNo,
         api: "Forecast by Date",
         forecast: "10-day Forecast",
+        issuance_date: issuanceDate,
+        municity: row.municity,
+        province: row.province,
+        region: row.region || null,
       },
-      data: [
-        {
-          municity: result.rows[0].municity,
-          province: result.rows[0].province,
-          issuance_date: issuanceDate,
-        },
-        ...data,
-      ],
-      footer: {
+      data: {
+        date: row.date.toLocaleString("en-PH").split(", ")[0],
+        rainfall_desc: row.rainfall,
+        rainfall_total: row.total_rainfall,
+        cloud_cover: row.cloud_cover,
+        tmean: row.mean,
+        tmin: row.min,
+        tmax: row.max,
+        humidity: row.humidity,
+        wind_speed: row.speed,
+        wind_direction: row.direction,
+      },
+      misc: {
         ...baseFooter,
-        total_count: data.length,
+        total_count: 1,
         total_pages: 1,
         status_code: 200,
         description: "OK",
@@ -190,8 +184,8 @@ router.get("/date", authenticateToken(4), async (req, res) => {
         api: "Forecast by Date",
         forecast: "10-day Forecast",
       },
-      data: [],
-      footer: {
+      data: {},
+      misc: {
         ...baseFooter,
         status_code: 500,
         description: "Internal Server Error",

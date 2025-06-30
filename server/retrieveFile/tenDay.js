@@ -12,6 +12,10 @@ const getFileKeyForType = (date, fileType, isMasked, specDate) => {
     MAX: "TMAX",
   };
 
+  if (fileType.toLowerCase() === "all") {
+    mappedType = "ALL"; // for readability; won’t affect folder logic
+  }  
+
   const fileTypeUpper =
     typeMap[fileType.toUpperCase()] || fileType.toUpperCase();
   let fileKey = `${fileTypeUpper}_`;
@@ -93,9 +97,11 @@ export const retrieveForecastFile = async (
 
   // 📂 Default folder listing
   const folderPath =
-    mappedType === "XLSX"
-      ? `${folderName}/XLSX/`
-      : `${folderName}/${mappedType}/`;
+  fileType.toLowerCase() === "all" ? `${folderName}/` :
+  mappedType === "XLSX"
+    ? `${folderName}/XLSX/`
+    : `${folderName}/${mappedType}/`;
+
 
   console.log(`Checking S3 folder: ${folderPath}`);
 

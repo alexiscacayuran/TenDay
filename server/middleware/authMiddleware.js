@@ -1,10 +1,10 @@
 import { pool } from '../db.js';
-import { redisClient } from '../db.js'; 
+import { redisClient } from '../db.js';
 
 export const authenticateToken = (api_id) => {
   return async (req, res, next) => {
     const token = req.headers["token"];
-    let api_name = "Unknown API"; 
+    let api_name = "Unknown API";
     let forecast_label = "Forecast";
 
     const baseMetadata = {
@@ -41,14 +41,14 @@ export const authenticateToken = (api_id) => {
         misc: {
           ...baseMisc,
           status_code: 498,
-          description: "Missing token"
+          description: "Missing Token: Token is required but was not provided."
         }
       });
     }
 
     try {
       const result = await pool.query(
-        `SELECT organization, expires_at, api_ids FROM api_tokens WHERE token = $1`,
+        `SELECT organization, expires_at, api_ids, status FROM api_tokens WHERE token = $1`,
         [token]
       );
 
@@ -59,12 +59,24 @@ export const authenticateToken = (api_id) => {
           misc: {
             ...baseMisc,
             status_code: 498,
-            description: "Invalid token"
+            description: "Invalid Token: The provided token is invalid or expired."
           }
         });
       }
 
-      const { organization, expires_at, api_ids } = result.rows[0];
+      const { organization, expires_at, api_ids, status } = result.rows[0];
+
+      if (status !== 1) {
+        return res.status(403).json({
+          metadata: baseMetadata,
+          forecast: [],
+          misc: {
+            ...baseMisc,
+            status_code: 403,
+            description: "Forbidden: Token is not activated. Please activate your token via the email link."
+          }
+        });
+      }
 
       const tokenExpired = expires_at && new Date(expires_at) < new Date();
       if (tokenExpired) {
@@ -74,7 +86,7 @@ export const authenticateToken = (api_id) => {
           misc: {
             ...baseMisc,
             status_code: 498,
-            description: "Expired token"
+            description: "Expired Token: Your token has expired. Please renew or re-authenticate."
           }
         });
       }
@@ -87,20 +99,24 @@ export const authenticateToken = (api_id) => {
         forecast: forecast_label
       };
 
-      // Bypass rate limiting for internal orgs
+      // Allow internal org bypass
       if (organization === "10-Day Forecast") {
         return next();
       }
 
-      // Rate limit settings (per token)
+      // 🔁 Redis-based rate limiting
       const rateLimitKey = `rate_limit:${token}:${api_id}`;
+      const burstKey = `burst_count:${token}:${api_id}`;
       const cooldownKey = `last_request_time:${token}:${api_id}`;
-      const MAX_REQUESTS = 1000;
+      const MAX_REQUESTS = 100;
+      const MAX_BURST = 50;
       const COOL_DOWN_TIME = 60; // seconds
 
       const currentCount = parseInt(await redisClient.get(rateLimitKey)) || 0;
+      const burstCount = parseInt(await redisClient.get(burstKey)) || 0;
 
-      if (currentCount >= MAX_REQUESTS) {
+      // Burst check
+      if (burstCount >= MAX_BURST) {
         const lastRequestTime = await redisClient.get(cooldownKey);
         if (lastRequestTime) {
           const timeElapsed = Date.now() - parseInt(lastRequestTime);
@@ -116,12 +132,30 @@ export const authenticateToken = (api_id) => {
             });
           }
         }
+
+        // Reset burst after cooldown
+        await redisClient.del(burstKey);
       }
 
-      // Increment and set cooldown
+      // Hourly limit
+      if (currentCount >= MAX_REQUESTS) {
+        return res.status(429).json({
+          metadata: baseMetadata,
+          forecast: [],
+          misc: {
+            ...baseMisc,
+            status_code: 429,
+            description: `Hourly limit of ${MAX_REQUESTS} requests exceeded. Try again later.`
+          }
+        });
+      }
+
+      // Increment counters
       await redisClient.multi()
         .incr(rateLimitKey)
-        .expire(rateLimitKey, 3600) // 1 hour bucket
+        .expire(rateLimitKey, 3600)
+        .incr(burstKey)
+        .expire(burstKey, COOL_DOWN_TIME + 5)
         .set(cooldownKey, Date.now())
         .expire(cooldownKey, COOL_DOWN_TIME)
         .exec();
