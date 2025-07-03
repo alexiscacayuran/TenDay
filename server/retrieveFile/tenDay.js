@@ -12,19 +12,21 @@ const getFileKeyForType = (date, fileType, isMasked, specDate) => {
     MAX: "TMAX",
   };
 
-  if (fileType.toLowerCase() === "all") {
-    mappedType = "ALL"; // for readability; won’t affect folder logic
-  }  
+  const fileTypeLower = fileType.toLowerCase();
 
-  const fileTypeUpper =
-    typeMap[fileType.toUpperCase()] || fileType.toUpperCase();
+  // 🔁 Handle XLSX separately
+  if (fileTypeLower === "xlsx") {
+    return `TanawPH_${specDate}.xlsx`;
+  }
+
+  const fileTypeUpper = typeMap[fileType.toUpperCase()] || fileType.toUpperCase();
   let fileKey = `${fileTypeUpper}_`;
-
   fileKey += isMasked ? `${specDate}_masked` : `${specDate}`;
-  fileKey += ".tif"; // All types now use .tif format including WIND
+  fileKey += ".tif";
 
   return fileKey;
 };
+
 
 export const retrieveForecastFile = async (
   year,

@@ -115,7 +115,7 @@ const Map = () => {
     // Function to fetch data from the API
     const fetchDate = async () => {
       try {
-        const response = await axios.get("/api/v1/valid");
+        const response = await axios.get("/api/v1/tenday/issuance");
         startDate.current = response.data; // Store the fetched data
         const currentDate = new Date();
         const endDate = new Date(startDate.current.latest_date);
