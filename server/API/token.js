@@ -100,7 +100,7 @@ router.post("/generate-token", async (req, res) => {
             ? `<p><strong>Expiration:</strong> ${expires_at}</p>` 
             : `<p><strong>This token has lifetime access.</strong></p>`}
     
-          <p>Please <a href="http://54.169.50.101/api/validate?token=${createdToken}">click here to activate your token</a>.</p>
+          <p>Please <a href="https://tenday.pagasa.dost.gov.ph/api/v1/validate?token=${createdToken}">click here to activate your token</a>.</p>
     
           <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
     

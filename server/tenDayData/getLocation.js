@@ -21,8 +21,8 @@ const regionMap = {
   "12": "SOCCSKSARGEN (Region XII)", "xii": "SOCCSKSARGEN (Region XII)",
   "13": "Caraga (Region XIII)", "xiii": "Caraga (Region XIII)",
   "ncr": "National Capital Region (NCR)", "NCR": "National Capital Region (NCR)",
-  "car": "Cordillera Administrative Region (CAR)",
-  "armm": "Autonomous Region of Muslim Mindanao (ARMM)"
+  "barmm": "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
+  "nir": "Negros Island Region (Region XVIII)"
 };
 
 router.get("/location", authenticateToken(6), async (req, res) => {
@@ -65,23 +65,63 @@ router.get("/location", authenticateToken(6), async (req, res) => {
 
     const requestNo = await logApiRequest(req, 6);
 
+    // ✅ Return all region names and codes in order
     if (!region && !province) {
-      return res.status(400).json({
+      const regionGroups = {};
+
+      for (const [code, name] of Object.entries(regionMap)) {
+        if (!regionGroups[name]) {
+          regionGroups[name] = new Set();
+        }
+        regionGroups[name].add(code.toLowerCase());
+      }
+
+      const customOrder = [
+        "Ilocos Region (Region I)",
+        "Cagayan Valley (Region II)",
+        "Central Luzon (Region III)",
+        "CALABARZON (Region IV-A)",
+        "MIMAROPA (Region IV-B)",
+        "Bicol Region (Region V)",
+        "Western Visayas (Region VI)",
+        "Central Visayas (Region VII)",
+        "Eastern Visayas (Region VIII)",
+        "Zamboanga Peninsula (Region IX)",
+        "Northern Mindanao (Region X)",
+        "Davao Region (Region XI)",
+        "SOCCSKSARGEN (Region XII)",
+        "Caraga (Region XIII)",
+        "National Capital Region (NCR)",
+        "Cordillera Administrative Region (CAR)",
+        "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
+        "Negros Island Region (Region XVIII)"
+      ];
+
+      const formatted = customOrder
+        .filter(name => regionGroups[name])
+        .map(name => ({
+          name,
+          codes: Array.from(regionGroups[name]).sort().join(", ")
+        }));
+
+      return res.json({
         metadata: {
           request_no: requestNo,
           api: "Location",
           forecast: "Municipalities, Provinces, and Regions",
         },
-        data: [],
+        data: formatted,
         footer: {
           ...baseFooter,
-          status_code: 400,
-          description: "Bad Request: region or province is required",
+          total_count: formatted.length,
+          per_page: formatted.length,
+          status_code: 200,
+          description: "OK",
         },
       });
     }
 
-    let result, cacheKey, response;
+    let result, cacheKey;
 
     // 🎯 REGION MODE
     if (region) {
@@ -105,7 +145,6 @@ router.get("/location", authenticateToken(6), async (req, res) => {
       cacheKey = `region:${normalized}`;
       const cached = await redisClient.get(cacheKey);
       if (cached) {
-        console.log("Cache hit - region");
         const provinces = JSON.parse(cached);
         return res.json({
           metadata: {
@@ -129,23 +168,6 @@ router.get("/location", authenticateToken(6), async (req, res) => {
         `SELECT DISTINCT province FROM municities WHERE region = $1 ORDER BY province ASC`,
         [normalized]
       );
-
-      if (result.rows.length === 0) {
-        return res.status(204).json({
-          metadata: {
-            request_no: requestNo,
-            api: "Location",
-            forecast: "Municipalities, Provinces, and Regions",
-            region: normalized,
-          },
-          data: [],
-          footer: {
-            ...baseFooter,
-            status_code: 204,
-            description: "No provinces found for this region",
-          },
-        });
-      }
 
       const provinces = result.rows.map(r => r.province);
       await redisClient.set(cacheKey, JSON.stringify(provinces), "EX", 3600);
@@ -173,7 +195,6 @@ router.get("/location", authenticateToken(6), async (req, res) => {
       cacheKey = `province:${province}`;
       const cached = await redisClient.get(cacheKey);
       if (cached) {
-        console.log("Cache hit - province");
         const municipalities = JSON.parse(cached);
 
         const regResult = await pool.query(
@@ -205,23 +226,6 @@ router.get("/location", authenticateToken(6), async (req, res) => {
         `SELECT municity FROM municities WHERE province = $1 ORDER BY municity ASC`,
         [province]
       );
-
-      if (result.rows.length === 0) {
-        return res.status(400).json({
-          metadata: {
-            request_no: requestNo,
-            api: "Location",
-            forecast: "Municipalities, Provinces, and Regions",
-            province,
-          },
-          data: [],
-          footer: {
-            ...baseFooter,
-            status_code: 400,
-            description: "Bad Request: No municipalities found for this province",
-          },
-        });
-      }
 
       const municipalities = result.rows.map(r => r.municity);
       await redisClient.set(cacheKey, JSON.stringify(municipalities), "EX", 3600);

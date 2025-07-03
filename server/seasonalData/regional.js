@@ -23,7 +23,8 @@ const regionMap = {
   "13": "Caraga (Region XIII)", "xiii": "Caraga (Region XIII)",
   "ncr": "National Capital Region (NCR)",
   "car": "Cordillera Administrative Region (CAR)",
-  "armm": "Autonomous Region of Muslim Mindanao (ARMM)"
+  "barmm": "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
+  "nir": "Negros Island Region (Region XVIII)"
 };
 
 router.get("/region", authenticateToken(), async (req, res) => {
