@@ -21,7 +21,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
 
-const Feedback = () => {
+const Feedback = ({ setOpenSnackbar }) => {
   const submitFeedback = async (category, comment, email) => {
     setLoading(true);
     try {
@@ -49,7 +49,7 @@ const Feedback = () => {
 
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
+  // const [openSnackbar, setOpenSnackbar] = useState(false);
   return (
     <Box
       sx={{
@@ -75,7 +75,7 @@ const Feedback = () => {
           Feedback
         </Button>
         {/* <Snackbar
-          autoHideDuration={2000}
+          // autoHideDuration={2000}
           open={openSnackbar}
           onClose={(event, reason) => {
             if (reason === "clickaway") {
@@ -138,6 +138,7 @@ const Feedback = () => {
                     sx={{ backgroundColor: "neutral.600" }}
                     placeholder="Please do not include any of your sensitive information."
                     minRows={3}
+                    maxRows={10}
                     required
                   />
                 </FormControl>

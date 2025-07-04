@@ -77,6 +77,7 @@ const ForecastContainer = ({
   serverToken,
   arcgisToken,
   selectedPolygon,
+  setOpenSnackbar,
 }) => {
   const [forecast, setForecast] = useState(null);
   const [activeColumn, setActiveColumn] = useState(null);
@@ -491,7 +492,6 @@ const ForecastContainer = ({
   };
 
   const [loading, setLoading] = useState(false);
-  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   const submitFeedback = async (location) => {
     setLoading(true);
