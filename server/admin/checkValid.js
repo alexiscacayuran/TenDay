@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/checkValid', async (req, res) => {
   try {
-    const response = await axios.get(`${baseURL}/api/v1/valid`);
+    const response = await axios.get(`${baseURL}/api/v1/tenday/issuance`);
     const { latest_date, latest_time } = response.data;
 
     const latestDateTimePH = moment.tz(`${latest_date} ${latest_time}`, 'YYYY-MM-DD hh:mm:ss A', 'Asia/Manila');

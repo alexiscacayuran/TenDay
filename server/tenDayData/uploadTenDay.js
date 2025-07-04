@@ -80,7 +80,7 @@ export const uploadForecastData = async (year, month, day, userId) => {
 
     const monthFolder = `${formattedMonth}_${monthName}`;
     const formattedDayString = `${shortMonthName}${formattedDay}`; // Format as "Jan07"
-    const dayPath = path.join(SOURCE_PATH, year, monthFolder, formattedDayString, 'CSV_1D');
+    const dayPath = path.join(SOURCE_PATH, year, monthFolder, formattedDayString, 'CSV');
 
     try {
         const files = fs.readdirSync(dayPath);
