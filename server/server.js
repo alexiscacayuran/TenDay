@@ -21,7 +21,7 @@ import archiver from "archiver";
 import moment from "moment";
 
 import authRoutes from "./API/token.js";
-import { port } from './config.js';
+import { port } from "./config.js";
 
 import pieChart from "./route/pieChart.js";
 import barChart from "./route/barChart.js";
@@ -57,7 +57,7 @@ import getMunicities from "./tenDayData/internal/getMunicities.js";
 
 import analyticsRoutes from "./analytics.js";
 
-import markSolvedRoute from './API/markSolved.js';
+import markSolvedRoute from "./API/markSolved.js";
 
 //API seasonal (internal)
 import { processSeasonalData } from "./seasonalData/uploadSeasonal.js";
@@ -75,7 +75,7 @@ import apiOrg from "./admin/apiOrg.js";
 
 //CERAM
 import { uploadCeramCSV } from "./ceram/uploadCSV.js";
-import {getCeramData } from './ceram/getCeram.js';
+import { getCeramData } from "./ceram/getCeram.js";
 import ceramRoute from "./ceram/ceram.js";
 
 //Extemes
@@ -85,22 +85,23 @@ import { uploadTIF } from "./ceram/uploadTIF.js";
 import { checkWebsiteStatus } from "./backgroundJob/healthCheck.js";
 
 //Upload Check
-import checkValidRouter from './admin/checkValid.js';
+import checkValidRouter from "./admin/checkValid.js";
 
 import { DateTime } from "luxon";
 
 //Report
-import report from './report/postFeedback.js';
-import getFeedbackRouter from './report/getFeedback.js';
+import report from "./report/postFeedback.js";
+import getFeedbackRouter from "./report/getFeedback.js";
 
 // Show time in Manila
-const manilaTime = DateTime.now().setZone("Asia/Manila").toFormat("yyyy-MM-dd HH:mm:ss");
+const manilaTime = DateTime.now()
+  .setZone("Asia/Manila")
+  .toFormat("yyyy-MM-dd HH:mm:ss");
 console.log("🇵🇭 Manila Time:", manilaTime);
 
 // Show UTC time
 const utcTime = DateTime.utc().toFormat("yyyy-MM-dd HH:mm:ss");
 console.log("🌐 UTC Time:", utcTime);
-
 
 const app = express();
 
@@ -119,7 +120,6 @@ app.use(bodyParser.json());
 // ROUTES:
 app.use("/serverToken", getTokenRoute);
 
-
 app.use("/api/auth", authRoutes); // Token API
 
 app.get("/api/token", (req, res) => {
@@ -129,7 +129,7 @@ app.get("/api/token", (req, res) => {
 app.use("/auth", jwtAuth);
 
 //Mark Solved
-app.use('/api', markSolvedRoute);
+app.use("/api", markSolvedRoute);
 
 // PieChart
 app.use("/", pieChart);
@@ -149,7 +149,7 @@ app.use("/api/token", tokenPage);
 
 //report
 app.use("/api/report", reportPage);
-app.use('/api', getFeedbackRouter);
+app.use("/api", getFeedbackRouter);
 
 // Route for dashboard
 app.use("/dashboardAdmin", dashboardAdmin);
@@ -201,10 +201,10 @@ app.use("/fullInternal", getFullForecastInternal);
 // Route for fetching municities - internal
 app.use("/municitiesInternal", getMunicities);
 
-app.use('/api/', checkValidRouter);
+app.use("/api/", checkValidRouter);
 
-  //Analytics
-  app.use('/api', analyticsRoutes);
+//Analytics
+app.use("/api", analyticsRoutes);
 
 // Route for uploading Ten Day Data
 app.get("/uploadForecastData", authenticate, async (req, res) => {
@@ -344,7 +344,7 @@ app.get("/seasonal-date", authenticate, async (req, res) => {
     }
 
     // Process seasonal data
-    await processSeasonalData(batch, folderPath, userId); 
+    await processSeasonalData(batch, folderPath, userId);
     res.send("Seasonal data processed successfully.");
   } catch (error) {
     console.error("Error processing seasonal data:", error);
@@ -466,14 +466,13 @@ app.get("/uploadCeramCSV", async (req, res) => {
   }
 });
 
-app.get('/api/get-ceram', authenticate, async (req, res) => {
+app.get("/api/get-ceram", authenticate, async (req, res) => {
   const userId = req.user;
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
   await getCeramData(userId, res);
 });
 
-app.use("/api/v1", ceramRoute); 
-
+app.use("/api/v1", ceramRoute);
 
 //CERAM
 app.get("/uploadExtremesTIF", async (req, res) => {
@@ -495,7 +494,7 @@ app.get("/health", async (req, res) => {
 });
 
 //REPORT
-app.use('/api', report);
+app.use("/api", report);
 
 // Start the server
 app.listen(port, "0.0.0.0", () => {

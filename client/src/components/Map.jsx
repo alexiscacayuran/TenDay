@@ -28,8 +28,11 @@ import Issuance from "./right/Issuance";
 import DateSlider from "./bottom/DateSlider";
 import ZoomLevel from "./utils/ZoomLevel";
 
-import { Stack, Box } from "@mui/joy";
+import { Stack, Box, Snackbar } from "@mui/joy";
 import { Slide } from "@mui/material";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 
 const Map = () => {
   const theme = useTheme();
@@ -110,6 +113,8 @@ const Map = () => {
   });
 
   const [scale, setScale] = useState({ metric: true, imperial: false });
+
+  const [openSnackbar, setOpenSnackbar] = useState(false);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -228,7 +233,7 @@ const Map = () => {
               pointerEvents: "none", //Let clicks pass through by default
             }}
           >
-            <Feedback />
+            <Feedback setOpenSnackbar={setOpenSnackbar} />
 
             <Stack
               direction="column"
@@ -276,6 +281,7 @@ const Map = () => {
                 arcgisToken={arcgisToken}
                 selectedPolygon={selectedPolygon}
                 interactive={false}
+                setOpenSnackbar={setOpenSnackbar}
               />
             </Stack>
             <Legend
@@ -369,6 +375,30 @@ const Map = () => {
           </Stack>
         )}
 
+        <Snackbar
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+          autoHideDuration={4000}
+          open={openSnackbar}
+          onClose={(event, reason) => {
+            if (reason === "clickaway") {
+              return;
+            }
+            setOpenSnackbar(false);
+          }}
+          size="md"
+          variant="solid"
+          color="success"
+          sx={{ maxWidth: "350px" }}
+          startDecorator={
+            <FontAwesomeIcon
+              icon={faCircleCheck}
+              style={{ fontSize: "1.5rem" }}
+            />
+          }
+        >
+          Submitted successfully. Thank you for helping us improve!
+        </Snackbar>
+
         {!isMobile && <MapControl map={map} />}
         {dateReady && (
           <LayerMenu
@@ -423,6 +453,7 @@ const Map = () => {
       isBelowLaptop,
       isMobile,
       isBoundaryHidden,
+      openSnackbar,
     ]
   );
 
