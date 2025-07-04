@@ -66,7 +66,7 @@ router.post("/generate-token", async (req, res) => {
     // ✅ Insert token into database
     const insertQuery = `
       INSERT INTO api_tokens (token, organization, email, expires_at, created_at, api_ids) 
-      VALUES ($1, $2, $3, $4, NOW(), $5) RETURNING token
+      VALUES ($1, $2, $3, $4, (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Manila'), $5) RETURNING token
     `;
     const values = [token, organization, email, expires_at, validApiIds];  
     const result = await pool.query(insertQuery, values);
@@ -76,13 +76,13 @@ router.post("/generate-token", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: 'gabrielbesmontelopez100900@gmail.com',
-        pass: 'qjrf fjcg ytqh btwe',
+        user: 'tenday.pagasa@gmail.com',
+        pass: 'lnio apew yaup fqds',
       },
     });
 
     await transporter.sendMail({
-      from: `"TenDay" <${'gabrielbesmontelopez100900@gmail.com'}>`,
+      from: `"TenDay" <${'tenday.pagasa@gmail.com'}>`,
       to: email,
       subject: "Your API Access Token",
       html: `
@@ -100,7 +100,7 @@ router.post("/generate-token", async (req, res) => {
             ? `<p><strong>Expiration:</strong> ${expires_at}</p>` 
             : `<p><strong>This token has lifetime access.</strong></p>`}
     
-          <p>Please store this token securely. It is used to authenticate your API requests.</p>
+          <p>Please <a href="https://tenday.pagasa.dost.gov.ph/api/v1/validate?token=${createdToken}">click here to activate your token</a>.</p>
     
           <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
     

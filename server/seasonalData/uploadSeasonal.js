@@ -8,19 +8,21 @@ import { Router } from 'express';
 const router = Router();
 
 export const processSeasonalData = async (batch, folderPath, userId) => {
+  const startTime = Date.now(); // ⏱️ Start timer
   const fileName = path.basename(folderPath); // e.g., "180_Jan2025"
   const startMonthName = getMonthName(batch); // Jan
   const startYear = 2025 + Math.floor((batch - 180) / 12);
-
-  // Forecast starts one month after the folder name's month
   let forecastStart = moment(`${startYear}-${getMonthIndex(startMonthName)}-01`).add(1, 'month');
-
   const logDate = moment().format('YYYY-MM-DD HH:mm:ss');
   const client = await pool.connect();
 
+  let mmStatus = "New";
+  let pnStatus = "New";
+
   try {
-    // Parse prov_mm.csv
+    console.log(`📂 Processing folder: ${folderPath}`);
     const forecastData = await parseCSV(path.join(folderPath, 'prov_mm.csv'));
+    console.log(`✅ prov_mm.csv parsed. Rows: ${forecastData.length}`);
 
     for (let row of forecastData) {
       const provinceId = await getProvinceId(row.PROVINCE);
@@ -29,7 +31,6 @@ export const processSeasonalData = async (batch, folderPath, userId) => {
       for (let i = 1; i <= 6; i++) {
         const dateStr = currentDate.format('YYYY-MM-DD');
 
-        // Check for existing sf_date
         let dateRes = await client.query(
           `SELECT id FROM sf_date WHERE date = $1 AND province_id = $2`,
           [dateStr, provinceId]
@@ -37,21 +38,19 @@ export const processSeasonalData = async (batch, folderPath, userId) => {
 
         let dateId;
         if (dateRes.rowCount > 0) {
+          mmStatus = "Modified";
           dateId = dateRes.rows[0].id;
 
-          // Update sf_date
           await client.query(
             `UPDATE sf_date SET start_month = $1, start_year = $2, batch = $3 WHERE id = $4`,
             [startMonthName, startYear, batch, dateId]
           );
 
-          // Update forecast_rf
           await client.query(
             `UPDATE forecast_rf SET min = $1, mean = $2, max = $3 WHERE date_id = $4`,
             [row[`MIN${i}`], row[`MEAN${i}`], row[`MAX${i}`], dateId]
           );
         } else {
-          // Insert new sf_date and forecast_rf
           const newDateRes = await client.query(
             `INSERT INTO sf_date (date, start_month, start_year, batch, province_id)
              VALUES ($1, $2, $3, $4, $5) RETURNING id`,
@@ -70,8 +69,8 @@ export const processSeasonalData = async (batch, folderPath, userId) => {
       }
     }
 
-    // Parse prov_pn.csv
     const percentData = await parseCSV(path.join(folderPath, 'prov_pn.csv'));
+    console.log(`✅ prov_pn.csv parsed. Rows: ${percentData.length}`);
 
     for (let row of percentData) {
       const provinceId = await getProvinceId(row.PROVINCE);
@@ -94,6 +93,7 @@ export const processSeasonalData = async (batch, folderPath, userId) => {
           );
 
           if (percentRes.rowCount > 0) {
+            pnStatus = "Modified";
             await client.query(
               `UPDATE percent_n SET mean = $1, description = $2 WHERE date_id = $3`,
               [row[`MEAN${i}`], getDescription(row[`MEAN${i}`]), dateId]
@@ -106,40 +106,47 @@ export const processSeasonalData = async (batch, folderPath, userId) => {
             );
           }
         } else {
-          console.warn(`No sf_date found for ${dateStr}, skipping percent_n.`);
+          console.warn(`⚠️ No sf_date found for ${dateStr}, skipping percent_n.`);
         }
 
         currentDate.add(1, 'month');
       }
     }
 
-    // Log activity
-    const status = 'Not Applicable';
-    await client.query(
-      `INSERT INTO activity_log (file_name, logdate, user_id, status, forecast)
-       VALUES ('prov_mm_${batch}.csv', $1, $2, $3, $4)`,
-      [logDate, userId, status, 'Seasonal Forecast']
-    );
-    await client.query(
-      `INSERT INTO activity_log (file_name, logdate, user_id, status, forecast)
-       VALUES ('prov_pn_${batch}.csv', $1, $2, $3, $4)`,
-      [logDate, userId, status, 'Seasonal Forecast']
-    );
+    // 🔁 Log activity with UPSERT-style conflict handling
+    const logActivity = async (filename, status) => {
+      try {
+        await client.query(
+          `INSERT INTO activity_log (file_name, logdate, user_id, status, forecast)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (file_name)
+           DO UPDATE SET logdate = EXCLUDED.logdate, user_id = EXCLUDED.user_id,
+                         status = 'Modified', forecast = EXCLUDED.forecast`,
+          [filename, logDate, userId, status, 'Seasonal Forecast']
+        );
+      } catch (err) {
+        console.error(`❌ Error logging activity for ${filename}:`, err.message);
+      }
+    };
+
+    await logActivity(`prov_mm_${batch}.csv`, mmStatus);
+    await logActivity(`prov_pn_${batch}.csv`, pnStatus);
 
     // Clear Redis cache
     const keys = await redisClient.keys('SEASONAL:*');
     if (keys.length > 0) {
       await redisClient.del(keys);
-      console.log('Redis cache cleared for seasonal data');
+      console.log('♻️ Redis cache cleared for seasonal data.');
     }
 
-    console.log(`Activity logged for batch ${batch}`);
-
+    console.log(`✅ Activity logged. Batch: ${batch}`);
   } catch (err) {
-    console.error('Error processing seasonal data:', err);
+    console.error('❌ Error processing seasonal data:', err);
     throw err;
   } finally {
     client.release();
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`⏱️ Total time: ${duration} seconds`);
   }
 };
 
@@ -157,7 +164,7 @@ const parseCSV = (filePath) => {
 
 const getProvinceId = async (province) => {
   const result = await pool.query('SELECT id FROM province WHERE id = $1', [province]);
-  if (result.rows.length === 0) throw new Error(`Province not found: ${province}`);
+  if (result.rows.length === 0) throw new Error(`❌ Province not found: ${province}`);
   return result.rows[0].id;
 };
 

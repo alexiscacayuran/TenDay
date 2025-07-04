@@ -12,15 +12,21 @@ const getFileKeyForType = (date, fileType, isMasked, specDate) => {
     MAX: "TMAX",
   };
 
-  const fileTypeUpper =
-    typeMap[fileType.toUpperCase()] || fileType.toUpperCase();
-  let fileKey = `${fileTypeUpper}_`;
+  const fileTypeLower = fileType.toLowerCase();
 
+  // 🔁 Handle XLSX separately
+  if (fileTypeLower === "xlsx") {
+    return `TanawPH_${specDate}.xlsx`;
+  }
+
+  const fileTypeUpper = typeMap[fileType.toUpperCase()] || fileType.toUpperCase();
+  let fileKey = `${fileTypeUpper}_`;
   fileKey += isMasked ? `${specDate}_masked` : `${specDate}`;
-  fileKey += ".tif"; // All types now use .tif format including WIND
+  fileKey += ".tif";
 
   return fileKey;
 };
+
 
 export const retrieveForecastFile = async (
   year,
@@ -93,9 +99,11 @@ export const retrieveForecastFile = async (
 
   // 📂 Default folder listing
   const folderPath =
-    mappedType === "XLSX"
-      ? `${folderName}/XLSX/`
-      : `${folderName}/${mappedType}/`;
+  fileType.toLowerCase() === "all" ? `${folderName}/` :
+  mappedType === "XLSX"
+    ? `${folderName}/XLSX/`
+    : `${folderName}/${mappedType}/`;
+
 
   console.log(`Checking S3 folder: ${folderPath}`);
 

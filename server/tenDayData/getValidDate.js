@@ -1,37 +1,34 @@
 import express from "express";
-import { pool } from "../db.js"; // Removed redisClient
+import { pool } from "../db.js";
 
 const router = express.Router();
 
-router.get("/valid", async (req, res) => {
+router.get("/tenday/issuance", async (req, res) => {
   try {
-    // ✅ Query latest date from DB (Make sure it's in Manila Time)
-    const dateQuery = `SELECT MAX(start_date) as latest_date FROM date`;
+    // ✅ Query latest start_date
+    const dateQuery = `SELECT MAX(start_date) AS start_date FROM date`;
     const dateResult = await pool.query(dateQuery);
 
-    if (!dateResult.rows.length || !dateResult.rows[0].latest_date) {
+    if (!dateResult.rows.length || !dateResult.rows[0].start_date) {
       return res.status(404).json({ message: "No valid date found" });
     }
 
-    // ✅ Convert UTC date from DB to Manila Time
-    let latestDate = new Date(dateResult.rows[0].latest_date);
+    // Convert to Manila Time
+    let rawStart = new Date(dateResult.rows[0].start_date);
+    const manilaStart = new Date(rawStart.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
 
-    // ✅ Force conversion to Manila Time
-    latestDate = new Date(latestDate.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+    // Compute end_date: start + 9 days
+    const manilaEnd = new Date(manilaStart);
+    manilaEnd.setDate(manilaEnd.getDate() + 9);
 
-    // ✅ Format as YYYY-MM-DD (Manila Time)
-    const options = { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" };
-    const formattedDate = new Intl.DateTimeFormat("en-CA", options).format(latestDate);
+    const formatOptions = { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" };
+    const formattedStart = new Intl.DateTimeFormat("en-CA", formatOptions).format(manilaStart); // YYYY-MM-DD
+    const formattedEnd = new Intl.DateTimeFormat("en-CA", formatOptions).format(manilaEnd);     // YYYY-MM-DD
 
-    console.log("✅ Latest Date in Manila Time:", formattedDate); // Should be 2025-03-26
+    // Format for filename: MMDDYYYY (for day10.csv lookup)
+    const filenameDate = `${(manilaEnd.getMonth() + 1).toString().padStart(2, "0")}${manilaEnd.getDate().toString().padStart(2, "0")}${manilaEnd.getFullYear()}`;
 
-    // ✅ Correct the day10 target date (March 26 is Day 1, so add **9 days**)
-    latestDate.setDate(latestDate.getDate() + 9);
-    const datePart = `${(latestDate.getMonth() + 1).toString().padStart(2, "0")}${latestDate.getDate().toString().padStart(2, "0")}${latestDate.getFullYear()}`;
-
-    console.log("✅ Target Date for day10.csv:", datePart); // Should be 04042025
-
-    // ✅ Query latest time from activity_log for `day10.csv`
+    // ✅ Query latest time for day10.csv
     const logQuery = `
       SELECT TO_CHAR(logdate, 'HH12:MI:SS AM') AS formatted_time 
       FROM activity_log 
@@ -39,18 +36,21 @@ router.get("/valid", async (req, res) => {
       ORDER BY logdate DESC 
       LIMIT 1
     `;
-  
-    const logResult = await pool.query(logQuery, [`%${datePart}(day10.csv)%`]);
-  
+    const logResult = await pool.query(logQuery, [`%${filenameDate}(day10.csv)%`]);
+
     let latestTime = null;
     if (logResult.rows.length > 0) {
-      latestTime = logResult.rows[0].formatted_time; // Already formatted in SQL
+      latestTime = logResult.rows[0].formatted_time;
     }
 
-    // ✅ Final JSON response
-    const data = { latest_date: formattedDate, latest_time: latestTime };
+    // ✅ Final response
+    const data = {
+      latest_date: formattedStart,
+      latest_time: latestTime,
+      start_date: formattedStart,
+      end_date: formattedEnd
+    };
 
-    console.log("✅ Fetched latest date and time from database");
     res.json(data);
   } catch (error) {
     console.error("Error executing query", error.stack);
