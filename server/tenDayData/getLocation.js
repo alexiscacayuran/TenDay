@@ -40,15 +40,8 @@ router.get("/location", authenticateToken(6), async (req, res) => {
       total_pages: 1,
     };
 
-    const tokenResult = await pool.query(
-      `SELECT api_ids FROM api_tokens WHERE token = $1 LIMIT 1`,
-      [token]
-    );
-
-    if (
-      tokenResult.rows.length === 0 ||
-      !tokenResult.rows[0].api_ids.includes(6)
-    ) {
+    const tokenResult = await pool.query(`SELECT api_ids FROM api_tokens WHERE token = $1 LIMIT 1`, [token]);
+    if (tokenResult.rows.length === 0 || !tokenResult.rows[0].api_ids.includes(6)) {
       return res.status(403).json({
         metadata: {
           api: "Location",
@@ -65,44 +58,37 @@ router.get("/location", authenticateToken(6), async (req, res) => {
 
     const requestNo = await logApiRequest(req, 6);
 
-    // ✅ Return all region names and codes in order
+    const regionOrPsgc = region?.toLowerCase();
+    const normalizedRegion = regionMap[regionOrPsgc];
+
+    const regionResult = await pool.query(`SELECT DISTINCT region, r_psgc FROM municities`);
+    const regionPsgcMap = {};
+    regionResult.rows.forEach(r => {
+      if (!regionPsgcMap[r.region]) regionPsgcMap[r.region] = r.r_psgc;
+    });
+
     if (!region && !province) {
       const regionGroups = {};
-
       for (const [code, name] of Object.entries(regionMap)) {
-        if (!regionGroups[name]) {
-          regionGroups[name] = new Set();
-        }
+        if (!regionGroups[name]) regionGroups[name] = new Set();
         regionGroups[name].add(code.toLowerCase());
       }
 
       const customOrder = [
-        "Ilocos Region (Region I)",
-        "Cagayan Valley (Region II)",
-        "Central Luzon (Region III)",
-        "CALABARZON (Region IV-A)",
-        "MIMAROPA (Region IV-B)",
-        "Bicol Region (Region V)",
-        "Western Visayas (Region VI)",
-        "Central Visayas (Region VII)",
-        "Eastern Visayas (Region VIII)",
-        "Zamboanga Peninsula (Region IX)",
-        "Northern Mindanao (Region X)",
-        "Davao Region (Region XI)",
-        "SOCCSKSARGEN (Region XII)",
-        "Caraga (Region XIII)",
-        "National Capital Region (NCR)",
-        "Cordillera Administrative Region (CAR)",
-        "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
+        "Ilocos Region (Region I)", "Cagayan Valley (Region II)", "Central Luzon (Region III)",
+        "CALABARZON (Region IV-A)", "MIMAROPA (Region IV-B)", "Bicol Region (Region V)",
+        "Western Visayas (Region VI)", "Central Visayas (Region VII)", "Eastern Visayas (Region VIII)",
+        "Zamboanga Peninsula (Region IX)", "Northern Mindanao (Region X)", "Davao Region (Region XI)",
+        "SOCCSKSARGEN (Region XII)", "Caraga (Region XIII)", "National Capital Region (NCR)",
+        "Cordillera Administrative Region (CAR)", "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
         "Negros Island Region (Region XVIII)"
       ];
 
-      const formatted = customOrder
-        .filter(name => regionGroups[name])
-        .map(name => ({
-          name,
-          codes: Array.from(regionGroups[name]).sort().join(", ")
-        }));
+      const formatted = customOrder.filter(name => regionGroups[name]).map(name => ({
+        name,
+        codes: Array.from(regionGroups[name]).sort().join(", "),
+        psgc_code: regionPsgcMap[name] || null
+      }));
 
       return res.json({
         metadata: {
@@ -121,13 +107,17 @@ router.get("/location", authenticateToken(6), async (req, res) => {
       });
     }
 
-    let result, cacheKey;
-
-    // 🎯 REGION MODE
+    // REGION MODE
     if (region) {
-      const normalized = regionMap[region.toLowerCase()];
-      if (!normalized) {
-        return res.status(400).json({
+      const result = await pool.query(`
+        SELECT DISTINCT province, p_psgc, region
+        FROM municities
+        WHERE LOWER(region) = $1 OR r_psgc = $2
+        ORDER BY province ASC
+      `, [normalizedRegion?.toLowerCase(), region]);
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({
           metadata: {
             request_no: requestNo,
             api: "Location",
@@ -136,48 +126,21 @@ router.get("/location", authenticateToken(6), async (req, res) => {
           data: [],
           footer: {
             ...baseFooter,
-            status_code: 400,
-            description: "Bad Request: Invalid region code",
+            status_code: 404,
+            description: "Bad Request: Provided province or region not found",
           },
         });
       }
 
-      cacheKey = `region:${normalized}`;
-      const cached = await redisClient.get(cacheKey);
-      if (cached) {
-        const provinces = JSON.parse(cached);
-        return res.json({
-          metadata: {
-            request_no: requestNo,
-            api: "Location",
-            forecast: "Municipalities, Provinces, and Regions",
-            region: normalized,
-          },
-          data: provinces,
-          footer: {
-            ...baseFooter,
-            total_count: provinces.length,
-            per_page: provinces.length,
-            status_code: 200,
-            description: "OK",
-          },
-        });
-      }
-
-      result = await pool.query(
-        `SELECT DISTINCT province FROM municities WHERE region = $1 ORDER BY province ASC`,
-        [normalized]
-      );
-
-      const provinces = result.rows.map(r => r.province);
-      await redisClient.set(cacheKey, JSON.stringify(provinces), "EX", 3600);
+      const provinces = result.rows.map(r => ({ name: r.province, psgc_code: r.p_psgc }));
+      const fullRegionName = result.rows[0]?.region || normalizedRegion || region;
 
       return res.json({
         metadata: {
           request_no: requestNo,
           api: "Location",
           forecast: "Municipalities, Provinces, and Regions",
-          region: normalized,
+          region: fullRegionName,
         },
         data: provinces,
         footer: {
@@ -190,58 +153,46 @@ router.get("/location", authenticateToken(6), async (req, res) => {
       });
     }
 
-    // 🎯 PROVINCE MODE
+    // PROVINCE MODE
     if (province) {
-      cacheKey = `province:${province}`;
-      const cached = await redisClient.get(cacheKey);
-      if (cached) {
-        const municipalities = JSON.parse(cached);
+      const result = await pool.query(`
+        SELECT municity, m_psgc, province
+        FROM municities
+        WHERE LOWER(province) = $1 OR p_psgc = $2
+        ORDER BY municity ASC
+      `, [province?.toLowerCase(), province]);
 
-        const regResult = await pool.query(
-          `SELECT DISTINCT region FROM municities WHERE province = $1`,
-          [province]
-        );
-        const regionName = regResult.rows[0]?.region || null;
-
-        return res.json({
+      if (result.rowCount === 0) {
+        return res.status(404).json({
           metadata: {
             request_no: requestNo,
             api: "Location",
             forecast: "Municipalities, Provinces, and Regions",
-            province,
-            region: regionName,
           },
-          data: municipalities,
+          data: [],
           footer: {
             ...baseFooter,
-            total_count: municipalities.length,
-            per_page: municipalities.length,
-            status_code: 200,
-            description: "OK",
+            status_code: 404,
+            description: "Bad Request: Provided province or region not found",
           },
         });
       }
 
-      result = await pool.query(
-        `SELECT municity FROM municities WHERE province = $1 ORDER BY municity ASC`,
-        [province]
-      );
-
-      const municipalities = result.rows.map(r => r.municity);
-      await redisClient.set(cacheKey, JSON.stringify(municipalities), "EX", 3600);
+      const municipalities = result.rows.map(r => ({ name: r.municity, psgc_code: r.m_psgc }));
 
       const regResult = await pool.query(
-        `SELECT DISTINCT region FROM municities WHERE province = $1`,
-        [province]
+        `SELECT DISTINCT region FROM municities WHERE LOWER(province) = $1 OR p_psgc = $2`,
+        [province?.toLowerCase(), province]
       );
       const regionName = regResult.rows[0]?.region || null;
+      const fullProvinceName = result.rows[0]?.province || province;
 
       return res.json({
         metadata: {
           request_no: requestNo,
           api: "Location",
           forecast: "Municipalities, Provinces, and Regions",
-          province,
+          province: fullProvinceName,
           region: regionName,
         },
         data: municipalities,

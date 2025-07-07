@@ -1,22 +1,43 @@
 import express from "express";
+import Fuse from 'fuse.js';
 import { pool, redisClient } from "../db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
+const regionMap = {
+  "1": "Ilocos Region (Region I)", "i": "Ilocos Region (Region I)",
+  "2": "Cagayan Valley (Region II)", "ii": "Cagayan Valley (Region II)",
+  "3": "Central Luzon (Region III)", "iii": "Central Luzon (Region III)",
+  "4a": "CALABARZON (Region IV-A)", "iva": "CALABARZON (Region IV-A)",
+  "4b": "MIMAROPA (Region IV-B)", "ivb": "MIMAROPA (Region IV-B)",
+  "5": "Bicol Region (Region V)", "v": "Bicol Region (Region V)",
+  "6": "Western Visayas (Region VI)", "vi": "Western Visayas (Region VI)",
+  "7": "Central Visayas (Region VII)", "vii": "Central Visayas (Region VII)",
+  "8": "Eastern Visayas (Region VIII)", "viii": "Eastern Visayas (Region VIII)",
+  "9": "Zamboanga Peninsula (Region IX)", "ix": "Zamboanga Peninsula (Region IX)",
+  "10": "Northern Mindanao (Region X)", "x": "Northern Mindanao (Region X)",
+  "11": "Davao Region (Region XI)", "xi": "Davao Region (Region XI)",
+  "12": "SOCCSKSARGEN (Region XII)", "xii": "SOCCSKSARGEN (Region XII)",
+  "13": "Caraga (Region XIII)", "xiii": "Caraga (Region XIII)",
+  "ncr": "National Capital Region (NCR)",
+  "car": "Cordillera Administrative Region (CAR)",
+  "barmm": "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
+  "nir": "Negros Island Region (Region XVIII)"
+};
+
+// 🧠 Normalize function to handle "City of X" vs "X City"
+const normalizeMunicity = (name = "") => name.toLowerCase()
+  .replace(/^city of\s+/i, '')
+  .replace(/\s+city$/i, '')
+  .trim();
+
 router.get("/tenday/current", authenticateToken(1), async (req, res) => {
-  let { municity, province, page = "1", limit = "10" } = req.query;
+  let { municity, province, region, page = "1", limit = "10" } = req.query;
 
-  let per_page = parseInt(limit);
-  let current_page = null;
-
-  if (page === "none") {
-    current_page = null;
-  } else {
-    let pageNum = parseInt(page);
-    current_page = isNaN(pageNum) || pageNum < 1 ? 1 : pageNum;
-  }
+  const per_page = parseInt(limit);
+  const current_page = page === "none" ? null : (isNaN(parseInt(page)) || parseInt(page) < 1 ? 1 : parseInt(page));
 
   const today = new Date().toLocaleDateString("en-PH", { timeZone: "Asia/Manila" });
   const offset = current_page ? (current_page - 1) * per_page : 0;
@@ -33,7 +54,7 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
     method: req.method,
     status_code: 200,
     description: "OK"
-  };  
+  };
 
   try {
     const { api_ids } = req.user || {};
@@ -64,14 +85,87 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       });
     }
 
+    const refRows = (await pool.query("SELECT DISTINCT municity, province, region FROM municities")).rows.map(item => ({
+      ...item,
+      normalized_municity: normalizeMunicity(item.municity)
+    }));
+
+    const fuseOptions = {
+       isCaseSensitive: false,
+       includeScore: false,
+       ignoreDiacritics: false,
+       shouldSort: true,
+       includeMatches: false,
+       findAllMatches: false,
+       minMatchCharLength: 1,
+       location: 0,
+      threshold: 0.6,
+       distance: 100,
+       useExtendedSearch: false,
+       ignoreLocation: false,
+       ignoreFieldNorm: false,
+       fieldNormWeight: 1,
+      keys: ["municity", "province", "region"]
+    };
+    
+    const fuse = new Fuse(refRows, fuseOptions);
+    
+
+    if (municity) {
+      const mPsgcRes = await pool.query(
+        "SELECT municity, province, region FROM municities WHERE m_psgc = $1 LIMIT 1",
+        [municity]
+      );
+      if (mPsgcRes.rowCount > 0) {
+        municity = mPsgcRes.rows[0].municity;
+        province = mPsgcRes.rows[0].province;
+        region = mPsgcRes.rows[0].region;
+      } else {
+        const normalized = normalizeMunicity(municity);
+        const match = fuse.search(normalized).find(r => r.item.municity);
+        if (match) {
+          municity = match.item.municity;
+          province = match.item.province;
+          region = match.item.region;
+        }
+      }
+    } else if (province) {
+      const pPsgcRes = await pool.query(
+        "SELECT province, region FROM municities WHERE p_psgc = $1 LIMIT 1",
+        [province]
+      );
+      if (pPsgcRes.rowCount > 0) {
+        province = pPsgcRes.rows[0].province;
+        region = pPsgcRes.rows[0].region;
+      } else {
+        const match = fuse.search(province).find(r => r.item.province);
+        if (match) {
+          province = match.item.province;
+          region = match.item.region;
+        }
+      }
+    } else if (region) {
+      const normalized = region.toLowerCase().replace(/\s/g, '');
+      if (regionMap[normalized]) {
+        region = regionMap[normalized];
+      } else {
+        const psgcLookup = await pool.query("SELECT region FROM municities WHERE r_psgc = $1 LIMIT 1", [region]);
+        if (psgcLookup.rows.length > 0) {
+          region = psgcLookup.rows[0].region;
+        } else {
+          const match = fuse.search(region).find(r => r.item.region);
+          if (match) region = match.item.region;
+        }
+      }
+    }
+
     let query = `
       WITH total AS (
         SELECT COUNT(*) AS total_count 
         FROM municities AS m
         INNER JOIN date AS d ON m.id = d.municity_id
-        WHERE d.date = $1
-    `;
-    let values = [today];
+        WHERE d.date = $1`;
+    const values = [today];
 
     if (municity) {
       values.push(`%${municity}%`);
@@ -80,6 +174,10 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
     if (province) {
       values.push(`%${province}%`);
       query += ` AND m.province ILIKE $${values.length}`;
+    }
+    if (region) {
+      values.push(`%${region}%`);
+      query += ` AND m.region ILIKE $${values.length}`;
     }
 
     query += `)
@@ -104,6 +202,7 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
 
     if (municity) query += ` AND m.municity ILIKE $${values.indexOf(`%${municity}%`) + 1}`;
     if (province) query += ` AND m.province ILIKE $${values.indexOf(`%${province}%`) + 1}`;
+    if (region) query += ` AND m.region ILIKE $${values.indexOf(`%${region}%`) + 1}`;
 
     query += ` ORDER BY m.province ASC, m.municity ASC`;
 
@@ -114,26 +213,16 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
 
     const result = await pool.query(query, values);
 
-    if (result.rows.length === 0) {
-      if (municity || province) {
-        return res.status(400).json({
-          metadata: { request_no, ...baseMetadata },
-          data: [],
-          misc: {
-            ...defaultMisc,
-            status_code: 400,
-            description: "Bad Request: Provided municipality or province not found",
-          },
-        });
-      }
-
-      return res.status(404).json({
+    if (result.rowCount === 0) {
+      return res.status(municity || province || region ? 400 : 404).json({
         metadata: { request_no, ...baseMetadata },
         data: [],
         misc: {
           ...defaultMisc,
-          status_code: 404,
-          description: "No content: No current forecast data found",
+          status_code: municity || province || region ? 400 : 404,
+          description: municity || province || region
+            ? "Bad Request: Provided municipality, province, or region not found"
+            : "No content: No current forecast data found",
         },
       });
     }
@@ -150,16 +239,15 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       const key = `forecast:${entry.location_id}:${entry.date_id}`;
       const cachedData = await redisClient.hGetAll(key);
 
+      let forecastEntry;
       if (cachedData && Object.keys(cachedData).length > 0) {
-        forecastData.push({ ...cachedData });
+        forecastEntry = { ...cachedData };
       } else {
-        const forecastEntry = {
+        forecastEntry = {
           date: new Date(entry.date).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' }),
-          ...(municity ? {} : province ? { municity: entry.municity } : {
-            municity: entry.municity,
-            province: entry.province,
-            region: entry.region
-          }),
+          ...(municity ? {} : { municity: entry.municity }),
+          ...(province || municity ? {} : { province: entry.province }),
+          ...(region || province || municity ? {} : { region: entry.region }),
           rainfall_desc: entry.rainfall,
           rainfall_total: entry.total_rainfall,
           cloud_cover: entry.cloud_cover,
@@ -170,40 +258,23 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
           wind_speed: entry.speed,
           wind_direction: entry.direction,
         };
-        
         await redisClient.hSet(key, forecastEntry);
         await redisClient.expire(key, 86400);
-        forecastData.push(forecastEntry);
       }
+
+      forecastData.push(forecastEntry);
     }
 
-    let misc;
+    const misc = current_page === null
+      ? defaultMisc
+      : {
+          ...defaultMisc,
+          current_page,
+          per_page,
+          total_count,
+          total_page,
+        };
 
-    if (current_page === null) {
-      // Case: page=none → minimalist misc object
-      misc = {
-        version: "1.0",
-        timestamp,
-        method: req.method,
-        status_code: 200,
-        description: "OK"
-      };
-    } else {
-      // Case: default paginated
-      misc = {
-        version: "1.0",
-        timestamp,
-        method: req.method,
-        current_page,
-        per_page,
-        total_count,
-        total_page,
-        status_code: 200,
-        description: "OK"
-      };
-    }
-
-    // Metadata response logic
     const metadata = {
       request_no,
       api: "Current Forecast",
@@ -212,13 +283,14 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
     };
 
     const firstRow = result.rows[0];
-
     if (municity) {
       metadata.municity = firstRow.municity;
       metadata.province = firstRow.province;
       metadata.region = firstRow.region;
     } else if (province) {
       metadata.province = firstRow.province;
+      metadata.region = firstRow.region;
+    } else if (region) {
       metadata.region = firstRow.region;
     }
 

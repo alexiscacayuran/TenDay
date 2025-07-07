@@ -3,194 +3,224 @@ import chalk from "chalk";
 import { pool, redisClient } from "../db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
+import Fuse from "fuse.js";
 
 const router = express.Router();
 
-router.get("/tenday/date", authenticateToken(4), async (req, res) => {
-  const { municity, province, date } = req.query;
-  const token = req.headers["token"];
+const regionMap = {
+  "1": "Ilocos Region (Region I)", "i": "Ilocos Region (Region I)",
+  "2": "Cagayan Valley (Region II)", "ii": "Cagayan Valley (Region II)",
+  "3": "Central Luzon (Region III)", "iii": "Central Luzon (Region III)",
+  "4a": "CALABARZON (Region IV-A)", "iva": "CALABARZON (Region IV-A)",
+  "4b": "MIMAROPA (Region IV-B)", "ivb": "MIMAROPA (Region IV-B)",
+  "5": "Bicol Region (Region V)", "v": "Bicol Region (Region V)",
+  "6": "Western Visayas (Region VI)", "vi": "Western Visayas (Region VI)",
+  "7": "Central Visayas (Region VII)", "vii": "Central Visayas (Region VII)",
+  "8": "Eastern Visayas (Region VIII)", "viii": "Eastern Visayas (Region VIII)",
+  "9": "Zamboanga Peninsula (Region IX)", "ix": "Zamboanga Peninsula (Region IX)",
+  "10": "Northern Mindanao (Region X)", "x": "Northern Mindanao (Region X)",
+  "11": "Davao Region (Region XI)", "xi": "Davao Region (Region XI)",
+  "12": "SOCCSKSARGEN (Region XII)", "xii": "SOCCSKSARGEN (Region XII)",
+  "13": "Caraga (Region XIII)", "xiii": "Caraga (Region XIII)",
+  "ncr": "National Capital Region (NCR)",
+  "car": "Cordillera Administrative Region (CAR)",
+  "barmm": "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
+  "nir": "Negros Island Region (Region XVIII)"
+};
 
+function normalizeCityName(name) {
+  if (!name) return "";
+  let str = name.trim().toLowerCase();
+  str = str.replace(/^city of /i, "").replace(/^city /i, "");
+  if (!str.endsWith(" city")) str += " city";
+  return str.replace(/\s+/g, " ");
+}
+
+router.get("/tenday/date", authenticateToken(4), async (req, res) => {
+  const { region, province, municity, date, page } = req.query;
+  const isPageNone = page === "none";
+  const pageNum = !isPageNone ? parseInt(page || "1") : null;
+  const token = req.headers["token"];
   const baseFooter = {
     version: "1.0",
-    timestamp: new Date().toLocaleString("en-PH", {
-      timeZone: "Asia/Manila",
-    }).replace(",", ""),
-    method: "GET",
-    current_page: 1,
-    per_page: 10,
-    total_count: 0,
-    total_pages: 0,
+    timestamp: new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" }).replace(",", ""),
+    method: "GET"
   };
 
-  if (!municity || !province || !date) {
-    return res.status(400).json({
-      metadata: {
-        api: "Forecast by Date",
-        forecast: "10-day Forecast",
-      },
-      data: {},
-      misc: {
-        ...baseFooter,
-        status_code: 400,
-        description: "Bad Request: municity, province, and date param is required",
-      },
-    });
+  if (!isPageNone) {
+    baseFooter.current_page = pageNum;
+    baseFooter.per_page = 10;
+    baseFooter.total_count = 0;
+    baseFooter.total_pages = 0;
   }
 
   try {
-    const tokenResult = await pool.query(
-      `SELECT api_ids FROM api_tokens WHERE token = $1 LIMIT 1`,
-      [token]
-    );
-
-    if (tokenResult.rows.length === 0) {
-      return res.status(401).json({
-        metadata: {
-          api: "Forecast by Date",
-          forecast: "10-day Forecast",
-        },
-        data: {},
-        misc: {
-          ...baseFooter,
-          status_code: 401,
-          description: "Unauthorized: Invalid token or expired token",
-        },
-      });
-    }
-
-    const { api_ids } = tokenResult.rows[0];
-
-    if (!api_ids.includes(4)) {
+    const tokenResult = await pool.query(`SELECT api_ids FROM api_tokens WHERE token = $1 LIMIT 1`, [token]);
+    if (!tokenResult.rows.length || !tokenResult.rows[0].api_ids.includes(4)) {
       return res.status(403).json({
-        metadata: {
-          api: "Forecast by Date",
-          forecast: "10-day Forecast",
-        },
+        metadata: { api: "Forecast by Date" },
         data: {},
-        misc: {
-          ...baseFooter,
-          status_code: 403,
-          description: "Forbidden: You are not authorized to access this API.",
-        },
+        misc: { ...baseFooter, status_code: 403, description: "Forbidden: You are not authorized to access this API." }
       });
     }
 
     const requestNo = await logApiRequest(req, 4);
-    const cacheKey = `dateForecast:${token}:${municity}:${province}:${date}`;
-    const cachedData = await redisClient.get(cacheKey);
 
-    if (cachedData) {
-      console.log(chalk.bgGray.black(" Cache hit ") + " " + chalk.bgGreen.black(" Returning data from Redis "));
-      const response = JSON.parse(cachedData);
-      response.metadata.request_no = requestNo;
-      response.misc.timestamp = new Date().toLocaleString("en-PH", {
-        timeZone: "Asia/Manila",
-      }).replace(",", "");
-      return res.json(response);
-    }
-
-    const query = `
-      SELECT 
-        m.id AS location_id, 
-        m.municity, 
-        m.province,
-        m.region,
-        d.id AS date_id, 
-        d.date,
-        d.start_date AS issuance_date,
-        r.total AS total_rainfall,
-        r.description AS rainfall, 
-        c.description AS cloud_cover, 
-        t.mean, t.min, t.max, 
-        h.mean AS humidity, 
-        w.speed, w.direction 
-      FROM 
-        municities AS m 
-      INNER JOIN date AS d ON m.id = d.municity_id 
-      INNER JOIN rainfall AS r ON d.id = r.date_id 
-      INNER JOIN cloud_cover AS c ON d.id = c.date_id 
-      INNER JOIN temperature AS t ON d.id = t.date_id 
-      INNER JOIN humidity AS h ON d.id = h.date_id 
-      INNER JOIN wind AS w ON d.id = w.date_id 
-      WHERE
-        REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($1, ' CITY', '', 'gi') || '%' 
-        AND 
-        m.province ILIKE '%' || $2 || '%' 
-        AND d.date = $3 
-      ORDER BY 
-        d.start_date DESC 
-      LIMIT 1`;
-
-    const values = [municity, province, date];
-    const result = await pool.query(query, values);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        metadata: {
-          request_no: requestNo,
-          api: "Forecast by Date",
-          forecast: "10-day Forecast",
-        },
+    if (!date) {
+      return res.status(400).json({
+        metadata: { api: "Forecast by Date" },
         data: {},
-        misc: {
-          ...baseFooter,
-          status_code: 404,
-          description: "No content: No forecast data found",
-        },
+        misc: { ...baseFooter, status_code: 400, description: "Bad Request: Provided date, municipality, province, or region not found" }
       });
     }
 
-    const row = result.rows[0];
-    const issuanceDate = row.issuance_date.toLocaleString("en-PH").split(", ")[0];
+    const refQuery = await pool.query("SELECT municity, province, region FROM municities");
+    const fuseOptions = {
+      isCaseSensitive: false,
+      includeScore: false,
+      threshold: 0.6,
+      distance: 100,
+      minMatchCharLength: 1,
+      shouldSort: true,
+      keys: ["municity", "province", "region"]
+    };
+    const fuse = new Fuse(refQuery.rows, fuseOptions);
 
-    const response = {
-      metadata: {
-        request_no: requestNo,
-        api: "Forecast by Date",
-        forecast: "10-day Forecast",
-        issuance_date: issuanceDate,
-        municity: row.municity,
-        province: row.province,
-        region: row.region || null,
-      },
-      data: {
-        date: row.date.toLocaleString("en-PH").split(", ")[0],
-        rainfall_desc: row.rainfall,
-        rainfall_total: row.total_rainfall,
-        cloud_cover: row.cloud_cover,
-        tmean: row.mean,
-        tmin: row.min,
-        tmax: row.max,
-        humidity: row.humidity,
-        wind_speed: row.speed,
-        wind_direction: row.direction,
-      },
-      misc: {
-        ...baseFooter,
-        total_count: 1,
-        total_pages: 1,
-        status_code: 200,
-        description: "OK",
-      },
+    let where = [`d.date = $1`];
+    let values = [date];
+    let i = 2;
+
+    let matched;
+    if (municity) {
+      const normalized = normalizeCityName(municity);
+      matched = fuse.search(normalized).find(x => x.item.municity);
+      where.push(`(m.municity = $${i} OR m.m_psgc = $${i})`);
+      values.push(matched ? matched.item.municity : municity);
+      i++;
+    }
+    if (province) {
+      matched = fuse.search(province).find(x => x.item.province);
+      where.push(`(m.province = $${i} OR m.p_psgc = $${i})`);
+      values.push(matched ? matched.item.province : province);
+      i++;
+    }
+    if (region) {
+      const regKey = region.toLowerCase();
+      const regName = regionMap[regKey] || region;
+      where.push(`(m.region = $${i} OR m.r_psgc = $${i})`);
+      values.push(regName);
+      i++;
+    }
+
+    const offset = (pageNum - 1) * 10;
+    const limitClause = isPageNone ? "" : `LIMIT 10 OFFSET ${offset}`;
+
+    const query = `
+      SELECT m.municity, m.province, m.region, d.date, d.start_date AS issuance_date,
+             r.total AS total_rainfall, r.description AS rainfall,
+             c.description AS cloud_cover, t.mean, t.min, t.max,
+             h.mean AS humidity, w.speed, w.direction
+      FROM municities m
+      JOIN date d ON m.id = d.municity_id
+      JOIN rainfall r ON d.id = r.date_id
+      JOIN cloud_cover c ON d.id = c.date_id
+      JOIN temperature t ON d.id = t.date_id
+      JOIN humidity h ON d.id = h.date_id
+      JOIN wind w ON d.id = w.date_id
+      WHERE ${where.join(" AND ")}
+      ORDER BY m.province, m.municity
+      ${limitClause}`;
+
+    const result = await pool.query(query, values);
+    const fullCount = await pool.query(`
+      SELECT COUNT(*) FROM municities m
+      JOIN date d ON m.id = d.municity_id
+      WHERE ${where.join(" AND ")}`, values);
+
+    if (!result.rows.length) return res.status(404).json({ metadata: { request_no: requestNo, api: "Forecast by Date", forecast: "10-day Forecast" }, data: [], misc: { ...baseFooter, status_code: 404, description: "No content: No current forecast data found" } });
+
+    const first = result.rows[0];
+    const metadata = {
+      request_no: requestNo,
+      api: "Forecast by Date",
+      forecast: "10-day Forecast",
+      issuance_date: first.issuance_date.toLocaleString("en-PH").split(",")[0],
+      date: first.date.toLocaleString("en-PH").split(",")[0]
     };
 
+    if (municity) {
+      metadata.region = first.region;
+      metadata.province = first.province;
+      metadata.municity = first.municity;
+    } else if (province) {
+      metadata.region = first.region;
+      metadata.province = first.province;
+    } else if (region) {
+      metadata.region = first.region;
+    }
+
+    let data;
+    if (municity) {
+      data = {
+        rainfall_desc: first.rainfall,
+        rainfall_total: first.total_rainfall,
+        cloud_cover: first.cloud_cover,
+        tmean: first.mean,
+        tmin: first.min,
+        tmax: first.max,
+        humidity: first.humidity,
+        wind_speed: first.speed,
+        wind_direction: first.direction
+      };
+    } else if (province) {
+      data = result.rows.map(r => ({
+        municity: r.municity,
+        rainfall_desc: r.rainfall,
+        rainfall_total: r.total_rainfall,
+        cloud_cover: r.cloud_cover,
+        tmean: r.mean,
+        tmin: r.min,
+        tmax: r.max,
+        humidity: r.humidity,
+        wind_speed: r.speed,
+        wind_direction: r.direction
+      }));
+    } else if (region) {
+      data = result.rows.map(r => ({
+        province: r.province,
+        municity: r.municity,
+        rainfall_desc: r.rainfall,
+        rainfall_total: r.total_rainfall,
+        cloud_cover: r.cloud_cover,
+        tmean: r.mean,
+        tmin: r.min,
+        tmax: r.max,
+        humidity: r.humidity,
+        wind_speed: r.speed,
+        wind_direction: r.direction
+      }));
+    }
+
+    const misc = isPageNone ? {
+      ...baseFooter,
+      status_code: 200,
+      description: "OK"
+    } : {
+      ...baseFooter,
+      total_count: parseInt(fullCount.rows[0].count, 10),
+      total_pages: Math.ceil(fullCount.rows[0].count / 10),
+      status_code: 200,
+      description: "OK"
+    };
+
+    const response = { metadata, data, misc };
+
+    const cacheKey = `dateForecast:${token}:${region}:${province}:${municity}:${date}`;
     await redisClient.set(cacheKey, JSON.stringify(response), "EX", 3600);
-    console.log("❌ Cache miss - Fetching from database");
-    res.json(response);
-  } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).json({
-      metadata: {
-        api: "Forecast by Date",
-        forecast: "10-day Forecast",
-      },
-      data: {},
-      misc: {
-        ...baseFooter,
-        status_code: 500,
-        description: "Internal Server Error",
-      },
-    });
+    return res.json(response);
+  } catch (err) {
+    console.error("Error executing query", err.stack);
+    res.status(500).json({ metadata: { api: "Forecast by Date" }, data: {}, misc: { ...baseFooter, status_code: 500, description: "Internal Server Error" } });
   }
 });
 
