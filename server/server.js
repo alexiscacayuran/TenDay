@@ -634,7 +634,7 @@ app.get("/uploadExtremesTIF", async (req, res) => {
 
 //HEALTH CHECK
 app.get("/health", async (req, res) => {
-  const isActive = await checkWebsiteStatus("http://13.228.79.63:8080/");
+  const isActive = await checkWebsiteStatus("https://tenday.pagasa.dost.gov.ph/");
   res.status(isActive ? 200 : 503).json({
     status: isActive ? "ACTIVE" : "OFFLINE",
   });
