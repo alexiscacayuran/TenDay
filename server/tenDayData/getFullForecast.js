@@ -1,13 +1,35 @@
 import express from "express";
 import chalk from "chalk";
+import Fuse from "fuse.js";
 import { pool, redisClient } from "../db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
+const regionMap = {
+  "1": "Ilocos Region (Region I)", "i": "Ilocos Region (Region I)",
+  "2": "Cagayan Valley (Region II)", "ii": "Cagayan Valley (Region II)",
+  "3": "Central Luzon (Region III)", "iii": "Central Luzon (Region III)",
+  "4a": "CALABARZON (Region IV-A)", "iva": "CALABARZON (Region IV-A)",
+  "4b": "MIMAROPA (Region IV-B)", "ivb": "MIMAROPA (Region IV-B)",
+  "5": "Bicol Region (Region V)", "v": "Bicol Region (Region V)",
+  "6": "Western Visayas (Region VI)", "vi": "Western Visayas (Region VI)",
+  "7": "Central Visayas (Region VII)", "vii": "Central Visayas (Region VII)",
+  "8": "Eastern Visayas (Region VIII)", "viii": "Eastern Visayas (Region VIII)",
+  "9": "Zamboanga Peninsula (Region IX)", "ix": "Zamboanga Peninsula (Region IX)",
+  "10": "Northern Mindanao (Region X)", "x": "Northern Mindanao (Region X)",
+  "11": "Davao Region (Region XI)", "xi": "Davao Region (Region XI)",
+  "12": "SOCCSKSARGEN (Region XII)", "xii": "SOCCSKSARGEN (Region XII)",
+  "13": "Caraga (Region XIII)", "xiii": "Caraga (Region XIII)",
+  "ncr": "National Capital Region (NCR)",
+  "car": "Cordillera Administrative Region (CAR)",
+  "barmm": "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
+  "nir": "Negros Island Region (Region XVIII)"
+};
+
 router.get("/tenday/full", authenticateToken(2), async (req, res) => {
-  const { municity, province, page = "1", limit = "10" } = req.query;
+  const { municity, province, region, page = "1", limit = "10" } = req.query;
   const timestamp = new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" }).replace(",", "");
 
   const baseMetadata = {
@@ -20,10 +42,10 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
     timestamp,
     method: "GET",
     status_code: 400,
-    description: "Bad Request: municity or province param is required",
+    description: "Bad Request: municity, province, or region param is required",
   };
 
-  if (!municity && !province) {
+  if (!municity && !province && !region) {
     return res.status(400).json({
       metadata: baseMetadata,
       data: [],
@@ -69,24 +91,77 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
         SELECT MAX(start_date) FROM date
       )`;
 
-    const values = [];
-    let filters = [];
-
-    if (municity) {
-      values.push(municity);
-      filters.push(`REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($${values.length}, ' CITY', '', 'gi') || '%'`);
-    }
-
-    if (province) {
-      values.push(province);
-      filters.push(`m.province ILIKE '%' || $${values.length} || '%'`);
-    }
+      const values = [];
+      const filters = [];
+  
+      const refRes = await pool.query(`SELECT DISTINCT municity, province, region FROM municities`);
+      const refRows = refRes.rows;
+  
+      const fuseOptions = {
+        isCaseSensitive: false,
+        includeScore: false,
+        ignoreDiacritics: false,
+        shouldSort: true,
+        includeMatches: false,
+        findAllMatches: false,
+        minMatchCharLength: 1,
+        location: 0,
+        threshold: 0.6,
+        distance: 100,
+        useExtendedSearch: false,
+        ignoreLocation: false,
+        ignoreFieldNorm: false,
+        fieldNormWeight: 1,
+        keys: ["municity", "province", "region"]
+      };
+  
+      const fuse = new Fuse(refRows, fuseOptions);
+  
+      const clean = (str) => str?.toLowerCase().replace(/city of |city/gi, "").trim();
+  
+      if (municity) {
+        const result = fuse.search(clean(municity));
+        const match = result.find(r => r.item.municity);
+        const bestMatch = match?.item?.municity ?? municity;
+        values.push(bestMatch);
+        filters.push(`(
+          REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($${values.length}, ' CITY', '', 'gi') || '%' OR
+          m.m_psgc ILIKE '%' || $${values.length} || '%'
+        )`);
+      }
+  
+      if (province) {
+        const result = fuse.search(clean(province));
+        const match = result.find(r => r.item.province);
+        const bestMatch = match?.item?.province ?? province;
+        values.push(bestMatch);
+        filters.push(`(
+          m.province ILIKE '%' || $${values.length} || '%' OR
+          m.p_psgc ILIKE '%' || $${values.length} || '%'
+        )`);
+      }
+  
+      if (region) {
+        const regionCode = region.toLowerCase();
+        const mappedRegion = regionMap[regionCode];
+        const regionInput = mappedRegion || clean(region);
+        const result = fuse.search(regionInput);
+        const match = result.find(r => r.item.region);
+        const bestMatch = match?.item?.region ?? regionInput;
+  
+        values.push(bestMatch);
+        filters.push(`(
+          m.region ILIKE '%' || $${values.length} || '%' OR
+          m.r_psgc ILIKE '%' || $${values.length} || '%'
+        )`);
+      }
+  
 
     if (filters.length > 0) {
       query += ` AND ${filters.join(" AND ")}`;
     }
 
-    query += ` ORDER BY m.municity ASC, d.date ASC`;
+    query += ` ORDER BY m.province ASC, m.municity ASC, d.date ASC`;
 
     const result = await pool.query(query, values);
 
@@ -97,6 +172,7 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
           ...baseMetadata,
           ...(municity ? { municity } : {}),
           ...(province ? { province } : {}),
+          ...(region ? { region } : {}),
         },
         data: [],
         misc: {
@@ -104,7 +180,7 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
           timestamp,
           method: "GET",
           status_code: 400,
-          description: "Bad Request: Provided municipality or province not found"
+          description: "Bad Request: Provided municipality, province, or region not found"
         }
       });
     }
@@ -122,16 +198,26 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
       current_page = isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
     }
 
-    // group data per municity
+    // group by municity
     const groupedForecast = {};
-
     result.rows.forEach((row) => {
       const mname = row.municity;
       if (!groupedForecast[mname]) groupedForecast[mname] = [];
-
-      groupedForecast[mname].push({
-        ...(province && !municity ? { municity: row.municity } : {}),
+    
+      const baseData = {
         date: new Date(row.date).toLocaleDateString("en-PH", { timeZone: "Asia/Manila" }),
+      };
+    
+      // ⬇️ Data field logic based on params
+      if (region && !province && !municity) {
+        baseData.province = row.province;
+        baseData.municity = row.municity;
+      } else if (province && !municity) {
+        baseData.municity = row.municity;
+      }
+      // ✅ Do NOT add municity/province if municity param is present
+    
+      Object.assign(baseData, {
         rainfall_desc: row.rainfall,
         rainfall_total: row.total_rainfall,
         cloud_cover: row.cloud_cover,
@@ -142,10 +228,11 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
         wind_speed: row.speed,
         wind_direction: row.direction,
       });
+    
+      groupedForecast[mname].push(baseData);
     });
-
+    
     let fullData = Object.values(groupedForecast).flat();
-
     const total_count = fullData.length;
     let total_page = 1;
     let paginatedData = fullData;
@@ -155,10 +242,7 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
       const start = (current_page - 1) * per_page;
       const end = start + per_page;
       paginatedData = fullData.slice(start, end);
-
-      if (current_page > total_page) {
-        paginatedData = [];
-      }
+      if (current_page > total_page) paginatedData = [];
     }
 
     const misc = {
@@ -173,7 +257,7 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
       }),
       status_code: 200,
       description: "OK",
-    };    
+    };
 
     const metadata = {
       request_no: requestId,
@@ -182,14 +266,21 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
       issuance_date,
       start_date,
       end_date,
-      ...(municity && province
-        ? { municity: first.municity, province: first.province, region: first.region }
-        : province
-        ? { province: first.province, region: first.region }
-        : municity
-        ? { municity: first.municity, province: first.province, region: first.region }
-        : {}),
     };
+    
+    // ⬇️ Metadata logic based on params
+    if (region && !province && !municity) {
+      metadata.region = first.region;
+    } else if (province && !municity) {
+      metadata.region = first.region;
+      metadata.province = first.province;
+    } else if (municity) {
+      metadata.region = first.region;
+      metadata.province = first.province;
+      metadata.municity = first.municity;
+    }
+    
+
 
     return res.status(200).json({
       metadata,
