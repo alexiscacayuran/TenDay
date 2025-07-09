@@ -10,24 +10,27 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
   const [provinceId, setProvinceId] = useState(null);
   const [showMunicity, setShowMunicity] = useState(false);
   const municityLayerRef = useRef(null);
-  const weatherBasemapEnum = "8ece66cf764742f7ba0f3006481a7b75";
+  const weatherEnum = "8ece66cf764742f7ba0f3006481a7b75";
   const hilshadeEnum = "74463549688e4bb48092df8e5c789fd0";
+  const satelliteEnum = "arcgis/imagery";
 
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
+
+  map.createPane("basemapPane");
+  map.getPane("basemapPane").style.zIndex = 200;
 
   map.createPane("activeFeaturePane");
   map.getPane("activeFeaturePane").style.zIndex = 400;
 
+  map.createPane("hillshadePane");
+  map.getPane("hillshadePane").style.zIndex = 250;
+
   useEffect(() => {
     if (!arcgisToken) return;
 
-    map.createPane("hillshadePane");
-    map.getPane("hillshadePane").style.zIndex = 250;
-
-    const weatherBasemap = vectorBasemapLayer(weatherBasemapEnum, {
+    const weatherBasemap = vectorBasemapLayer(weatherEnum, {
       apiKey: arcgisToken,
-      pane: "overlayPane",
-      zIndex: 200,
+      pane: "basemapPane",
     }).addTo(map);
 
     const provinceBoundaries = featureLayer({
