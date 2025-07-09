@@ -28,10 +28,17 @@ const regionMap = {
 };
 
 // 🧠 Normalize function to handle "City of X" vs "X City"
-const normalizeMunicity = (name = "") => name.toLowerCase()
-  .replace(/^city of\s+/i, '')
-  .replace(/\s+city$/i, '')
-  .trim();
+  const normalizeMunicity = (name = "") =>
+    name
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove diacritics (like ñ → n)
+      .replace(/ñ/g, 'n') // Just in case normalization misses it
+      .replace(/city of\s+/i, '')  // remove "city of"
+      .replace(/\s+city$/i, '')    // remove trailing "city"
+      .replace(/^binan$/, 'city of binan') // binan → city of binan
+      .replace(/^city of binan$/, 'binan') // city of binan → binan
+      .trim();
+  
 
 router.get("/tenday/current", authenticateToken(1), async (req, res) => {
   let { municity, province, region, page = "1", limit = "10" } = req.query;
@@ -105,7 +112,7 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
        ignoreLocation: false,
        ignoreFieldNorm: false,
        fieldNormWeight: 1,
-      keys: ["municity", "province", "region"]
+      keys: ["normalized_municity", "province", "region"]
     };
     
     const fuse = new Fuse(refRows, fuseOptions);
@@ -117,12 +124,12 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
         [municity]
       );
       if (mPsgcRes.rowCount > 0) {
-        municity = mPsgcRes.rows[0].municity;
-        province = mPsgcRes.rows[0].province;
         region = mPsgcRes.rows[0].region;
+        province = mPsgcRes.rows[0].province;
+        municity = mPsgcRes.rows[0].municity;
       } else {
         const normalized = normalizeMunicity(municity);
-        const match = fuse.search(normalized).find(r => r.item.municity);
+        const match = fuse.search(normalized).find(r => r.item.normalized_municity === normalized);
         if (match) {
           municity = match.item.municity;
           province = match.item.province;
