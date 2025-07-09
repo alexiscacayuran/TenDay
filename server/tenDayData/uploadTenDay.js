@@ -11,10 +11,13 @@ const router = Router();
 
 const decodeCity = (city) => {
     return city
-        .replace(/Ã±/g, 'ñ')  // Fix ñ character encoding issues
-        .replace(/Ã©/g, 'é')  // Fix é character encoding issues (if needed)
+        .replace(/Ã±/g, 'ñ')     // Fix bad encoding
+        .replace(/ñ/g, 'n')      // Normalize ñ to n
+        .replace(/Ã©/g, 'é')     // Optional: fix é if needed
         .normalize();
 };
+
+
 
 // Utility to encode 'ñ' to 'Ã±' when writing data back
 const encodeCity = (city) => {
@@ -192,42 +195,35 @@ const processCSV = async (csvPath, year, month, day, fileName, userId) => {
                 }
 
                 // Province corrections
-                if (row.province === 'Samar') row.province = 'Western Samar';
-                if (row.province === 'Shariff Kabunsuan') row.province = 'Maguindanao';
-                if (row.province.trim() === 'Metropolitan Manila') row.province = 'Metro Manila';
+                //if (row.province === 'Samar') row.province = 'Western Samar';
+                //if (row.province === 'Shariff Kabunsuan') row.province = 'Maguindanao';
+                if (row.province.trim() === 'NCR') row.province = 'Metro Manila';
 
                 // Municity to Province adjustments
-                const municityToProvince = {
-                    'Jose Abad Santos': 'Davao Occidental',
-                    'Malita': 'Davao Occidental',
-                    'Santa Maria': 'Davao Occidental',
-                    'Sarangani': 'Davao Occidental',
-                };
-                if (municityToProvince[row.municity] && row.province === 'Davao del Sur') {
-                    row.province = municityToProvince[row.municity];
-                }
+                //const municityToProvince = {
+                //    'Jose Abad Santos': 'Davao Occidental',
+                //    'Malita': 'Davao Occidental',
+                //    'Santa Maria': 'Davao Occidental',
+                //    'Sarangani': 'Davao Occidental',
+                //};
+                //if (municityToProvince[row.municity] && row.province === 'Davao del Sur') {
+                //    row.province = municityToProvince[row.municity];
+                //}
                 
 
             // Corrected Municity Adjustments Object
             const municityAdjustments = {
-                'Pozzorubio': { province: 'Pangasinan', newName: 'Pozorrubio' },
-                'Sofronio Espanola': { province: 'Palawan', newName: 'Sofronio Española' },
-                'Zaragoza': { province: 'Nueva Ecija', newName: 'Zaragosa' },
+                'Sofronio Española': { province: 'Palawan', newName: 'Sofronio Espanola' },
                 'Peñaranda': { province: 'Nueva Ecija', newName: 'Penaranda' },
-                'Muñoz City': { province: 'Nueva Ecija', newName: 'Munoz' },
-                'Salvador Benedicto': { province: 'Negros Occidental', newName: 'Salvador Benedecto' },
-                'Pio V. Corpuz': { province: 'Masbate', newName: 'Pio V. Corpus' },
-                'Datu Abdullah Sanki': { province: 'Maguindanao', newName: 'Datu Abdullah Sangki' },
-                'Lumbaca-Unayan': { province: 'Lanao Del Sur', newName: 'Lumbaca-Unayan' },
-                'Cordoba': { province: 'Cebu', newName: 'Cordova' },
-                'Quezon': { province: 'Nueva Vizcaya', newName: 'Quezon 2' },
                 'Santo Niño': { province: 'Cagayan', newName: 'Santo Nino' },
+                'Santo Niño': { province: 'Samar', newName: 'Santo Nino' },
+                'Santo Niño': { province: 'South Cotabato', newName: 'Santo Nino' },
                 'Peñablanca': { province: 'Cagayan', newName: 'Penablanca' },
                 'Doña Remedios Trinidad': { province: 'Bulacan', newName: 'Dona Remedios Trinidad' },
                 'Peñarrubia': { province: 'Abra', newName: 'Penarrubia' },
-                'Kalookan City': { province: 'Metro Manila', newName: 'Caloocan City' },
-                'Parañaque': { province: 'Metro Manila', newName: 'Parañaque City' },
-                'Las Piñas': { province: 'Metro Manila', newName: 'Las Pinas City' },
+                'City of Biñan': { province: 'Laguna', newName: 'City of Binan' },
+                'Los Baños': { province: 'Laguna', newName: 'Los Banos' },
+                'Sagñay': { province: 'Camarines Sur', newName: 'Sagnay' },
             };
 
             // Check if municity exists in municityAdjustments and province matches
