@@ -1,16 +1,22 @@
 import express from "express";
-import { pool, redisClient } from "../../db.js"; // Import Redis connection
+import { pool, redisClient } from "../../db.js";
+import Fuse from "fuse.js";
 import { logApiRequest } from "../../middleware/logMiddleware.js";
 
 const router = express.Router();
 
+// Normalize helper: lowercase, trim, replace ñ with n, remove " city"
+const normalize = (str) =>
+  str
+    .toLowerCase()
+    .replace(/ñ/g, "n")
+    .replace(/\s*city\s*/gi, "")
+    .trim();
 
 router.get("/", async (req, res) => {
   const { municity, province, date } = req.query;
-  const token = req.headers["token"];
 
-     // ✅ Log API request
-     const requestNo = await logApiRequest(req, 4);
+  const requestNo = await logApiRequest(req, 4);
 
   if (!municity || !province || !date) {
     return res
@@ -18,17 +24,39 @@ router.get("/", async (req, res) => {
       .json({ error: "municity, province, and date are required" });
   }
 
-  const cacheKey = `dateForecast_internal:${municity}:${province}:${date}`;
+  const normMunicity = normalize(municity);
+  const normProvince = normalize(province);
+  const cacheKey = `dateForecast_internal:${normMunicity}:${normProvince}:${date}`;
 
   try {
-    // Check Redis cache
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit - Returning data from Redis");
       return res.json(JSON.parse(cachedData));
     }
 
-    // Query PostgreSQL if not cached
+    // 🔍 Get list of known municities from DB
+    const municityRes = await pool.query("SELECT DISTINCT municity, province FROM municities");
+    const municities = municityRes.rows.map(row => ({
+      originalMunicity: row.municity,
+      originalProvince: row.province,
+      municity: normalize(row.municity),
+      province: normalize(row.province),
+    }));
+
+    // ⚡ Use Fuse.js to find closest match
+    const fuse = new Fuse(municities, {
+      keys: ["municity", "province"],
+      threshold: 0.3, // adjust sensitivity if needed
+    });
+
+    const results = fuse.search({ municity: normMunicity, province: normProvince });
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Location not found" });
+    }
+
+    const { originalMunicity, originalProvince } = results[0].item;
+
     const query = `
       SELECT 
         m.id AS location_id, 
@@ -52,69 +80,52 @@ router.get("/", async (req, res) => {
       INNER JOIN humidity AS h ON d.id = h.date_id 
       INNER JOIN wind AS w ON d.id = w.date_id 
       WHERE
-        REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($1, ' CITY', '', 'gi') || '%' 
-        AND 
-        m.province ILIKE '%' || $2 || '%' 
-        AND d.date = $3 
+        m.municity = $1 AND 
+        m.province = $2 AND 
+        d.date = $3 
       ORDER BY 
         d.start_date DESC 
-      LIMIT 1`;
+      LIMIT 1
+    `;
 
-    const values = [municity, province, date];
+    const values = [originalMunicity, originalProvince, date];
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "No data found" });
     }
 
-    const {
-      location_id,
-      municity: _municity,
-      province: _province,
-      date_id,
-      date: forecast_date,
-      start_date,
-      total,
-      desc,
-      cloud_cover,
-      mean,
-      min,
-      max,
-      humidity,
-      speed,
-      direction,
-    } = result.rows[0];
+    const row = result.rows[0];
 
     const data = {
-      id: location_id,
-      municity: _municity,
-      province: _province,
+      id: row.location_id,
+      municity: row.municity,
+      province: row.province,
       forecast: {
-        forecast_id: date_id,
-        date: forecast_date.toLocaleString("en-PH").split(", ")[0],
-        start_date: start_date.toLocaleString("en-PH").split(", ")[0],
+        forecast_id: row.date_id,
+        date: row.date.toLocaleDateString("en-PH"),
+        start_date: row.start_date.toLocaleDateString("en-PH"),
         rainfall: {
-          total,
-          desc,
+          total: row.total,
+          desc: row.desc,
         },
-        cloud_cover,
+        cloud_cover: row.cloud_cover,
         temperature: {
-          mean,
-          min,
-          max,
+          mean: row.mean,
+          min: row.min,
+          max: row.max,
         },
-        humidity,
+        humidity: row.humidity,
         wind: {
-          speed,
-          direction,
+          speed: row.speed,
+          direction: row.direction,
         },
       },
     };
 
-    // Store result in Redis cache for 10 days
-    await redisClient.set(cacheKey, JSON.stringify(data), "EX", 864000);
+    await redisClient.set(cacheKey, JSON.stringify(data), "EX", 86400); // 1 day
 
-    console.log("Cache miss - Fetching from database");
+    console.log("Cache miss - Fetched from database");
     res.json(data);
   } catch (error) {
     console.error("Error executing query", error.stack);

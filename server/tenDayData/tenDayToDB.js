@@ -42,10 +42,11 @@ const getMunicityMap = async (client) => {
     FROM municities
   `;
   const municityMap = new Map(
-    (await client.query(municityQuery)).rows.map((row) => [
-      `${row.municity}-${row.province}`,
-      row.id,
-    ])
+    (await client.query(municityQuery)).rows.map((row) => {
+      const key = `${row.municity}-${row.province}`;
+      console.log("🟩 Available key from DB:", key);
+      return [key, row.id];
+    })
   );
 
   await redis.set(
