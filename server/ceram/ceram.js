@@ -5,7 +5,7 @@ import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-router.get("/ceram", authenticateToken(8), async (req, res) => {
+router.get("/projections/ceram", authenticateToken(8), async (req, res) => {
   let {
     province,
     indicator_code,

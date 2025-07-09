@@ -28,13 +28,18 @@ const regionMap = {
   "nir": "Negros Island Region (Region XVIII)"
 };
 
-function normalizeCityName(name) {
-  if (!name) return "";
-  let str = name.trim().toLowerCase();
-  str = str.replace(/^city of /i, "").replace(/^city /i, "");
-  if (!str.endsWith(" city")) str += " city";
-  return str.replace(/\s+/g, " ");
+function normalizeName(name = "") {
+  return name
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove diacritics like ñ
+    .replace(/ñ/g, "n")
+    .replace(/^city of\s+/i, "")
+    .replace(/^city\s+/i, "")
+    .replace(/\s+city$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
+
 
 router.get("/tenday/date", authenticateToken(4), async (req, res) => {
   const { region, province, municity, date, page } = req.query;
@@ -75,6 +80,13 @@ router.get("/tenday/date", authenticateToken(4), async (req, res) => {
     }
 
     const refQuery = await pool.query("SELECT municity, province, region FROM municities");
+    const refRows = refQuery.rows.map(row => ({
+      ...row,
+      normalized_municity: normalizeName(row.municity),
+      normalized_province: normalizeName(row.province),
+      normalized_region: normalizeName(row.region)
+    }));
+    
     const fuseOptions = {
       isCaseSensitive: false,
       includeScore: false,
@@ -82,35 +94,49 @@ router.get("/tenday/date", authenticateToken(4), async (req, res) => {
       distance: 100,
       minMatchCharLength: 1,
       shouldSort: true,
-      keys: ["municity", "province", "region"]
+      keys: ["normalized_municity", "normalized_province", "normalized_region"]
     };
-    const fuse = new Fuse(refQuery.rows, fuseOptions);
+    
+    const fuse = new Fuse(refRows, fuseOptions);    
 
     let where = [`d.date = $1`];
     let values = [date];
     let i = 2;
 
     let matched;
+
     if (municity) {
-      const normalized = normalizeCityName(municity);
-      matched = fuse.search(normalized).find(x => x.item.municity);
-      where.push(`(m.municity = $${i} OR m.m_psgc = $${i})`);
-      values.push(matched ? matched.item.municity : municity);
+      const norm = normalizeName(municity);
+      const searchResults = fuse.search(normalizeName(municity));
+      const bestMatch = searchResults.length ? searchResults[0].item.municity : municity;
+      
+      where.push(`(
+        REGEXP_REPLACE(LOWER(m.municity), ' city', '', 'gi') ILIKE '%' || REGEXP_REPLACE(LOWER($${i}), ' city', '', 'gi') || '%'
+        OR m.m_psgc ILIKE '%' || $${i} || '%'
+      )`);
+      values.push(bestMatch);      
       i++;
     }
+    
     if (province) {
-      matched = fuse.search(province).find(x => x.item.province);
+      const norm = normalizeName(province);
+      matched = fuse.search(norm).find(x => normalizeName(x.item.province) === norm);
+      const bestMatch = matched?.item?.province ?? province;
       where.push(`(m.province = $${i} OR m.p_psgc = $${i})`);
-      values.push(matched ? matched.item.province : province);
+      values.push(bestMatch);
       i++;
     }
+    
     if (region) {
-      const regKey = region.toLowerCase();
-      const regName = regionMap[regKey] || region;
+      const regKey = normalizeName(region);
+      const mapped = regionMap[regKey] || region;
+      matched = fuse.search(mapped).find(x => normalizeName(x.item.region) === normalizeName(mapped));
+      const bestMatch = matched?.item?.region ?? mapped;
       where.push(`(m.region = $${i} OR m.r_psgc = $${i})`);
-      values.push(regName);
+      values.push(bestMatch);
       i++;
     }
+    
 
     const offset = (pageNum - 1) * 10;
     const limitClause = isPageNone ? "" : `LIMIT 10 OFFSET ${offset}`;
