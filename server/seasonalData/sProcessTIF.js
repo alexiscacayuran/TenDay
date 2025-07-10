@@ -10,7 +10,7 @@ const s3 = new S3Client({
         accessKeyId: process.env.AWS_AKI,
         secretAccessKey: process.env.AWS_SAK,
     },
-    endpoint: `https://s3.${process.env.AWS_R}.amazonaws.com`, // ✅ Explicit endpoint
+    endpoint: `https://s3.${process.env.AWS_R}.amazonaws.com`,
     forcePathStyle: true, // ✅ Required for some regions
     maxAttempts: 3,
 });
