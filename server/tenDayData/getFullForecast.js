@@ -97,8 +97,6 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
           .toLowerCase()
           .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove diacritics
           .replace(/ñ/g, 'n') // Handle ñ → n
-          .replace(/city of\s+/i, '') // Remove "City of"
-          .replace(/\s+city$/i, '')   // Remove "City" at the end
           .trim();
       
           const refRes = await pool.query(`SELECT DISTINCT municity, province, region FROM municities`);
@@ -123,6 +121,7 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
           if (municity) {
             const normalized = normalizeMunicity(municity);
             const match = fuse.search(normalized).find(r => r.item.normalized_municity === normalized);
+            console.log(match);
             const bestMatch = match?.item?.municity ?? municity;
           
             values.push(bestMatch);

@@ -6,12 +6,20 @@ import { logApiRequest } from "../../middleware/logMiddleware.js";
 const router = express.Router();
 
 // Normalize helper: lowercase, trim, replace ñ with n, remove " city"
-const normalize = (str) =>
-  str
+const normalize = (str, isProvince = false) => {
+  let normalized = str
     .toLowerCase()
     .replace(/ñ/g, "n")
     .replace(/\s*city\s*/gi, "")
     .trim();
+
+//  if (isProvince) {
+//    if (normalized === "western samar") normalized = "samar";
+//  }
+
+  return normalized;
+};
+
 
 router.get("/", async (req, res) => {
   const { municity, province, date } = req.query;
@@ -25,7 +33,7 @@ router.get("/", async (req, res) => {
   }
 
   const normMunicity = normalize(municity);
-  const normProvince = normalize(province);
+  const normProvince = normalize(province, true);
   const cacheKey = `dateForecast_internal:${normMunicity}:${normProvince}:${date}`;
 
   try {
@@ -46,14 +54,31 @@ router.get("/", async (req, res) => {
 
     // ⚡ Use Fuse.js to find closest match
     const fuse = new Fuse(municities, {
+      isCaseSensitive: false,
+      includeScore: false,
+      ignoreDiacritics: false,
+      shouldSort: true,
+      includeMatches: false,
+      findAllMatches: true,
+      minMatchCharLength: 1,
+      location: 0,
+     threshold: 0.6,
+      distance: 100,
+      useExtendedSearch: false,
+      ignoreLocation: false,
+      ignoreFieldNorm: false,
+      fieldNormWeight: 1,
       keys: ["municity", "province"],
-      threshold: 0.3, // adjust sensitivity if needed
     });
+
+    console.log(fuse);
 
     const results = fuse.search({ municity: normMunicity, province: normProvince });
     if (results.length === 0) {
       return res.status(404).json({ error: "Location not found" });
     }
+
+    console.log(results);
 
     const { originalMunicity, originalProvince } = results[0].item;
 
@@ -90,6 +115,7 @@ router.get("/", async (req, res) => {
 
     const values = [originalMunicity, originalProvince, date];
     const result = await pool.query(query, values);
+    console.log(result);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: "No data found" });

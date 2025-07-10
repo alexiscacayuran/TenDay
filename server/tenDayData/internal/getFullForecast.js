@@ -6,13 +6,21 @@ import { logApiRequest } from "../../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-// Helper to normalize text (lowercase, trim, remove 'city', replace ñ with n)
-const normalize = (str) =>
-  str
+// normalize text (lowercase, trim, remove 'city', replace ñ with n)
+const normalize = (str, isProvince = false) => {
+  let normalized = str
     .toLowerCase()
     .replace(/ñ/g, "n")
     .replace(/\s*city\s*/gi, "")
     .trim();
+
+//  if (isProvince) {
+//    if (normalized === "western samar") normalized = "samar";
+//  }
+
+  return normalized;
+};
+
 
 router.get("/", authenticateToken(2), async (req, res) => {
   try {
@@ -41,7 +49,7 @@ router.get("/", authenticateToken(2), async (req, res) => {
     }
 
     const normMunicity = normalize(municity);
-    const normProvince = normalize(province);
+    const normProvince = normalize(province, true);
     const cacheKey = `forecast_internal:${normMunicity}:${normProvince}`;
 
     const cachedData = await redisClient.get(cacheKey);
