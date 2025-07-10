@@ -103,6 +103,9 @@ import checkValidRouter from "./admin/checkValid.js";
 
 import { DateTime } from "luxon";
 
+//EASITOOL
+import genLink from './admin/genLink.js';
+
 //Report
 import report from "./report/postFeedback.js";
 import getFeedbackRouter from "./report/getFeedback.js";
@@ -134,6 +137,9 @@ app.use(bodyParser.json());
 // ROUTES:
 app.use("/serverToken", getTokenRoute);
 app.use("/api", activateTokenRoute);
+
+//EASITOOL
+app.use('/', genLink);
 
 app.use("/api/auth", authRoutes); // Token API
 
