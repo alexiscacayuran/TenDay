@@ -13,9 +13,9 @@ const normalize = (str, isProvince = false) => {
     .replace(/\s*city\s*/gi, "")
     .trim();
 
-//  if (isProvince) {
-//    if (normalized === "western samar") normalized = "samar";
-//  }
+  if (isProvince) {
+    if (normalized === "western samar") normalized = "samar";
+  }
 
   return normalized;
 };
