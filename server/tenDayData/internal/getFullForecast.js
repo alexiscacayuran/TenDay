@@ -6,22 +6,6 @@ import { logApiRequest } from "../../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-// normalize text (lowercase, trim, remove 'city', replace ñ with n)
-const normalize = (str, isProvince = false) => {
-  let normalized = str
-    .toLowerCase()
-    .replace(/ñ/g, "n")
-    .replace(/\s*city\s*/gi, "")
-    .trim();
-
-//  if (isProvince) {
-//    if (normalized === "western samar") normalized = "samar";
-//  }
-
-  return normalized;
-};
-
-
 router.get("/", authenticateToken(2), async (req, res) => {
   try {
     const token = req.headers["token"];
@@ -35,7 +19,9 @@ router.get("/", authenticateToken(2), async (req, res) => {
       tokenResult.rows.length === 0 ||
       !tokenResult.rows[0].api_ids.includes(2)
     ) {
-      return res.status(403).json({ error: "Forbidden: Unauthorized API access" });
+      return res
+        .status(403)
+        .json({ error: "Forbidden: Unauthorized API access" });
     }
 
     const requestId = await logApiRequest(req, 2);
@@ -45,42 +31,65 @@ router.get("/", authenticateToken(2), async (req, res) => {
 
     const { municity, province } = req.query;
     if (!municity || !province) {
-      return res.status(400).json({ error: "municity and province are required" });
+      return res
+        .status(400)
+        .json({ error: "municity and province are required" });
     }
 
-    const normMunicity = normalize(municity);
-    const normProvince = normalize(province, true);
-    const cacheKey = `forecast_internal:${normMunicity}:${normProvince}`;
-
+    const cacheKey = `forecast_internal:${municity}:${province}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       console.log("Cache hit - Returning data from Redis");
       return res.json(JSON.parse(cachedData));
     }
 
-    // Fetch all known municities and provinces
-    const muniRes = await pool.query("SELECT DISTINCT municity, province FROM municities");
-    const municityList = muniRes.rows.map(row => ({
-      originalMunicity: row.municity,
-      originalProvince: row.province,
-      municity: normalize(row.municity),
-      province: normalize(row.province),
-    }));
+    try {
+      const response = await fetch(
+        "https://tendayforecast.s3.ap-southeast-1.amazonaws.com/utils/municities.json"
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
 
-    // Fuzzy match using fuse.js
-    const fuse = new Fuse(municityList, {
-      keys: ["municity", "province"],
-      threshold: 0.3,
-    });
+      const municities = await response.json();
+      console.log("JSON loaded: ", municities);
 
-    const match = fuse.search({ municity: normMunicity, province: normProvince });
-    if (match.length === 0) {
-      return res.status(404).json({ error: "Location not found" });
-    }
+      // ⚡ Use Fuse.js to find closest match
+      const fuse = new Fuse(municities, {
+        location: 8,
+        threshold: 0.5,
+        distance: 20,
+        isCaseSensitive: false,
+        includeScore: true,
+        keys: ["municity", "province", "muniOld", "provOld"],
+      });
 
-    const { originalMunicity, originalProvince } = match[0].item;
+      const results = fuse.search({
+        $and: [
+          {
+            $or: [
+              //search either new or old PSGC name for municity
+              { municity: municity },
+              { muniOld: municity },
+            ],
+          },
+          {
+            $or: [
+              //search either new or old PSGC name for province
+              { province: province },
+              { provOld: province },
+            ],
+          },
+        ],
+      });
+      if (results.length === 0) {
+        return res.status(404).json({ error: "Location not found" });
+      }
 
-    const query = `
+      const matchedMunicity = results[0].item.municity;
+      const matchedProvince = results[0].item.province;
+
+      const query = `
       SELECT 
         m.id AS location_id, m.municity, m.province, 
         d.id AS date_id, d.date, d.start_date, 
@@ -105,50 +114,56 @@ router.get("/", authenticateToken(2), async (req, res) => {
         d.start_date DESC, date ASC
       LIMIT 10`;
 
-    const values = [originalMunicity, originalProvince];
-    const result = await pool.query(query, values);
+      const values = [matchedMunicity, matchedProvince];
+      const result = await pool.query(query, values);
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "No forecast data found" });
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: "No forecast data found" });
+      }
+
+      const {
+        location_id,
+        municity: _municity,
+        province: _province,
+      } = result.rows[0];
+
+      const data = {
+        id: location_id,
+        municity: _municity,
+        province: _province,
+        forecasts: result.rows.map((forecast) => ({
+          forecast_id: forecast.date_id,
+          date: forecast.date.toLocaleString("en-PH").split(", ")[0],
+          start_date: forecast.start_date
+            .toLocaleString("en-PH")
+            .split(", ")[0],
+          rainfall: {
+            total: forecast.rainfall_total,
+            description: forecast.rainfall_desc,
+          },
+          cloud_cover: forecast.cloud_cover,
+          temperature: {
+            mean: forecast.mean,
+            min: forecast.min,
+            max: forecast.max,
+          },
+          humidity: forecast.humidity,
+          wind: {
+            speed: forecast.speed,
+            direction: forecast.direction,
+          },
+        })),
+      };
+
+      // ✅ Cache for 1 day (86400 seconds)
+      await redisClient.set(cacheKey, JSON.stringify(data), "EX", 86400);
+
+      console.log("Cache miss - Fetched from database");
+      res.json(data);
+    } catch (error) {
+      console.error("Failed to load JSON:", error);
+      return null;
     }
-
-    const {
-      location_id,
-      municity: _municity,
-      province: _province,
-    } = result.rows[0];
-
-    const data = {
-      id: location_id,
-      municity: _municity,
-      province: _province,
-      forecasts: result.rows.map((forecast) => ({
-        forecast_id: forecast.date_id,
-        date: forecast.date.toLocaleString("en-PH").split(", ")[0],
-        start_date: forecast.start_date.toLocaleString("en-PH").split(", ")[0],
-        rainfall: {
-          total: forecast.rainfall_total,
-          description: forecast.rainfall_desc,
-        },
-        cloud_cover: forecast.cloud_cover,
-        temperature: {
-          mean: forecast.mean,
-          min: forecast.min,
-          max: forecast.max,
-        },
-        humidity: forecast.humidity,
-        wind: {
-          speed: forecast.speed,
-          direction: forecast.direction,
-        },
-      })),
-    };
-
-    // ✅ Cache for 1 day (86400 seconds)
-    await redisClient.set(cacheKey, JSON.stringify(data), "EX", 86400);
-
-    console.log("Cache miss - Fetched from database");
-    res.json(data);
   } catch (error) {
     console.error("Error executing query", error.stack);
     res.status(500).json({ error: "Internal Server Error" });
