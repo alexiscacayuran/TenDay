@@ -44,7 +44,7 @@ const getMunicityMap = async (client) => {
   const municityMap = new Map(
     (await client.query(municityQuery)).rows.map((row) => {
       const key = `${row.municity}-${row.province}`;
-      console.log("🟩 Available key from DB:", key);
+      //console.log("🟩 Available key from DB:", key);
       return [key, row.id];
     })
   );
@@ -220,8 +220,8 @@ export const uploadBatchToDB = async (batch, userID) => {
     console.log("Batch uploaded successfully.");
 
     // Clear Redis cache after successful upload
-    await redis.flushall();
-    console.log("Redis cache cleared.");
+    //await redis.flushall();
+    //console.log("Redis cache cleared.");
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error uploading batch:", error);

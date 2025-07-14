@@ -105,6 +105,8 @@ import { DateTime } from "luxon";
 
 //EASITOOL
 import genLink from './admin/genLink.js';
+import presignedLinkRoutes from './admin/presignedlink.js';
+import formStatusRoutes from './admin/formStatus.js';
 
 //Report
 import report from "./report/postFeedback.js";
@@ -140,6 +142,8 @@ app.use("/api", activateTokenRoute);
 
 //EASITOOL
 app.use('/', genLink);
+app.use('/api/presigned-links', presignedLinkRoutes);
+app.use('/api/form-status', formStatusRoutes);
 
 app.use("/api/auth", authRoutes); // Token API
 

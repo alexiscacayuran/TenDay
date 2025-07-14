@@ -35,8 +35,6 @@ const regionMap = {
       .replace(/ñ/g, 'n') // Just in case normalization misses it
       .replace(/city of\s+/i, '')  // remove "city of"
       .replace(/\s+city$/i, '')    // remove trailing "city"
-      .replace(/^binan$/, 'city of binan') // binan → city of binan
-      .replace(/^city of binan$/, 'binan') // city of binan → binan
       .trim();
   
 
