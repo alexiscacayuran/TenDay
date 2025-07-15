@@ -9,8 +9,8 @@ const POWER_BI_URL =
   'https://app.powerbi.com/view?r=eyJrIjoiMDhjM2JiM2UtMjI0Ni00ZGM0LThmODYtMGIyOTEwMGJiNDRlIiwidCI6ImIzN2NiMTliLTNjMzAtNGJhNi1hNWE5LWUxYzViNTJjODMwMiIsImMiOjEwfQ%3D%3D&navContentPaneEnabled=false&filterPaneEnabled=false&$fitToPage=true';
 
 const BASE_URL = 'http://tenday.pagasa.dost.gov.ph:3030/easitool';
-//const EXPIRE_SECONDS = 10800; //3 Hours
-const EXPIRE_SECONDS = 60; //3 Hours
+const EXPIRE_SECONDS = 10800; //3 Hours
+//const EXPIRE_SECONDS = 60; //3 Hours
 
 // Setup email
 const transporter = nodemailer.createTransport({
@@ -103,12 +103,15 @@ router.post('/generate-link', async (req, res) => {
 // 👉 GET: iframe rendering
 router.get('/view/:token', async (req, res) => {
   const { token } = req.params;
+  console.log('Received token:', token);
 
   try {
     const result = await pool.query(
       `SELECT * FROM presigned_links WHERE token = $1 AND expires_at > now()`,
       [token]
     );
+
+    console.log('Query result:', result.rows); // 👈 ADD THIS LINE
 
     if (result.rows.length === 0) {
       return res.status(403).send('<h2>Link expired or invalid.</h2>');
