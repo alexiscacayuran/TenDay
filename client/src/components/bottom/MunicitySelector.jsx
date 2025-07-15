@@ -28,7 +28,7 @@ const MunicitySelector = ({
   _query.token(arcgisToken);
 
   const executeQuery = (result) => {
-    console.log(result);
+    // console.log(result);
     _query.nearby(result.latlng, 1);
 
     _query.run(function (error, featureCollection, response) {
@@ -108,7 +108,7 @@ const MunicitySelector = ({
       .city(newValue + " " + forecast.province)
       .run((error, res) => {
         if (!error) {
-          console.log("Geocode result", res);
+          // console.log("Geocode result", res);
           const result = res.results[0];
 
           setLocation({

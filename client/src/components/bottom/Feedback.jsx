@@ -32,7 +32,7 @@ const Feedback = ({ setOpenSnackbar }) => {
         email: email,
       });
 
-      console.log("Feedback submitted:", response.data.feedback);
+      // console.log("Feedback submitted:", response.data.feedback);
     } catch (err) {
       if (err.response) {
         console.error("Server error:", err.response.data.error);

@@ -37,7 +37,7 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
 
       const container = scrollRef.current;
       const scrollTo = index * itemWidth + 50;
-      console.log(scrollTo);
+      // console.log(scrollTo);
 
       container.scrollTo({
         left: scrollTo,
