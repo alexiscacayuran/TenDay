@@ -10,11 +10,17 @@ function generateDateRange(startDate, range) {
 }
 
 const DateSlider = ({ initialDate, range, date, setDate, open }) => {
+  console.log("initialDate", initialDate);
+  console.log("range", range);
+
   const [dateRange] = useState(generateDateRange(initialDate, range));
 
   const scrollRef = useRef(null);
   const itemWidth = 100;
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(() => {
+    const savedIndex = localStorage.getItem("dateSliderSelectedIndex");
+    return savedIndex ? parseInt(savedIndex, 10) : 0;
+  });
   const [isDragging, setIsDragging] = useState(false);
   const startX = useRef(0);
   const scrollLeftStart = useRef(0);
@@ -45,6 +51,30 @@ const DateSlider = ({ initialDate, range, date, setDate, open }) => {
       });
     }
   }, [dateRange]);
+
+  // // ✅ Restore scrollLeft from localStorage on mount
+  // useEffect(() => {
+  //   const container = scrollRef.current;
+  //   if (!container) return;
+
+  //   const savedScrollLeft = localStorage.getItem("dateSliderScrollLeft");
+  //   if (savedScrollLeft !== null) {
+  //     container.scrollLeft = parseInt(savedScrollLeft, 10);
+  //   }
+  // }, []);
+
+  // // ✅ Save scrollLeft to localStorage whenever it changes
+  // useEffect(() => {
+  //   const container = scrollRef.current;
+  //   if (!container) return;
+
+  //   const handleScroll = () => {
+  //     localStorage.setItem("dateSliderScrollLeft", container.scrollLeft);
+  //   };
+
+  //   container.addEventListener("scroll", handleScroll);
+  //   return () => container.removeEventListener("scroll", handleScroll);
+  // }, []);
 
   const updateSelectedIndex = useCallback(
     debounce(() => {

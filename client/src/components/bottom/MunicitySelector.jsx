@@ -145,7 +145,8 @@ const MunicitySelector = ({
         "&:hover": {
           backgroundColor: "transparent",
         },
-        maxWidth: "280px",
+
+        maxWidth: "180px",
       }}
       slotProps={{
         button: {

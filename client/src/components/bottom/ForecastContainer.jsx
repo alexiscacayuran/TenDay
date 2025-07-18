@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -12,8 +12,7 @@ import {
   Table,
   Button,
 } from "@mui/joy";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBookmark } from "@fortawesome/free-solid-svg-icons";
+
 import CloseIcon from "@mui/icons-material/Close";
 import {
   SunnyIcon,
@@ -53,6 +52,10 @@ import ForecastTable from "./ForecastTable";
 import MunicitySelector from "./MunicitySelector";
 import ToggleUnits from "../utils/ToggleUnits";
 import DownloadDialog from "./DownloadDialog";
+import FavoriteButton from "./FavoriteButton";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 
 let isInitial = true;
 
@@ -78,6 +81,7 @@ const ForecastContainer = ({
   arcgisToken,
   selectedPolygon,
   setOpenSnackbar,
+  setSnackbarContent,
 }) => {
   const [forecast, setForecast] = useState(null);
   const [activeColumn, setActiveColumn] = useState(null);
@@ -512,6 +516,17 @@ const ForecastContainer = ({
       }
     } finally {
       setLoading(false); // ✅ Reset loading state
+      setOpenSnackbar(false);
+      setSnackbarContent({
+        message: "Submitted successfully. Thank you for helping us improve!",
+        icon: (
+          <FontAwesomeIcon
+            icon={faCircleCheck}
+            style={{ fontSize: "1.5rem" }}
+          />
+        ),
+        color: "success",
+      });
       setOpenSnackbar(true);
     }
   };
@@ -761,7 +776,7 @@ const ForecastContainer = ({
                   minWidth: "100px",
                   maxWidth: !isMobile ? "220px" : "100%",
                   height: !isMobile ? "100%" : "auto",
-                  justifyContent: !isMobile ? "unset" : "space-between",
+                  justifyContent: !isMobile ? "unset" : "flex-start",
                 }}
               >
                 <Stack
@@ -769,10 +784,11 @@ const ForecastContainer = ({
                   spacing={0}
                   sx={{
                     position: "relative",
-                    justifyContent: "space-between",
+                    justifyContent: "flex-start",
                     alignItems: "flex-start",
-
                     mb: !isMobile ? 1 : 0,
+                    width: "100%",
+                    minWidth: 200,
                   }}
                 >
                   <Stack
@@ -782,22 +798,15 @@ const ForecastContainer = ({
                       position: "relative",
                       justifyContent: "flex-start",
                       alignItems: "flex-start",
+                      mr: "auto",
                     }}
                   >
-                    <IconButton
-                      size="sm"
-                      color="inherit"
-                      aria-label="favorite"
-                      onClick={() => {}}
-                    >
-                      <FontAwesomeIcon
-                        icon={faBookmark}
-                        style={{
-                          fontSize: "1rem",
-                          color: "var(--joy-palette-neutral-700, #32383E)",
-                        }}
-                      />
-                    </IconButton>
+                    <FavoriteButton
+                      location={location}
+                      units={units}
+                      setOpenSnackbar={setOpenSnackbar}
+                      setSnackbarContent={setSnackbarContent}
+                    />
                     <DownloadDialog
                       serverToken={serverToken}
                       location={location}
@@ -833,7 +842,6 @@ const ForecastContainer = ({
                   spacing={1}
                   direction="column"
                   sx={{
-                    mr: 1,
                     flexGrow: 1,
                     justifyContent: "flex-start",
                     "& root > :not(style) ~ :not(style)": {

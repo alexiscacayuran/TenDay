@@ -31,9 +31,6 @@ import ZoomLevel from "./utils/ZoomLevel";
 import { Stack, Box, Snackbar } from "@mui/joy";
 import { Slide } from "@mui/material";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
-
 const Map = () => {
   const theme = useTheme();
   const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
@@ -94,12 +91,12 @@ const Map = () => {
   const [open, setOpen] = useState(false); // Slide up bottom container state
   const [date, setDate] = useState(new Date());
   const [dateReady, setDateReady] = useState(false);
-  const [overlay, setOverlay] = useState("temperature_mean");
+  const [overlay, setOverlay] = useState("rainfall");
   const [zoomLevel, setZoomLevel] = useState(8);
 
-  const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [temp, setTemp] = useState("temperature_mean");
-  const [activeTooltip, setActiveTooltip] = useState("Temperature");
+  const [activeTooltip, setActiveTooltip] = useState("Rainfall");
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
   const [isLayerClipped, setIsLayerClipped] = useState(false);
@@ -115,6 +112,11 @@ const Map = () => {
   const [scale, setScale] = useState({ metric: true, imperial: false });
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarContent, setSnackbarContent] = useState({
+    message: "",
+    icon: null,
+    color: "",
+  });
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -153,6 +155,8 @@ const Map = () => {
           setScale={setScale}
           setIsLocationReady={setIsLocationReady}
           selectedPolygon={selectedPolygon}
+          setOpenSnackbar={setOpenSnackbar}
+          setSnackbarContent={setSnackbarContent}
         />
         <MapContainer
           ref={setMap}
@@ -233,7 +237,10 @@ const Map = () => {
               pointerEvents: "none", //Let clicks pass through by default
             }}
           >
-            <Feedback setOpenSnackbar={setOpenSnackbar} />
+            <Feedback
+              setOpenSnackbar={setOpenSnackbar}
+              setSnackbarContent={setSnackbarContent}
+            />
 
             <Stack
               direction="column"
@@ -282,6 +289,7 @@ const Map = () => {
                 selectedPolygon={selectedPolygon}
                 interactive={false}
                 setOpenSnackbar={setOpenSnackbar}
+                setSnackbarContent={setSnackbarContent}
               />
             </Stack>
             <Legend
@@ -376,7 +384,7 @@ const Map = () => {
         )}
 
         <Snackbar
-          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
           autoHideDuration={4000}
           open={openSnackbar}
           onClose={(event, reason) => {
@@ -387,16 +395,11 @@ const Map = () => {
           }}
           size="md"
           variant="solid"
-          color="success"
+          color={snackbarContent.color}
           sx={{ maxWidth: "350px" }}
-          startDecorator={
-            <FontAwesomeIcon
-              icon={faCircleCheck}
-              style={{ fontSize: "1.5rem" }}
-            />
-          }
+          startDecorator={snackbarContent.icon}
         >
-          Submitted successfully. Thank you for helping us improve!
+          {snackbarContent.message}
         </Snackbar>
 
         {!isMobile && <MapControl map={map} />}

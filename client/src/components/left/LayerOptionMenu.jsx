@@ -3,7 +3,6 @@ import { useMediaQuery } from "@mui/material";
 import Popover from "@mui/material/Popover";
 import PopupState, { bindTrigger, bindPopover } from "material-ui-popup-state";
 import {
-  Box,
   Typography,
   Switch,
   IconButton,
