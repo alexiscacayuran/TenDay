@@ -72,7 +72,7 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
     const requestId = await logApiRequest(req, 2);
 
     let query = `
-      SELECT 
+      SELECT DISTINCT ON (d.date, m.id)
         m.id AS location_id, m.municity, m.province, m.region,
         d.date, d.start_date,
         r.description AS rainfall, r.total AS total_rainfall,
@@ -91,77 +91,69 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
         SELECT MAX(start_date) FROM date
       )`;
 
-
-      const normalizeMunicity = (name = "") =>
-        name
-          .toLowerCase()
-          .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-          .replace(/ñ/g, 'n') // Handle ñ → n
-          .trim();
-      
-          const refRes = await pool.query(`SELECT DISTINCT municity, province, region FROM municities`);
-          const refRows = refRes.rows.map(row => ({
-            ...row,
-            normalized_municity: normalizeMunicity(row.municity),
-          }));
-          
-          const fuseOptions = {
-            isCaseSensitive: false,
-            includeScore: false,
-            threshold: 0.6,
-            distance: 100,
-            keys: ["normalized_municity", "province", "region"]
-          };
-          
-          const fuse = new Fuse(refRows, fuseOptions);
-          
-          const values = [];
-          const filters = [];
-          
-          if (municity) {
-            const normalized = normalizeMunicity(municity);
-            const match = fuse.search(normalized).find(r => r.item.normalized_municity === normalized);
-            console.log(match);
-            const bestMatch = match?.item?.municity ?? municity;
-          
-            values.push(bestMatch);
-            filters.push(`(
-              REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($${values.length}, ' CITY', '', 'gi') || '%' OR
-              m.m_psgc ILIKE '%' || $${values.length} || '%'
-            )`);
-          }
-          
-          if (province) {
-            const normalized = normalizeMunicity(province);
-            const match = fuse.search(normalized).find(r => normalizeMunicity(r.item.province) === normalized);
-            const bestMatch = match?.item?.province ?? province;
-          
-            values.push(bestMatch);
-            filters.push(`(
-              m.province ILIKE '%' || $${values.length} || '%' OR
-              m.p_psgc ILIKE '%' || $${values.length} || '%'
-            )`);
-          }
-          
-          if (region) {
-            const normalized = region.toLowerCase().replace(/\s/g, '');
-            const regionInput = regionMap[normalized] || normalizeMunicity(region);
-            const match = fuse.search(regionInput).find(r => normalizeMunicity(r.item.region) === normalizeMunicity(regionInput));
-            const bestMatch = match?.item?.region ?? regionInput;
-          
-            values.push(bestMatch);
-            filters.push(`(
-              m.region ILIKE '%' || $${values.length} || '%' OR
-              m.r_psgc ILIKE '%' || $${values.length} || '%'
-            )`);
-          }
+      const refRows = (await pool.query(`
+        SELECT DISTINCT 
+          municity, province, region, 
+          m_old AS "muniOld", p_old AS "provOld"
+        FROM municities
+      `)).rows;    
+    
+      const fuseOptions = {
+        location: 8,
+        threshold: 0.4,
+        distance: 30,
+        isCaseSensitive: false,
+        includeScore: true,
+        ignoreDiacritics: true,
+        keys: ["municity", "province", "muniOld", "provOld"]
+      };    
+    
+      const fuse = new Fuse(refRows, fuseOptions);
+    
+      const values = [];
+      const filters = [];
+    
+      if (municity) {
+        const match = fuse.search(municity).at(0);
+        const bestMatch = match?.item?.municity ?? municity;
+    
+        values.push(bestMatch);
+        filters.push(`(
+          REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($${values.length}, ' CITY', '', 'gi') || '%' OR
+          m.m_psgc ILIKE '%' || $${values.length} || '%'
+        )`);
+      }
+    
+      if (province) {
+        const match = fuse.search(province).at(0);
+        const bestMatch = match?.item?.province ?? province;
+    
+        values.push(bestMatch);
+        filters.push(`(
+          m.province ILIKE '%' || $${values.length} || '%' OR
+          m.p_psgc ILIKE '%' || $${values.length} || '%'
+        )`);
+      }
+    
+      if (region) {
+        const inputKey = region.toLowerCase().replace(/\s/g, '');
+        const regionInput = regionMap[inputKey] ?? region;
+        const match = fuse.search(regionInput).at(0);
+        const bestMatch = match?.item?.region ?? regionInput;
+    
+        values.push(bestMatch);
+        filters.push(`(
+          m.region ILIKE '%' || $${values.length} || '%' OR
+          m.r_psgc ILIKE '%' || $${values.length} || '%'
+        )`);
+      }
   
 
     if (filters.length > 0) {
       query += ` AND ${filters.join(" AND ")}`;
     }
 
-    query += ` ORDER BY m.province ASC, m.municity ASC, d.date ASC`;
+    query += ` ORDER BY d.date ASC, m.id ASC, m.province ASC, m.municity ASC`;
 
     const result = await pool.query(query, values);
 

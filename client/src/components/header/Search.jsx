@@ -102,6 +102,7 @@ const Search = ({
       .run((error, res) => {
         if (!error) {
           const result = res.results[0];
+          console.log(result);
           setLocation({
             latLng: result.latlng,
             municity: result.properties.City,
