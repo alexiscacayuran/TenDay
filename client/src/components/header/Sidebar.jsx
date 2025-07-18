@@ -89,6 +89,15 @@ const Sidebar = ({ units, setUnits, scale, setScale }) => {
             "& > div": { justifyContent: "flex-start" },
           }}
         >
+          <Settings
+            units={units}
+            setUnits={setUnits}
+            scale={scale}
+            setScale={setScale}
+            openSidebar={openSidebar}
+            setOpenSidebar={setOpenSidebar}
+          />
+          <About openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
           <ListItemButton>
             <Typography
               level="title-lg"
@@ -106,15 +115,6 @@ const Sidebar = ({ units, setUnits, scale, setScale }) => {
               API
             </Typography>
           </ListItemButton>
-          <Settings
-            units={units}
-            setUnits={setUnits}
-            scale={scale}
-            setScale={setScale}
-            openSidebar={openSidebar}
-            setOpenSidebar={setOpenSidebar}
-          />
-          <About openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
         </List>
       </Drawer>
     </React.Fragment>

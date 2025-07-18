@@ -16,14 +16,22 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
 
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
-  map.createPane("basemapPane");
-  map.getPane("basemapPane").style.zIndex = 200;
+  useEffect(() => {
+    if (!map.getPane("basemapPane")) {
+      map.createPane("basemapPane");
+      map.getPane("basemapPane").style.zIndex = 200;
+    }
 
-  map.createPane("activeFeaturePane");
-  map.getPane("activeFeaturePane").style.zIndex = 400;
+    if (!map.getPane("activeFeaturePane")) {
+      map.createPane("activeFeaturePane");
+      map.getPane("activeFeaturePane").style.zIndex = 400;
+    }
 
-  map.createPane("hillshadePane");
-  map.getPane("hillshadePane").style.zIndex = 250;
+    if (!map.getPane("hillshadePane")) {
+      map.createPane("hillshadePane");
+      map.getPane("hillshadePane").style.zIndex = 250;
+    }
+  }, []);
 
   useEffect(() => {
     if (!arcgisToken) return;
@@ -64,9 +72,15 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
     map.attributionControl.setPosition("bottomleft");
 
     return () => {
-      map.removeLayer(weatherBasemap);
-      map.removeLayer(provinceBoundaries);
-      map.removeLayer(hillshade);
+      if (map.hasLayer(weatherBasemap)) {
+        map.removeLayer(weatherBasemap);
+      }
+      if (map.hasLayer(provinceBoundaries)) {
+        map.removeLayer(provinceBoundaries);
+      }
+      if (map.hasLayer(hillshade)) {
+        map.removeLayer(hillshade);
+      }
     };
   }, [map, arcgisToken, isMobile]);
 

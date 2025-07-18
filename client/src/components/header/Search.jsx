@@ -8,6 +8,7 @@ import {
   ListItem,
   ListItemButton,
   ListDivider,
+  ListSubheader,
   IconButton,
   Stack,
   Sheet,
@@ -19,12 +20,14 @@ import {
   faSearch,
   faLocationCrosshairs,
   faTimes,
+  faStar,
 } from "@fortawesome/free-solid-svg-icons";
 import { geocodeService, reverseGeocode } from "esri-leaflet-geocoder";
 import { query } from "esri-leaflet";
 import L from "leaflet";
 import { useMediaQuery } from "@mui/material";
-import { useTheme } from "@mui/joy/styles";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "../bottom/FavoriteButton";
 
 const Search = ({
   arcgisToken,
@@ -39,9 +42,38 @@ const Search = ({
   isLocateOnly,
 }) => {
   const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
-
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
+  const [isFocused, setIsFocused] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(true);
+  const [isUsing, setIsUsing] = useState(false);
+
+  const favorites = useLiveQuery(() => db.favorites.toArray(), []);
+
+  const clearFavorites = async () => {
+    setShowFavorites(false);
+    await db.favorites.clear();
+  };
+
+  const handleSelectFavorite = (location) => {
+    setLocation({
+      latLng: location.latLng,
+      municity: location.municity,
+      province: location.province,
+    });
+    map.flyTo(location.latLng, 12, { duration: 2 });
+    setOpen(true);
+    setIsLocationReady(true);
+  };
+
+  const isInteractive = (target) => {
+    if (!target) return false;
+    return (
+      target.closest("button") ||
+      target.closest('[role="button"]') ||
+      target.closest('[data-clickable="true"]')
+    );
+  };
 
   const _query = query({
     url: "https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/PHL_Boundaries_2022/FeatureServer/3",
@@ -165,6 +197,7 @@ const Search = ({
   return (
     <>
       {!isLocateOnly ? (
+        //show full search bar with geolocate button beside it
         <Stack
           direction="row"
           spacing={1}
@@ -195,7 +228,6 @@ const Search = ({
                   : "Search for location..."
               }
               value={input}
-              onChange={handleInputChange}
               startDecorator={
                 <FontAwesomeIcon
                   icon={faSearch}
@@ -232,24 +264,186 @@ const Search = ({
                   </IconButton>
                 )
               }
+              onFocus={() => {
+                setIsFocused(true);
+                if (input.trim() === "") {
+                  setShowFavorites(true);
+                }
+              }}
+              onBlur={() => {
+                // Defer blur handling to allow click event on favorites to register
+                setTimeout(() => {
+                  if (!isUsing) {
+                    setIsFocused(false);
+                    setShowFavorites(false);
+                  }
+                }, 100);
+              }}
+              onChange={(e) => {
+                const value = e.target.value;
+                setInput(value);
+                handleInputChange(e);
+                if (value.trim() !== "") {
+                  setShowFavorites(false);
+                } else {
+                  setShowFavorites(true);
+                }
+              }}
             />
+            {isFocused && showFavorites && (
+              <Sheet
+                color="neutral"
+                variant="solid"
+                sx={{
+                  width: !searchLayout ? "max-content" : "91vw",
+                  borderRadius: "lg",
+                  position: "absolute",
+                  top: { lg: 70, xs: 70 },
+                  left: { lg: 160, xs: 25 },
+                  userSelect: "none",
+                }}
+                onMouseDownCapture={(e) => {
+                  if (isInteractive(e.target)) {
+                    setIsUsing(true);
+                  }
+                }}
+                onMouseUp={() => {
+                  setTimeout(() => {
+                    setIsUsing(false);
+                  }, 100);
+                }}
+              >
+                <Box sx={{ mx: 1 }}>
+                  <List
+                    sx={{
+                      minWidth: 300,
+                      maxWidth: !searchLayout ? 300 : "none",
+                    }}
+                  >
+                    <Stack
+                      direction="row"
+                      sx={{
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <ListSubheader sx={{ color: "common.white" }}>
+                        Favorites
+                      </ListSubheader>
+                      {favorites.length > 0 && (
+                        <Button
+                          size="sm"
+                          color="neutral"
+                          variant="solid"
+                          sx={{
+                            backgroundColor: "neutral.600",
+                            borderRadius: "20px",
+                            fontSize: "0.75rem",
+                            fontWeight: "normal",
+                            paddingInline: "0.75rem",
+                            height: "0.75rem",
+                            m: 1,
+                          }}
+                          onClick={clearFavorites}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </Stack>
+
+                    {favorites.length === 0 ? (
+                      <ListItem>
+                        <Typography
+                          level="body-sm"
+                          sx={{
+                            color: "white",
+                            width: "100%",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          No locations saved yet. Add by clicking the{" "}
+                          <FontAwesomeIcon
+                            icon={faStar}
+                            animate={{
+                              color: "#32383E",
+                            }}
+                            transition={{ duration: 0.1 }}
+                            style={{ fontSize: "1rem" }}
+                          />{" "}
+                          in the forecast panel.
+                        </Typography>
+                      </ListItem>
+                    ) : (
+                      favorites.map((loc, i) => (
+                        <div key={i}>
+                          <ListItem>
+                            <ListItemButton
+                              sx={{
+                                '&:not(.Mui-selected, [aria-selected="true"]):hover':
+                                  {
+                                    backgroundColor: "neutral.700",
+                                    borderRadius: "lg",
+                                  },
+                                '&:not(.Mui-selected, [aria-selected="true"]):active':
+                                  {
+                                    backgroundColor: "neutral.700",
+                                    borderRadius: "lg",
+                                  },
+                              }}
+                              onClick={() => {
+                                setShowFavorites(false);
+                                handleSelectFavorite(loc);
+                              }}
+                            >
+                              <Stack spacing={0}>
+                                <Typography
+                                  level="title-md"
+                                  sx={{
+                                    color: "primary.400",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  {loc.municity}
+                                </Typography>
+                                <Typography
+                                  level="body-xs"
+                                  sx={{ color: "white" }}
+                                >
+                                  {loc.province}
+                                </Typography>
+                              </Stack>
+                            </ListItemButton>
+                          </ListItem>
+                          {i < favorites.length - 1 && (
+                            <ListDivider
+                              sx={{ backgroundColor: "white" }}
+                              inset="gutter"
+                            />
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </List>
+                </Box>
+              </Sheet>
+            )}
             {suggestions.length > 0 && (
               <Sheet
                 color="neutral"
                 variant="solid"
                 sx={{
                   width: !searchLayout ? "max-content" : "91vw",
-                  borderRadius: "sm",
+                  borderRadius: "lg",
                   position: "absolute",
-                  top: { lg: 70, md: 50, xs: 70 },
-                  left: { lg: 160, md: 280, xs: 25 },
+                  top: { lg: 70, xs: 70 },
+                  left: { lg: 160, xs: 25 },
                   userSelect: "none",
                 }}
               >
-                <Box sx={{ mx: 1, mt: 1 }}>
+                <Box sx={{ mx: 1 }}>
                   <List
                     sx={{
-                      minWidth: 280,
+                      minWidth: 300,
+                      maxWidth: !searchLayout ? 300 : "none",
                     }}
                   >
                     {suggestions.map((s, i) => (
@@ -275,25 +469,28 @@ const Search = ({
                               '&:not(.Mui-selected, [aria-selected="true"]):hover':
                                 {
                                   backgroundColor: "neutral.700",
-                                  borderRadius: "sm",
+                                  borderRadius: "lg",
                                 },
                               '&:not(.Mui-selected, [aria-selected="true"]):active':
                                 {
                                   backgroundColor: "neutral.700",
-                                  borderRadius: "sm",
+                                  borderRadius: "lg",
                                 },
                             }}
                             onClick={() => handleSelectSuggestion(s.text)}
                           >
                             <Stack spacing={0}>
                               <Typography
-                                level="title-lg"
-                                sx={{ color: "primary.400" }}
+                                level="title-md"
+                                sx={{
+                                  color: "primary.400",
+                                  fontWeight: "bold",
+                                }}
                               >
                                 {s.text.split(", ")[0]}
                               </Typography>
                               <Typography
-                                level="title-sm"
+                                level="body-xs"
                                 sx={{ color: "white" }}
                               >
                                 {s.text.split(", ")[1]}
@@ -352,6 +549,7 @@ const Search = ({
           )}
         </Stack>
       ) : (
+        //hide search bar and use only the geolocate, when on mobile
         <IconButton color="inherit" onClick={handleLocate} size="lg">
           <FontAwesomeIcon
             icon={faLocationCrosshairs}

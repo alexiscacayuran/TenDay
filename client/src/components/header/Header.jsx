@@ -30,6 +30,7 @@ const Header = (props) => {
             src={Logo}
             style={{ height: "30px" }}
           />
+
           <Search {...props} />
         </Sheet>
       ) : (

@@ -14,14 +14,13 @@ import {
   Select,
   Option,
   Textarea,
-  Snackbar,
 } from "@mui/joy";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
+import { faEnvelope, faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { useTheme } from "@mui/joy/styles"; // or @mui/joy/styles if consistent
 
-const Feedback = ({ setOpenSnackbar }) => {
+const Feedback = ({ setOpenSnackbar, setSnackbarContent }) => {
   const submitFeedback = async (category, comment, email) => {
     setLoading(true);
     try {
@@ -41,6 +40,17 @@ const Feedback = ({ setOpenSnackbar }) => {
       }
     } finally {
       setLoading(false); // ✅ Reset loading state
+      setOpenSnackbar(false);
+      setSnackbarContent({
+        message: "Submitted successfully. Thank you for helping us improve!",
+        icon: (
+          <FontAwesomeIcon
+            icon={faCircleCheck}
+            style={{ fontSize: "1.5rem" }}
+          />
+        ),
+        color: "success",
+      });
       setOpenSnackbar(true);
     }
   };
@@ -49,7 +59,7 @@ const Feedback = ({ setOpenSnackbar }) => {
 
   const theme = useTheme();
   const [open, setOpen] = useState(false);
-  // const [openSnackbar, setOpenSnackbar] = useState(false);
+
   return (
     <Box
       sx={{
@@ -74,21 +84,6 @@ const Feedback = ({ setOpenSnackbar }) => {
         >
           Feedback
         </Button>
-        {/* <Snackbar
-          // autoHideDuration={2000}
-          open={openSnackbar}
-          onClose={(event, reason) => {
-            if (reason === "clickaway") {
-              return;
-            }
-            setOpenSnackbar(false);
-          }}
-          size="md"
-          variant="solid"
-          sx={{ zIndex: 9999 }}
-        >
-          Feedback submitted successfully. Thank you for helping us improve!
-        </Snackbar> */}
         <Modal open={open} onClose={() => setOpen(false)}>
           <ModalDialog
             variant="solid"
@@ -110,7 +105,6 @@ const Feedback = ({ setOpenSnackbar }) => {
                 const email = formData.get("email");
 
                 await submitFeedback(category, comment, email);
-
                 setOpen(false);
               }}
             >

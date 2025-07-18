@@ -47,6 +47,8 @@ const Navbar = ({
   setScale,
   setIsLocationReady,
   selectedPolygon,
+  setOpenSnackbar,
+  setSnackbarContent,
 }) => {
   const theme = useTheme();
   const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
@@ -84,10 +86,12 @@ const Navbar = ({
               cursor: "pointer",
               ml: "1.25rem",
               mr: !isBelowLaptop ? "1.25rem" : 0,
-              justifyContent: "flex-end",
+              justifyContent: "flex-start",
               display: "flex",
               alignItems: "center",
               pointerEvents: "auto",
+              width: !isBelowLaptop ? 400 : "auto",
+              flexShrink: 5,
             }}
           >
             {/* <IconButton color="inherit" sx={{ mr: 1 }}>
@@ -161,6 +165,15 @@ const Navbar = ({
               boxShadow: "sm",
             }}
           >
+            <Settings
+              units={units}
+              setUnits={setUnits}
+              scale={scale}
+              setScale={setScale}
+            />
+
+            <About />
+
             <Button color="inherit">
               <Typography
                 level="title-md"
@@ -176,15 +189,6 @@ const Navbar = ({
                 API
               </Typography>
             </Button>
-
-            <Settings
-              units={units}
-              setUnits={setUnits}
-              scale={scale}
-              setScale={setScale}
-            />
-
-            <About />
           </Stack>
         </Box>
       ) : (

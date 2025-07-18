@@ -216,13 +216,13 @@ export const LayerStyleIcon = (props) => (
 );
 
 export const GradientIcon = (props) => (
-  <SvgIcon {...props}>
+  <SvgIcon sx={{ fontSize: "1rem" }} {...props}>
     <Gradient />
   </SvgIcon>
 );
 
 export const ParticlesIcon = (props) => (
-  <SvgIcon {...props}>
+  <SvgIcon sx={{ fontSize: "1rem" }} {...props}>
     <Particles />
   </SvgIcon>
 );

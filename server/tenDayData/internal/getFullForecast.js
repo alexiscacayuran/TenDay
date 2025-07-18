@@ -60,6 +60,7 @@ router.get("/", authenticateToken(2), async (req, res) => {
         distance: 20,
         isCaseSensitive: false,
         includeScore: true,
+        ignoreDiacritics: true,
         keys: ["municity", "province", "muniOld", "provOld"],
       });
 

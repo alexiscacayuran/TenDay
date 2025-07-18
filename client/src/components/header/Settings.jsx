@@ -194,7 +194,7 @@ const Settings = ({
             )}
 
             {renderUnitSelector(
-              "Wind Speed",
+              "Wind speed",
               [
                 { val: "m/s", label: "m/s" },
                 { val: "km/h", label: "km/h" },
@@ -205,7 +205,7 @@ const Settings = ({
             )}
 
             {renderUnitSelector(
-              "Wind Direction",
+              "Wind direction",
               [
                 { val: "arrow", label: "arrow" },
                 { val: "desc", label: "description" },
@@ -215,7 +215,7 @@ const Settings = ({
             )}
 
             {renderUnitSelector(
-              "Map Scale",
+              "Map scale",
               [
                 { val: "metric", label: "km" },
                 { val: "imperial", label: "mi" },
