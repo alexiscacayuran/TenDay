@@ -112,6 +112,12 @@ import formStatusRoutes from './admin/formStatus.js';
 import report from "./report/postFeedback.js";
 import getFeedbackRouter from "./report/getFeedback.js";
 
+//ENV
+import envTokenRoutes from './admin/env.js';
+
+//stations
+import stationsRouter from "./synopagro/stations.js";
+
 // Show time in Manila
 const manilaTime = DateTime.now()
   .setZone("Asia/Manila")
@@ -150,6 +156,9 @@ app.use("/api/auth", authRoutes); // Token API
 app.get("/api/token", (req, res) => {
   res.json({ accessToken: process.env.A_TOKEN });
 });
+
+// OS env
+app.use('/api/env-token', envTokenRoutes);
 
 app.use("/auth", jwtAuth);
 
@@ -233,6 +242,9 @@ app.use("/api/", checkValidRouter);
 
 //Analytics
 app.use("/api", analyticsRoutes);
+
+//Stations
+app.use("/api/stations", stationsRouter);
 
 // Route for uploading Ten Day Data
 app.get("/uploadForecastData", authenticate, async (req, res) => {
