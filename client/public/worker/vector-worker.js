@@ -7,7 +7,7 @@ importScripts("https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js");
 
 onmessage = async (e) => {
   const { url } = e.data;
-  console.log("Worker received URL:", url);
+  //console.log("Worker received URL:", url);
   const bandIndexes = [0, 1]; // Always U and V bands
 
   try {
