@@ -57,10 +57,11 @@ router.get("/", authenticateToken(2), async (req, res) => {
       // ⚡ Use Fuse.js to find closest match
       const fuse = new Fuse(municities, {
         location: 8,
-        threshold: 0.5,
-        distance: 20,
+        threshold: 0.6,
+        distance: 30,
         isCaseSensitive: false,
         includeScore: true,
+        ignoreDiacritics: true,
         keys: ["municity", "province", "muniOld", "provOld"],
       });
 
@@ -90,29 +91,33 @@ router.get("/", authenticateToken(2), async (req, res) => {
       const matchedProvince = results[0].item.province;
 
       const query = `
-      SELECT 
-        m.id AS location_id, m.municity, m.province, 
-        d.id AS date_id, d.date, d.start_date, 
-        r.total as rainfall_total,
-        r.description as rainfall_desc, 
-        c.description as cloud_cover, 
-        t.mean, t.min, t.max, 
-        h.mean as humidity, 
-        w.speed, w.direction 
-      FROM 
-        municities AS m 
-      INNER JOIN date AS d ON m.id = d.municity_id 
-      INNER JOIN rainfall as r ON d.id = r.date_id 
-      INNER JOIN cloud_cover as c ON d.id = c.date_id 
-      INNER JOIN temperature as t ON d.id = t.date_id 
-      INNER JOIN humidity as h ON d.id = h.date_id 
-      INNER JOIN wind as w ON d.id = w.date_id 
-      WHERE
-        m.municity = $1 
-        AND m.province = $2
-      ORDER BY 
-        d.start_date DESC, date ASC
-      LIMIT 10`;
+      SELECT DISTINCT ON (d.date)
+      m.id AS location_id, m.municity, m.province,
+      d.id AS date_id, d.date, d.start_date,
+      r.total AS rainfall_total,
+      r.description AS rainfall_desc, 
+      c.description AS cloud_cover,
+      t.mean, t.min, t.max,
+      h.mean AS humidity,
+      w.speed, w.direction
+    FROM municities AS m
+    INNER JOIN date AS d ON m.id = d.municity_id
+    INNER JOIN rainfall AS r ON d.id = r.date_id
+    INNER JOIN cloud_cover AS c ON d.id = c.date_id
+    INNER JOIN temperature AS t ON d.id = t.date_id
+    INNER JOIN humidity AS h ON d.id = h.date_id
+    INNER JOIN wind AS w ON d.id = w.date_id
+    WHERE m.municity = $1
+      AND m.province = $2
+      AND d.start_date = (
+        SELECT MAX(d2.start_date)
+        FROM date AS d2
+        JOIN municities AS m2 ON m2.id = d2.municity_id
+        WHERE m2.municity = $1 AND m2.province = $2
+      )
+    ORDER BY d.date ASC
+    LIMIT 10;
+    `;
 
       const values = [matchedMunicity, matchedProvince];
       const result = await pool.query(query, values);

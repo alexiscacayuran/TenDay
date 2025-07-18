@@ -39,10 +39,11 @@ router.get("/", async (req, res) => {
       // ⚡ Use Fuse.js to find closest match
       const fuse = new Fuse(municities, {
         location: 8,
-        threshold: 0.5,
-        distance: 20,
+        threshold: 0.6,
+        distance: 30,
         isCaseSensitive: false,
         includeScore: true,
+        ignoreDiacritics: true,
         keys: ["municity", "province", "muniOld", "provOld"],
       });
 
