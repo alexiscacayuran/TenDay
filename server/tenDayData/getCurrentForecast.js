@@ -26,16 +26,6 @@ const regionMap = {
   "barmm": "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
   "nir": "Negros Island Region (Region XVIII)"
 };
-
-// 🧠 Normalize function to handle "City of X" vs "X City"
-  const normalizeMunicity = (name = "") =>
-    name
-      .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove diacritics (like ñ → n)
-      .replace(/ñ/g, 'n') // Just in case normalization misses it
-      .replace(/city of\s+/i, '')  // remove "city of"
-      .replace(/\s+city$/i, '')    // remove trailing "city"
-      .trim();
   
 
 router.get("/tenday/current", authenticateToken(1), async (req, res) => {
@@ -90,28 +80,22 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       });
     }
 
-    const refRows = (await pool.query("SELECT DISTINCT municity, province, region FROM municities")).rows.map(item => ({
-      ...item,
-      normalized_municity: normalizeMunicity(item.municity)
-    }));
+    const refRows = (await pool.query(`
+      SELECT DISTINCT 
+        municity, province, region, 
+        m_old AS "muniOld", p_old AS "provOld"
+      FROM municities
+    `)).rows;    
 
     const fuseOptions = {
-       isCaseSensitive: false,
-       includeScore: false,
-       ignoreDiacritics: false,
-       shouldSort: true,
-       includeMatches: false,
-       findAllMatches: false,
-       minMatchCharLength: 1,
-       location: 0,
+      location: 8,
       threshold: 0.6,
-       distance: 100,
-       useExtendedSearch: false,
-       ignoreLocation: false,
-       ignoreFieldNorm: false,
-       fieldNormWeight: 1,
-      keys: ["normalized_municity", "province", "region"]
-    };
+      distance: 30,
+      isCaseSensitive: false,
+      includeScore: true,
+      ignoreDiacritics: true,
+      keys: ["municity", "province", "muniOld", "provOld"]
+    };    
     
     const fuse = new Fuse(refRows, fuseOptions);
     
@@ -126,13 +110,29 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
         province = mPsgcRes.rows[0].province;
         municity = mPsgcRes.rows[0].municity;
       } else {
-        const normalized = normalizeMunicity(municity);
-        const match = fuse.search(normalized).find(r => r.item.normalized_municity === normalized);
-        if (match) {
-          municity = match.item.municity;
-          province = match.item.province;
-          region = match.item.region;
+        const results = fuse.search({
+          $and: [
+            {
+              $or: [
+                { municity: municity },
+                { muniOld: municity }
+              ]
+            },
+            {
+              $or: [
+                { province: province },
+                { provOld: province }
+              ]
+            }
+          ]
+        });
+        
+        if (results.length > 0) {
+          municity = results[0].item.municity;
+          province = results[0].item.province;
+          region = results[0].item.region;
         }
+        
       }
     } else if (province) {
       const pPsgcRes = await pool.query(
@@ -270,34 +270,31 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       forecastData.push(forecastEntry);
     }
 
-    const misc = current_page === null
-      ? defaultMisc
-      : {
-          ...defaultMisc,
-          current_page,
-          per_page,
-          total_count,
-          total_page,
-        };
+    const { status_code, description, ...rest } = defaultMisc;
 
-    const metadata = {
-      request_no,
-      api: "Current Forecast",
-      forecast: "10-day Forecast",
-      issuance_date,
+    const misc = {
+      ...rest, 
+      ...(current_page !== null && {
+        current_page,
+        per_page,
+        total_count,
+        total_page,
+      }),
+      status_code,
+      description
     };
 
-    const firstRow = result.rows[0];
-    if (municity) {
-      metadata.municity = firstRow.municity;
-      metadata.province = firstRow.province;
-      metadata.region = firstRow.region;
-    } else if (province) {
-      metadata.province = firstRow.province;
-      metadata.region = firstRow.region;
-    } else if (region) {
-      metadata.region = firstRow.region;
-    }
+        const firstRow = result.rows[0];
+
+        const metadata = {
+          request_no,
+          api: "Current Forecast",
+          forecast: "10-day Forecast",
+          issuance_date,
+          ...(firstRow?.region && { region: firstRow.region }),
+          ...(firstRow?.province && { province: firstRow.province }),
+          ...(firstRow?.municity && { municity: firstRow.municity }),
+        };        
 
     return res.status(200).json({
       metadata,
