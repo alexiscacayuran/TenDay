@@ -89,7 +89,7 @@ const WeatherLayer = ({
   open,
   zoomLevel,
 }) => {
-  console.log(zoomLevel);
+  // console.log(zoomLevel);
   const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
   const map = useMap();
   const localOverlay = useRef(overlayList.find((o) => o.name === overlay));

@@ -52,7 +52,6 @@ router.get("/", authenticateToken(2), async (req, res) => {
       }
 
       const municities = await response.json();
-      console.log("JSON loaded: ", municities);
 
       // ⚡ Use Fuse.js to find closest match
       const fuse = new Fuse(municities, {
