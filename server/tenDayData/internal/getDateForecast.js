@@ -39,7 +39,7 @@ router.get("/", async (req, res) => {
       const fuse = new Fuse(municities, {
         location: 8,
         threshold: 0.6,
-        distance: 30,
+        distance: 20,
         isCaseSensitive: false,
         includeScore: true,
         ignoreDiacritics: true,

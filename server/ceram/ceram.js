@@ -2,6 +2,7 @@ import express from "express";
 import { pool } from "../db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
+import Fuse from "fuse.js";
 
 const router = express.Router();
 
@@ -25,7 +26,6 @@ router.get("/projections/ceram", authenticateToken(8), async (req, res) => {
   const currentPage = isPageNone ? 1 : parseInt(page) || 1;
   const limit = isPageNone ? null : parseInt(per_page) || defaultPerPage;
 
-  // ✅ API access control
   const { api_ids } = req.user;
 
   if (!Array.isArray(api_ids) || !api_ids.includes(8)) {
@@ -63,9 +63,47 @@ router.get("/projections/ceram", authenticateToken(8), async (req, res) => {
     `;
 
     if (province) {
-      filters.push(`p.name ILIKE $${index++}`);
-      values.push(province);
+      if (/^\d{9,10}$/.test(province)) {
+        filters.push(`p.p_psgc = $${index++}`);
+        values.push(province);
+      } else {
+        const provQuery = await pool.query(`SELECT id, name FROM province WHERE id < 84`);
+        const allProvinces = provQuery.rows;
+
+        const fuse = new Fuse(allProvinces, {
+          keys: ['name'],
+          location: 1,
+          threshold: 0.4,
+          distance: 30,
+          isCaseSensitive: false,
+          includeScore: true,
+          ignoreDiacritics: true,
+        });
+
+        const fuzzyMatch = fuse.search(province)?.[0]?.item;
+
+        if (fuzzyMatch) {
+          filters.push(`p.id = $${index++}`);
+          values.push(fuzzyMatch.id);
+        } else {
+          return res.status(404).json({
+            metadata: {
+              api: "CERAM",
+              forecast: "Climate Extremes Risk Analysis Matrix"
+            },
+            data: [],
+            misc: {
+              version: "1.0",
+              timestamp,
+              method,
+              status_code: 404,
+              description: "Bad Request: No provinces found."
+            }
+          });
+        }
+      }
     }
+
     if (indicator_code) {
       filters.push(`c.indicator_code = $${index++}`);
       values.push(indicator_code);
@@ -95,32 +133,31 @@ router.get("/projections/ceram", authenticateToken(8), async (req, res) => {
       baseQuery += " AND " + filters.join(" AND ");
     }
 
-    // Count query
     const countQuery = `SELECT COUNT(*) ${baseQuery}`;
     const countResult = await pool.query(countQuery, values);
     const total_count = parseInt(countResult.rows[0].count);
     const total_pages = isPageNone ? 1 : Math.ceil(total_count / limit);
     const offset = isPageNone ? 0 : (currentPage - 1) * limit;
 
-    // Data query
     const dataQuery = `
-      SELECT c.*, p.name AS province
+      SELECT c.*, p.name AS province, p.region
       ${baseQuery}
       ORDER BY
-        CASE c.indicator_code
-          WHEN 'TNn' THEN 1
-          WHEN 'TNm' THEN 2
-          WHEN 'TNx' THEN 3
-          WHEN 'TXn' THEN 4
-          WHEN 'TXm' THEN 5
-          WHEN 'TXx' THEN 6
-          WHEN 'RX1day' THEN 7
-          WHEN 'RX5day' THEN 8
-          ELSE 999
-        END,
-        c.indicator_code,
-        c.range DESC,
-        c.id
+      p.name ASC,
+      CASE c.indicator_code
+        WHEN 'TNn' THEN 1
+        WHEN 'TNm' THEN 2
+        WHEN 'TNx' THEN 3
+        WHEN 'TXn' THEN 4
+        WHEN 'TXm' THEN 5
+        WHEN 'TXx' THEN 6
+        WHEN 'RX1day' THEN 7
+        WHEN 'RX5day' THEN 8
+        ELSE 999
+      END,
+      c.indicator_code,
+      c.range DESC,
+      c.id
       ${isPageNone ? "" : `LIMIT $${index++} OFFSET $${index++}`}
     `;
 
@@ -152,53 +189,53 @@ router.get("/projections/ceram", authenticateToken(8), async (req, res) => {
       });
     }
 
-    // Group by province and indicator
-    const groupedByProvince = {};
+    let finalData;
+    let provinceName, regionName;
 
-    dataResult.rows.forEach(row => {
-      if (!groupedByProvince[row.province]) {
-        groupedByProvince[row.province] = {};
-      }
-
-      const indicators = groupedByProvince[row.province];
-
-      if (!indicators[row.indicator_code]) {
-        indicators[row.indicator_code] = {
-          indicator_code: row.indicator_code,
-          observed_baseline: parseFloat(row.observed_baseline),
-          ranges: {}
-        };
-      }
-
-      if (!indicators[row.indicator_code].ranges[row.range]) {
-        indicators[row.indicator_code].ranges[row.range] = [];
-      }
-
-      indicators[row.indicator_code].ranges[row.range].push({
+    if (province) {
+      // Flattened data without province and region in each item
+      finalData = dataResult.rows.map(row => ({
+        indicator_code: row.indicator_code,
+        observed_baseline: parseFloat(row.observed_baseline),
+        range: row.range,
         scenario: row.scenario,
         start_period: row.start_period,
         end_period: row.end_period,
         projected_value: parseFloat(row.projected_value),
         change: parseFloat(row.change)
-      });
-    });
+      }));
 
-    const finalData = Object.entries(groupedByProvince).map(([province, indicatorsMap]) => ({
-      province,
-      indicators: Object.values(indicatorsMap).map(indicator => ({
-        ...indicator,
-        ranges: Object.entries(indicator.ranges).map(([range, values]) => ({
-          range,
-          values
-        }))
-      }))
-    }));
+      // Assume province + region are same for all rows (since filtered)
+      provinceName = dataResult.rows[0].province;
+      regionName = dataResult.rows[0].region;
+    } else {
+      // Include province and region in each data item
+      finalData = dataResult.rows.map(row => ({
+        province: row.province,
+        region: row.region,
+        indicator_code: row.indicator_code,
+        observed_baseline: parseFloat(row.observed_baseline),
+        range: row.range,
+        scenario: row.scenario,
+        start_period: row.start_period,
+        end_period: row.end_period,
+        projected_value: parseFloat(row.projected_value),
+        change: parseFloat(row.change)
+      }));
+    }
+
+    const metadata = {
+      api: "CERAM",
+      forecast: "Climate Extremes Risk Analysis Matrix"
+    };
+    
+    if (province && provinceName && regionName) {
+      metadata.province = provinceName;
+      metadata.region = regionName;
+    }
 
     const response = {
-      metadata: {
-        api: "CERAM",
-        forecast: "Climate Extremes Risk Analysis Matrix"
-      },
+      metadata,
       data: finalData,
       misc: isPageNone ? {
         version: "1.0",
@@ -218,6 +255,7 @@ router.get("/projections/ceram", authenticateToken(8), async (req, res) => {
         description: "OK"
       }
     };
+    
 
     await logApiRequest(req, 8);
     return res.status(200).json(response);

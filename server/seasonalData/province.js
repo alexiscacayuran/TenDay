@@ -1,5 +1,6 @@
 import express from "express";
 import { pool, redisClient } from "../db.js";
+import Fuse from "fuse.js";
 import { format } from "date-fns";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
@@ -47,6 +48,34 @@ router.get("/province", authenticateToken(9), async (req, res) => {
 
   await logApiRequest(req, 9);
 
+  let provinceFilter = null;
+
+  if (province) {
+    // Get all provinces for fuzzy matching
+    const refRows = (await pool.query(`
+      SELECT DISTINCT name AS province, region, p_psgc FROM province
+    `)).rows;    
+
+    let matched = refRows.find(r => r.p_psgc === province);
+
+    // Fallback to fuzzy name match
+    if (!matched) {
+      const fuse = new Fuse(refRows, {
+        location: 1,
+        threshold: 0.4,
+        distance: 30,
+        isCaseSensitive: false,
+        includeScore: true,
+        ignoreDiacritics: true,
+        keys: ["province"]
+      });
+    
+      matched = fuse.search(province).at(0)?.item;
+    }
+    
+    provinceFilter = matched?.province ?? province;    
+  }
+
   if (!value) {
     return sendErrorResponse({
       res,
@@ -78,11 +107,12 @@ router.get("/province", authenticateToken(9), async (req, res) => {
     let provincesRes;
     let totalCount = 0;
 
-    if (province) {
+    if (provinceFilter) {
       provincesRes = await pool.query(
         "SELECT id, name, region FROM province WHERE LOWER(name) = LOWER($1)",
-        [province]
+        [provinceFilter]
       );
+
       totalCount = provincesRes.rows.length;
     } else {
       const countRes = await pool.query("SELECT COUNT(*) FROM province");
@@ -215,10 +245,13 @@ router.get("/province", authenticateToken(9), async (req, res) => {
         const rf = rfMap[date_id] || {};
         const pn = pnMap[date_id] || {};
         const entry = {
-          province: prov.name,
-          region: prov.region,
+          ...(province ? {} : {
+            province: prov.name,
+            region: prov.region
+          }),
           month: format(new Date(date), "MMMM yyyy")
         };
+        
 
         if (value === "mm") {
           entry.min_mm = rf.min ?? null;
@@ -251,7 +284,13 @@ router.get("/province", authenticateToken(9), async (req, res) => {
         issuance_month,
         start_month,
         end_month,
-        ...(province ? { province: resultData[0].province, region: resultData[0].region } : {})
+        ...(provinceFilter && provinces.length > 0
+          ? {
+              province: provinces[0].name ?? provinceFilter,
+              region: provinces[0].region ?? null
+            }
+          : {})        
+        
       },
       data: resultData,
       misc: {
