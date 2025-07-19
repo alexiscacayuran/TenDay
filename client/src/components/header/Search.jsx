@@ -299,8 +299,8 @@ const Search = ({
                   width: !searchLayout ? "max-content" : "91vw",
                   borderRadius: "lg",
                   position: "absolute",
-                  top: { lg: 70, xs: 70 },
-                  left: { lg: 160, xs: 25 },
+                  top: { lg: 70, md: 50, xs: 70 },
+                  left: { lg: 160, md: 280, xs: 25 },
                   userSelect: "none",
                 }}
                 onMouseDownCapture={(e) => {
@@ -436,8 +436,8 @@ const Search = ({
                   width: !searchLayout ? "max-content" : "91vw",
                   borderRadius: "lg",
                   position: "absolute",
-                  top: { lg: 70, xs: 70 },
-                  left: { lg: 160, xs: 25 },
+                  top: { lg: 70, md: 50, xs: 70 },
+                  left: { lg: 160, md: 280, xs: 25 },
                   userSelect: "none",
                 }}
               >
