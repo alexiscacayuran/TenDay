@@ -26,10 +26,12 @@ import Legend from "./right/Legend";
 import Issuance from "./right/Issuance";
 
 import DateSlider from "./bottom/DateSlider";
+
 import ZoomLevel from "./utils/ZoomLevel";
 
 import { Stack, Box, Snackbar } from "@mui/joy";
-import { Slide } from "@mui/material";
+
+import { motion, AnimatePresence } from "framer-motion";
 
 const Map = () => {
   const theme = useTheme();
@@ -117,6 +119,8 @@ const Map = () => {
     icon: null,
     color: "",
   });
+
+  let sliderRef = useRef(null);
 
   useEffect(() => {
     // Function to fetch data from the API
@@ -258,39 +262,43 @@ const Map = () => {
               }}
             >
               {dateReady && (
-                <DateNavigation
-                  initialDate={new Date(startDate.current.latest_date)}
-                  range={10}
-                  setDate={setDate}
-                  date={date}
-                  open={open}
-                />
+                <>
+                  <DateNavigation
+                    initialDate={new Date(startDate.current.latest_date)}
+                    setDate={setDate}
+                    date={date}
+                    open={open}
+                  />
+
+                  <ForecastContainer
+                    serverToken={serverToken}
+                    map={map}
+                    open={open}
+                    setOpen={setOpen}
+                    location={location}
+                    setLocation={setLocation}
+                    markerLayer={markerLayer}
+                    overlay={overlay}
+                    setOverlay={setOverlay}
+                    setIsMenuOpen={setIsMenuOpen}
+                    temp={temp}
+                    setTemp={setTemp}
+                    setActiveTooltip={setActiveTooltip}
+                    units={units}
+                    setUnits={setUnits}
+                    date={date}
+                    setDate={setDate}
+                    isDiscrete={isDiscrete}
+                    arcgisToken={arcgisToken}
+                    selectedPolygon={selectedPolygon}
+                    interactive={false}
+                    setOpenSnackbar={setOpenSnackbar}
+                    setSnackbarContent={setSnackbarContent}
+                    sliderRef={sliderRef}
+                    initialDate={new Date(startDate.current.latest_date)}
+                  />
+                </>
               )}
-              <ForecastContainer
-                serverToken={serverToken}
-                map={map}
-                open={open}
-                setOpen={setOpen}
-                location={location}
-                setLocation={setLocation}
-                markerLayer={markerLayer}
-                overlay={overlay}
-                setOverlay={setOverlay}
-                setIsMenuOpen={setIsMenuOpen}
-                temp={temp}
-                setTemp={setTemp}
-                setActiveTooltip={setActiveTooltip}
-                units={units}
-                setUnits={setUnits}
-                date={date}
-                setDate={setDate}
-                isDiscrete={isDiscrete}
-                arcgisToken={arcgisToken}
-                selectedPolygon={selectedPolygon}
-                interactive={false}
-                setOpenSnackbar={setOpenSnackbar}
-                setSnackbarContent={setSnackbarContent}
-              />
             </Stack>
             <Legend
               overlay={overlay}
@@ -322,13 +330,13 @@ const Map = () => {
                 ml: 0,
                 alignItems: "center",
                 justifyContent: "flex-end",
-                position: "relative",
+                position: "absolute",
                 width: "100%",
                 height: "auto",
               }}
             >
               {dateReady && (
-                <Slide direction="up" in={!open} mountOnEnter unmountOnExit>
+                <>
                   <Box
                     sx={{
                       position: "absolute",
@@ -339,6 +347,7 @@ const Map = () => {
                     }}
                   >
                     <DateSlider
+                      sliderRef={sliderRef}
                       initialDate={new Date(startDate.current.latest_date)}
                       range={10}
                       setDate={setDate}
@@ -346,32 +355,38 @@ const Map = () => {
                       open={open}
                     />
                   </Box>
-                </Slide>
+
+                  <ForecastContainer
+                    serverToken={serverToken}
+                    map={map}
+                    open={open}
+                    setOpen={setOpen}
+                    location={location}
+                    setLocation={setLocation}
+                    markerLayer={markerLayer}
+                    overlay={overlay}
+                    setOverlay={setOverlay}
+                    setIsMenuOpen={setIsMenuOpen}
+                    temp={temp}
+                    setTemp={setTemp}
+                    setActiveTooltip={setActiveTooltip}
+                    units={units}
+                    setUnits={setUnits}
+                    date={date}
+                    setDate={setDate}
+                    isDiscrete={isDiscrete}
+                    arcgisToken={arcgisToken}
+                    selectedPolygon={selectedPolygon}
+                    interactive={false}
+                    setOpenSnackbar={setOpenSnackbar}
+                    setSnackbarContent={setSnackbarContent}
+                    sliderRef={sliderRef}
+                    initialDate={new Date(startDate.current.latest_date)}
+                  />
+                </>
               )}
-              <ForecastContainer
-                serverToken={serverToken}
-                map={map}
-                open={open}
-                setOpen={setOpen}
-                location={location}
-                setLocation={setLocation}
-                markerLayer={markerLayer}
-                overlay={overlay}
-                setOverlay={setOverlay}
-                setIsMenuOpen={setIsMenuOpen}
-                temp={temp}
-                setTemp={setTemp}
-                setActiveTooltip={setActiveTooltip}
-                units={units}
-                setUnits={setUnits}
-                date={date}
-                setDate={setDate}
-                isDiscrete={isDiscrete}
-                arcgisToken={arcgisToken}
-                selectedPolygon={selectedPolygon}
-                interactive={false}
-              />
             </Stack>
+
             {!open && (
               <Legend
                 overlay={overlay}

@@ -272,9 +272,8 @@ const Search = ({
                 }
               }}
               onBlur={() => {
-                // Defer blur handling to allow click event on favorites to register
                 setTimeout(() => {
-                  if (!isUsing) {
+                  if (!isUsing && !searchLayout) {
                     setIsFocused(false);
                     setShowFavorites(false);
                   }
@@ -284,6 +283,7 @@ const Search = ({
                 const value = e.target.value;
                 setInput(value);
                 handleInputChange(e);
+
                 if (value.trim() !== "") {
                   setShowFavorites(false);
                 } else {
@@ -291,7 +291,7 @@ const Search = ({
                 }
               }}
             />
-            {isFocused && showFavorites && (
+            {(searchLayout || (isFocused && showFavorites)) && (
               <Sheet
                 color="neutral"
                 variant="solid"
@@ -330,7 +330,7 @@ const Search = ({
                       <ListSubheader sx={{ color: "common.white" }}>
                         Favorites
                       </ListSubheader>
-                      {favorites.length > 0 && (
+                      {Array.isArray(favorites) && favorites.length > 0 && (
                         <Button
                           size="sm"
                           color="neutral"
@@ -351,7 +351,7 @@ const Search = ({
                       )}
                     </Stack>
 
-                    {favorites.length === 0 ? (
+                    {Array.isArray(favorites) && favorites.length === 0 ? (
                       <ListItem>
                         <Typography
                           level="body-sm"
@@ -374,6 +374,7 @@ const Search = ({
                         </Typography>
                       </ListItem>
                     ) : (
+                      Array.isArray(favorites) &&
                       favorites.map((loc, i) => (
                         <div key={i}>
                           <ListItem>

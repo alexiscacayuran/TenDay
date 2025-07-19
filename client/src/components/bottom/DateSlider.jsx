@@ -1,293 +1,128 @@
-import { useRef, useEffect, useCallback, useState } from "react";
+import React, { useMemo, useEffect, useRef } from "react";
+import { format, addDays } from "date-fns";
 import { Box, Sheet, Typography, Stack } from "@mui/joy";
-import { format, addDays, subDays } from "date-fns";
-import debounce from "lodash.debounce";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
+import { Slide } from "@mui/material";
 
-function generateDateRange(startDate, range) {
+export const generateDateRange = (startDate, range) => {
   return Array.from({ length: range }, (_, i) => addDays(startDate, i));
-}
+};
 
-const DateSlider = ({ initialDate, range, date, setDate, open }) => {
-  console.log("initialDate", initialDate);
-  console.log("range", range);
-
-  const [dateRange] = useState(generateDateRange(initialDate, range));
-
-  const scrollRef = useRef(null);
-  const itemWidth = 100;
-  const [selectedIndex, setSelectedIndex] = useState(() => {
-    const savedIndex = localStorage.getItem("dateSliderSelectedIndex");
-    return savedIndex ? parseInt(savedIndex, 10) : 0;
-  });
-  const [isDragging, setIsDragging] = useState(false);
-  const startX = useRef(0);
-  const scrollLeftStart = useRef(0);
-
-  console.dir(scrollLeftStart.current);
+const DateSlider = ({ initialDate, date, setDate, open, sliderRef }) => {
+  const dateRange = useMemo(() => {
+    const after = Array.from({ length: 4 }, () => null); //padding, empty date slides
+    return [...generateDateRange(initialDate, 10), ...after];
+  }, [initialDate]);
 
   useEffect(() => {
-    setDate(dateRange[selectedIndex]);
-  }, [selectedIndex]);
-
-  useEffect(() => {
-    if (!scrollRef.current || !dateRange.length || !date) return;
-
-    const index = dateRange.findIndex(
+    const idx = dateRange.findIndex(
       (d) => d.toDateString() === new Date(date).toDateString()
     );
-
-    if (index !== -1) {
-      setSelectedIndex(index);
-
-      const container = scrollRef.current;
-      const scrollTo = index * itemWidth + 50;
-      // console.log(scrollTo);
-
-      container.scrollTo({
-        left: scrollTo,
-        behavior: "smooth", // makes it scroll smoothly on load
-      });
+    if (idx >= 0 && sliderRef.current) {
+      sliderRef.current.slickGoTo(idx, true);
     }
-  }, [dateRange]);
+  }, []);
 
-  // // ✅ Restore scrollLeft from localStorage on mount
-  // useEffect(() => {
-  //   const container = scrollRef.current;
-  //   if (!container) return;
+  const settings = {
+    focusOnSelect: true,
+    centerMode: true,
+    infinite: false,
+    centerPadding: "0px",
+    slidesToShow: 5,
 
-  //   const savedScrollLeft = localStorage.getItem("dateSliderScrollLeft");
-  //   if (savedScrollLeft !== null) {
-  //     container.scrollLeft = parseInt(savedScrollLeft, 10);
-  //   }
-  // }, []);
+    speed: 500,
+    swipeToSlide: true,
+    afterChange: (current) => {
+      const newDate = dateRange[current];
 
-  // // ✅ Save scrollLeft to localStorage whenever it changes
-  // useEffect(() => {
-  //   const container = scrollRef.current;
-  //   if (!container) return;
-
-  //   const handleScroll = () => {
-  //     localStorage.setItem("dateSliderScrollLeft", container.scrollLeft);
-  //   };
-
-  //   container.addEventListener("scroll", handleScroll);
-  //   return () => container.removeEventListener("scroll", handleScroll);
-  // }, []);
-
-  const updateSelectedIndex = useCallback(
-    debounce(() => {
-      const container = scrollRef.current;
-      if (!container) return;
-
-      const center = container.scrollLeft - 54 + container.clientWidth / 2;
-      const contentCenter = center - container.clientWidth / 2;
-      const index = Math.round(contentCenter / itemWidth);
-
-      if (index !== selectedIndex && dateRange[index]) {
-        setSelectedIndex(index);
-      }
-    }, 100), // Debounce delay in ms
-    [selectedIndex]
-  );
-
-  useEffect(() => {
-    return () => {
-      updateSelectedIndex.cancel();
-    };
-  }, [updateSelectedIndex]);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    container.addEventListener("scroll", updateSelectedIndex);
-    return () => container.removeEventListener("scroll", updateSelectedIndex);
-  }, [selectedIndex]);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const handleMouseDown = (e) => {
-      setIsDragging(true);
-      container.classList.add("dragging");
-      startX.current = e.pageX - container.offsetLeft;
-      scrollLeftStart.current = container.scrollLeft;
-    };
-
-    const handleMouseMove = (e) => {
-      if (!isDragging) return;
-      e.preventDefault();
-      const x = e.pageX - container.offsetLeft;
-      const walk = x - startX.current;
-      container.scrollLeft = scrollLeftStart.current - walk;
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      container.classList.remove("dragging");
-    };
-
-    const handleTouchStart = (e) => {
-      startX.current = e.touches[0].pageX - container.offsetLeft;
-      scrollLeftStart.current = container.scrollLeft;
-    };
-
-    const handleTouchMove = (e) => {
-      const x = e.touches[0].pageX - container.offsetLeft;
-      const walk = x - startX.current;
-      container.scrollLeft = scrollLeftStart.current - walk;
-    };
-
-    container.addEventListener("mousedown", handleMouseDown);
-    container.addEventListener("mousemove", handleMouseMove);
-    container.addEventListener("mouseup", handleMouseUp);
-    container.addEventListener("mouseleave", handleMouseUp);
-
-    container.addEventListener("touchstart", handleTouchStart, {
-      passive: true,
-    });
-    container.addEventListener("touchmove", handleTouchMove, { passive: true });
-    container.addEventListener("touchend", handleMouseUp);
-
-    return () => {
-      container.removeEventListener("mousedown", handleMouseDown);
-      container.removeEventListener("mousemove", handleMouseMove);
-      container.removeEventListener("mouseup", handleMouseUp);
-      container.removeEventListener("mouseleave", handleMouseUp);
-
-      container.removeEventListener("touchstart", handleTouchStart);
-      container.removeEventListener("touchmove", handleTouchMove);
-      container.removeEventListener("touchend", handleMouseUp);
-    };
-  }, [isDragging]);
+      if (newDate) setDate(newDate);
+    },
+  };
 
   return (
-    <Box sx={{ position: "relative", width: "100%" }}>
-      {/* 🔻 Triangle Thumb Marker */}
-      <Box
+    <Slide
+      direction="up"
+      in={!open}
+      mountOnEnter
+      // unmountOnExit
+      timeout={{ enter: 200, exit: 200 }}
+    >
+      <Sheet
+        variant="solid"
         sx={{
+          height: "75px", // 🧱 Set consistent height
+          overflow: "hidden", // 👈 Prevent pushing layout
           position: "absolute",
-          top: 15,
-          left: "50%",
-          transform: "translateX(-50%)",
-          borderRadius: "lg",
-          zIndex: 10,
-          pointerEvents: "none",
+          bottom: 0,
+          width: "100%",
         }}
       >
-        <FontAwesomeIcon
-          icon={faCaretDown}
-          style={{
-            fontSize: "2rem",
-            color: "#3e7bff",
-            WebkitFilter: "drop-shadow(1px 1px 2px rgba(21, 21, 21, 0.2)",
-            filter: "drop-shadow(1px 1px 2px rgba(21, 21, 21, 0.2)",
-          }}
-        />
-      </Box>
-
-      {/* 📆 Scrollable/Draggable Track */}
-      <Box
-        ref={scrollRef}
-        sx={{
-          overflowX: "scroll",
-          overflowY: "hidden",
-          whiteSpace: "nowrap",
-          display: "flex",
-          pt: 4,
-          cursor: isDragging ? "grabbing" : "grab",
-          scrollbarWidth: "none",
-          "&::-webkit-scrollbar": {
-            display: "none",
-          },
-          userSelect: "none",
-        }}
-      >
-        {/* 🔲 Left Buffer */}
-        <Sheet
-          variant="solid"
+        <Box
           sx={{
-            width: "50%",
-            height: "55px",
-            flex: "0 0 auto",
+            position: "absolute",
+            top: -14,
+            left: "50%",
+            transform: "translateX(-50%)",
+            borderRadius: "lg",
+            zIndex: 10,
+            pointerEvents: "none",
           }}
-        />
-
-        {/* 🗓️ Dates */}
-        {dateRange.map((date, index) => {
-          const isSelected = index === selectedIndex;
-          return (
-            <Box
-              key={index}
-              sx={{
-                backgroundColor: "neutral.500",
-                boxSizing: "border-box",
-                height: "55px",
-                p: 0.1,
-              }}
-            >
-              <Sheet
-                variant="solid"
-                key={index}
-                sx={{
-                  my: 0.5,
-                  width: "100px",
-                  height: "83%",
-                  flex: "0 0 auto",
-                  backgroundColor: isSelected ? "neutral.700" : "neutral.500",
-                  borderRadius: isSelected ? "20px" : "0",
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+        >
+          <FontAwesomeIcon
+            icon={faCaretDown}
+            style={{
+              fontSize: "2rem",
+              color: "#3e7bff",
+              WebkitFilter: "drop-shadow(1px 1px 2px rgba(21, 21, 21, 0.2)",
+              filter: "drop-shadow(1px 1px 2px rgba(21, 21, 21, 0.2)",
+            }}
+          />
+        </Box>
+        <Slider
+          {...settings}
+          ref={(slider) => {
+            sliderRef.current = slider;
+          }}
+        >
+          {dateRange.map((d, i) => {
+            if (!d) return <Box key={i} />; // empty pad slide
+            const isSelected =
+              format(d, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
+            return (
+              <Sheet variant="solid" key={i} sx={{ py: 1 }}>
                 <Stack
-                  spacing={-0.8}
-                  direction="column"
+                  alignItems="center"
+                  spacing={-0.5}
                   sx={{
-                    alignItems: "center",
-                    justifyContent: "center",
+                    backgroundColor: isSelected ? "neutral.700" : "none",
+                    borderRadius: "20px",
                   }}
                 >
                   <Typography
-                    level="body-md"
-                    sx={{
-                      color: "common.white",
-                      fontWeight: isSelected ? "bold" : "normal",
-                    }}
+                    level="title-lg"
+                    fontWeight={isSelected ? "bolder" : "normal"}
+                    color="common.white"
                   >
-                    {format(date, "EEE")}
+                    {format(d, "EEE")}
                   </Typography>
                   <Typography
-                    level="body-sm"
-                    sx={{
-                      color: "common.white",
-                      fontWeight: isSelected ? "bold" : "normal",
-                    }}
+                    level="body-xs"
+                    fontWeight={isSelected ? "bold" : "normal"}
+                    color="common.white"
                   >
-                    {format(date, "MMM d")}
+                    {format(d, "MMM d")}
                   </Typography>
                 </Stack>
               </Sheet>
-            </Box>
-          );
-        })}
-
-        {/* 🔲 Right Buffer */}
-        <Sheet
-          variant="solid"
-          sx={{
-            width: "50%",
-            height: "55px",
-            flex: "0 0 auto",
-          }}
-        />
-      </Box>
-    </Box>
+            );
+          })}
+        </Slider>
+      </Sheet>
+    </Slide>
   );
 };
 

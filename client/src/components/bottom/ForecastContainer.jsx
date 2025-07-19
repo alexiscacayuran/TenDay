@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -57,6 +57,8 @@ import FavoriteButton from "./FavoriteButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 
+import { generateDateRange } from "./DateSlider";
+
 let isInitial = true;
 
 const ForecastContainer = ({
@@ -82,6 +84,8 @@ const ForecastContainer = ({
   selectedPolygon,
   setOpenSnackbar,
   setSnackbarContent,
+  initialDate,
+  sliderRef,
 }) => {
   const [forecast, setForecast] = useState(null);
   const [activeColumn, setActiveColumn] = useState(null);
@@ -89,6 +93,11 @@ const ForecastContainer = ({
   const [hoveredColumn, setHoveredColumn] = useState(null);
 
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
+
+  const dateRange = useMemo(() => {
+    const after = Array.from({ length: 4 }, () => null); //padding, empty date slides
+    return [...generateDateRange(initialDate, 10), ...after];
+  }, [initialDate]);
 
   // Handles column highlight
   const handleMouseEnter = (index) => {
@@ -532,7 +541,13 @@ const ForecastContainer = ({
   };
 
   return (
-    <Slide direction="up" in={open} mountOnEnter unmountOnExit>
+    <Slide
+      direction="up"
+      in={open}
+      mountOnEnter
+      unmountOnExit
+      timeout={{ enter: 200, exit: 200 }}
+    >
       <Sheet
         className={!isMobile ? "glass" : ""}
         sx={{
@@ -614,6 +629,14 @@ const ForecastContainer = ({
                             onClick={() => {
                               setActiveColumn(index + 3); // Adjust for first 2 columns
                               setDate(data.date); // ✅ Set the date using setDate
+                              const idx = dateRange.findIndex(
+                                (d) =>
+                                  d.toDateString() ===
+                                  new Date(data.date).toDateString()
+                              );
+                              if (idx >= 0 && sliderRef.current) {
+                                sliderRef.current.slickGoTo(idx, true);
+                              }
                             }}
                           >
                             {/* {todayColumn === index + 3 ? (
@@ -665,6 +688,14 @@ const ForecastContainer = ({
                               if (isClickValid.current) {
                                 setActiveColumn(index + 3);
                                 setDate(data.date);
+                                const idx = dateRange.findIndex(
+                                  (d) =>
+                                    d.toDateString() ===
+                                    new Date(data.date).toDateString()
+                                );
+                                if (idx >= 0 && sliderRef.current) {
+                                  sliderRef.current.slickGoTo(idx, true);
+                                }
                               }
                             }}
                           >
@@ -689,6 +720,8 @@ const ForecastContainer = ({
                         hoveredColumn={hoveredColumn}
                         isDiscrete={isDiscrete}
                         isClickValid={isClickValid}
+                        sliderRef={sliderRef}
+                        initialDate={initialDate}
                       />
                       <tr>
                         <th>
@@ -718,6 +751,14 @@ const ForecastContainer = ({
                               if (isClickValid.current) {
                                 setActiveColumn(index + 3);
                                 setDate(data.date);
+                                const idx = dateRange.findIndex(
+                                  (d) =>
+                                    d.toDateString() ===
+                                    new Date(data.date).toDateString()
+                                );
+                                if (idx >= 0 && sliderRef.current) {
+                                  sliderRef.current.slickGoTo(idx, true);
+                                }
                               }
                             }}
                             style={{ minHeight: "28px" }}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import chroma from "chroma-js";
 import { Typography, Link } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,6 +9,7 @@ import ToggleUnits from "../utils/ToggleUnits";
 import ForecastValue from "../utils/ForecastValue";
 import { useTheme } from "@mui/joy/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { generateDateRange } from "./DateSlider";
 
 // Weather parameters configuration
 const weatherParams = [
@@ -62,6 +63,8 @@ const ForecastTable = ({
   hoveredColumn,
   isDiscrete,
   isClickValid,
+  sliderRef,
+  initialDate,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -69,6 +72,11 @@ const ForecastTable = ({
   const [localOverlay, setLocalOverlay] = useState(overlay);
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_mean"); // Stores last selected temperature overlay
   const [hovered, setHovered] = useState(false);
+
+  const dateRange = useMemo(() => {
+    const after = Array.from({ length: 4 }, () => null); //padding, empty date slides
+    return [...generateDateRange(initialDate, 10), ...after];
+  }, [initialDate]);
 
   useEffect(() => {
     // If the selected overlay is a temperature type, update lastTempOverlay
@@ -227,6 +235,14 @@ const ForecastTable = ({
                       if (isClickValid.current) {
                         setActiveColumn(index + 3);
                         setDate(data.date);
+                        const idx = dateRange.findIndex(
+                          (d) =>
+                            d.toDateString() ===
+                            new Date(data.date).toDateString()
+                        );
+                        if (idx >= 0 && sliderRef.current) {
+                          sliderRef.current.slickGoTo(idx, true);
+                        }
                       }
                     }}
                   >

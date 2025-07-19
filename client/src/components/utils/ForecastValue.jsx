@@ -5,7 +5,7 @@ export const convertValue = (overlay, units, value) => {
   switch (true) {
     case overlay.includes("temperature"):
       return units.temperature === "°F"
-        ? parseFloat(convert(value).from("C").to("F").toFixed(1))
+        ? parseFloat(convert(value).from("C").to("F").toFixed(0))
         : parseFloat(convert(value).from("C").to("C").toFixed(1));
     case overlay.includes("rainfall"):
       return units.rainfall === "in/day"
@@ -13,9 +13,9 @@ export const convertValue = (overlay, units, value) => {
         : parseFloat(convert(value).from("mm").to("mm").toFixed(1));
     case overlay.includes("wind"):
       if (units.windSpeed === "km/h") {
-        return parseFloat(convert(value).from("m/s").to("km/h").toFixed(1));
+        return parseFloat(convert(value).from("m/s").to("km/h").toFixed(0));
       } else if (units.windSpeed === "kt") {
-        return parseFloat(convert(value).from("m/s").to("knot").toFixed(1));
+        return parseFloat(convert(value).from("m/s").to("knot").toFixed(0));
       } else return parseFloat(convert(value).from("m/s").to("m/s").toFixed(1));
     default:
       return value;
@@ -27,7 +27,7 @@ const ForecastValue = ({ overlay, units, value, context }) => {
 
   // If legend context, round down to whole number
   if (context === "legend") {
-    return <>{Math.floor(converted)}</>;
+    return <>{converted}</>;
   }
 
   // If table context and temperature, append degree symbol
