@@ -363,7 +363,12 @@ const PopupContent = React.memo(
               size="sm"
               color="primary"
               aria-label="See Forecast"
-              sx={{ ml: "auto", alignSelf: "center", fontWeight: 600 }}
+              sx={{
+                ml: "auto",
+                alignSelf: "center",
+                fontWeight: 600,
+                borderRadius: "lg",
+              }}
               endDecorator={<ExpandMoreIcon sx={{ fontSize: "1.5rem" }} />}
               onClick={(e) => {
                 e.stopPropagation(); // Prevent map interaction when button is clicked

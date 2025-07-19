@@ -16,13 +16,13 @@ function generateDateRange(startDate, range) {
   return Array.from({ length: range }, (_, i) => addDays(startDate, i));
 }
 
-const DateNavigation = ({ initialDate, range, setDate, date, open }) => {
+const DateNavigation = ({ initialDate, setDate, date, open }) => {
   const theme = useTheme();
   const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   const [localDate, setlocalDate] = useState(new Date());
-  const [dateRange] = useState(generateDateRange(initialDate, range));
+  const [dateRange] = useState(generateDateRange(initialDate, 10));
 
   useEffect(() => {
     setlocalDate(new Date(date));
