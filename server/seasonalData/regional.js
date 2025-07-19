@@ -3,6 +3,7 @@ import { pool, redisClient } from "../db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
 import dayjs from "dayjs";
+import Fuse from "fuse.js";
 
 const router = express.Router();
 
@@ -64,25 +65,60 @@ router.get("/region", authenticateToken(), async (req, res) => {
     });
   }
 
-  const normalizedRegion = region?.toLowerCase();
-  const regionName = regionMap[normalizedRegion];
+  let regionName = null;
 
-  if (region && !regionName) {
-    return res.status(400).json({
-      metadata: {
-        api: "Regional Forecast",
-        forecast: "Seasonal Forecast"
-      },
-      data: [],
-      misc: {
-        version: "1.0",
-        timestamp,
-        method: "GET",
-        status_code: 404,
-        description: "Bad Request: Invalid region parameter"
-      }
-    });
-  }
+// 1️⃣ Try exact match by r_psgc
+if (region?.match(/^\d{9,10}$/)) {
+  const resPsgc = await pool.query(
+    `SELECT DISTINCT region FROM province WHERE r_psgc = $1 LIMIT 1`,
+    [region]
+  );
+  regionName = resPsgc.rows[0]?.region;
+}
+
+// 2️⃣ Try regionMap shortcut (ivb, ncr, etc.)
+if (!regionName && region) {
+  regionName = regionMap[region.toLowerCase()] ?? null;
+}
+
+// 3️⃣ Try fuzzy match on actual region names
+if (!regionName && region) {
+  const regionQuery = await pool.query(`
+    SELECT DISTINCT region FROM province WHERE id < 84 AND region IS NOT NULL
+  `);
+  const allRegions = regionQuery.rows.map(r => r.region);
+
+  const fuse = new Fuse(allRegions, {
+    location: 1,
+    threshold: 0.4,
+    distance: 30,
+    isCaseSensitive: false,
+    includeScore: true,
+    ignoreDiacritics: true,
+  });
+
+  const fuzzyResult = fuse.search(region);
+  regionName = fuzzyResult?.[0]?.item || null;
+}
+
+// 4️⃣ Still not found? Return error
+if (region && !regionName) {
+  return res.status(400).json({
+    metadata: {
+      api: "Regional Forecast",
+      forecast: "Seasonal Forecast"
+    },
+    data: [],
+    misc: {
+      version: "1.0",
+      timestamp,
+      method: "GET",
+      status_code: 404,
+      description: "Bad Request: Invalid region parameter"
+    }
+  });
+}
+
 
   // Cache key based on params
   const cacheKey = `forecast:region:${region || "all"}:value:${value}:page:${page}:limit:${per_page}`;

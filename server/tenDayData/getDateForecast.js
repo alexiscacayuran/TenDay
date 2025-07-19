@@ -28,19 +28,6 @@ const regionMap = {
   "nir": "Negros Island Region (Region XVIII)"
 };
 
-function normalizeName(name = "") {
-  return name
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove diacritics like ñ
-    .replace(/ñ/g, "n")
-    .replace(/^city of\s+/i, "")
-    .replace(/^city\s+/i, "")
-    .replace(/\s+city$/i, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-
 router.get("/tenday/date", authenticateToken(4), async (req, res) => {
   const { region, province, municity, date, page } = req.query;
   const isPageNone = page === "none";
@@ -79,62 +66,61 @@ router.get("/tenday/date", authenticateToken(4), async (req, res) => {
       });
     }
 
-    const refQuery = await pool.query("SELECT municity, province, region FROM municities");
-    const refRows = refQuery.rows.map(row => ({
-      ...row,
-      normalized_municity: normalizeName(row.municity),
-      normalized_province: normalizeName(row.province),
-      normalized_region: normalizeName(row.region)
-    }));
-    
+    const refRows = (await pool.query(`
+      SELECT DISTINCT 
+        municity, province, region, 
+        m_old AS "muniOld", p_old AS "provOld"
+      FROM municities
+    `)).rows;    
+  
     const fuseOptions = {
+      location: 8,
+      threshold: 0.4,
+      distance: 30,
       isCaseSensitive: false,
-      includeScore: false,
-      threshold: 0.6,
-      distance: 100,
-      minMatchCharLength: 1,
-      shouldSort: true,
-      keys: ["normalized_municity", "normalized_province", "normalized_region"]
-    };
-    
-    const fuse = new Fuse(refRows, fuseOptions);    
-
-    let where = [`d.date = $1`];
-    let values = [date];
-    let i = 2;
-
-    let matched;
-
+      includeScore: true,
+      ignoreDiacritics: true,
+      keys: ["municity", "province", "muniOld", "provOld"]
+    };    
+  
+    const fuse = new Fuse(refRows, fuseOptions);
+  
+    const values = [];
+    const filters = [];
+  
     if (municity) {
-      const norm = normalizeName(municity);
-      const searchResults = fuse.search(normalizeName(municity));
-      const bestMatch = searchResults.length ? searchResults[0].item.municity : municity;
-      
-      where.push(`(
-        REGEXP_REPLACE(LOWER(m.municity), ' city', '', 'gi') ILIKE '%' || REGEXP_REPLACE(LOWER($${i}), ' city', '', 'gi') || '%'
-        OR m.m_psgc ILIKE '%' || $${i} || '%'
+      const match = fuse.search(municity).at(0);
+      const bestMatch = match?.item?.municity ?? municity;
+  
+      values.push(bestMatch);
+      filters.push(`(
+        REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($${values.length}, ' CITY', '', 'gi') || '%' OR
+        m.m_psgc ILIKE '%' || $${values.length} || '%'
       )`);
-      values.push(bestMatch);      
-      i++;
     }
-    
+  
     if (province) {
-      const norm = normalizeName(province);
-      matched = fuse.search(norm).find(x => normalizeName(x.item.province) === norm);
-      const bestMatch = matched?.item?.province ?? province;
-      where.push(`(m.province = $${i} OR m.p_psgc = $${i})`);
+      const match = fuse.search(province).at(0);
+      const bestMatch = match?.item?.province ?? province;
+  
       values.push(bestMatch);
-      i++;
+      filters.push(`(
+        m.province ILIKE '%' || $${values.length} || '%' OR
+        m.p_psgc ILIKE '%' || $${values.length} || '%'
+      )`);
     }
-    
+  
     if (region) {
-      const regKey = normalizeName(region);
-      const mapped = regionMap[regKey] || region;
-      matched = fuse.search(mapped).find(x => normalizeName(x.item.region) === normalizeName(mapped));
-      const bestMatch = matched?.item?.region ?? mapped;
-      where.push(`(m.region = $${i} OR m.r_psgc = $${i})`);
+      const inputKey = region.toLowerCase().replace(/\s/g, '');
+      const regionInput = regionMap[inputKey] ?? region;
+      const match = fuse.search(regionInput).at(0);
+      const bestMatch = match?.item?.region ?? regionInput;
+  
       values.push(bestMatch);
-      i++;
+      filters.push(`(
+        m.region ILIKE '%' || $${values.length} || '%' OR
+        m.r_psgc ILIKE '%' || $${values.length} || '%'
+      )`);
     }
     
 
