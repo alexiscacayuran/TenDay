@@ -171,6 +171,12 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
           version: "1.0",
           timestamp,
           method: "GET",
+          ...(page !== "none" && {
+            current_page: parseInt(page) || 1,
+            per_page: parseInt(limit),
+            total_count: 0,
+            total_page: 1,
+          }),
           status_code: 400,
           description: "Bad Request: Provided municipality, province, or region not found"
         }
