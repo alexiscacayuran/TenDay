@@ -110,22 +110,29 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
         province = mPsgcRes.rows[0].province;
         municity = mPsgcRes.rows[0].municity;
       } else {
-        const results = fuse.search({
-          $and: [
-            {
-              $or: [
-                { municity: municity },
-                { muniOld: municity }
-              ]
-            },
-            {
-              $or: [
-                { province: province },
-                { provOld: province }
-              ]
-            }
-          ]
-        });
+        let fuseQuery = {
+  $or: [
+    { municity },
+    { muniOld: municity }
+  ]
+};
+
+if (province) {
+  fuseQuery = {
+    $and: [
+      fuseQuery,
+      {
+        $or: [
+          { province },
+          { provOld: province }
+        ]
+      }
+    ]
+  };
+}
+
+const results = fuse.search(fuseQuery);
+
         
         if (results.length > 0) {
           municity = results[0].item.municity;
@@ -219,18 +226,32 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
     const result = await pool.query(query, values);
 
     if (result.rowCount === 0) {
-      return res.status(municity || province || region ? 400 : 404).json({
+      const isBadRequest = municity || province || region;
+      const statusCode = isBadRequest ? 400 : 404;
+    
+      const misc = {
+        ...defaultMisc,
+        ...(current_page !== null && {
+          current_page,
+          per_page,
+          total_count: 0,
+          total_page: 1,
+        }),
+      };
+      
+      misc.status_code = statusCode;
+      misc.description = isBadRequest
+        ? "Bad Request: Provided municipality, province, or region not found"
+        : "No content: No current forecast data found";
+      
+    
+      return res.status(statusCode).json({
         metadata: { request_no, ...baseMetadata },
         data: [],
-        misc: {
-          ...defaultMisc,
-          status_code: municity || province || region ? 400 : 404,
-          description: municity || province || region
-            ? "Bad Request: Provided municipality, province, or region not found"
-            : "No content: No current forecast data found",
-        },
+        misc,
       });
     }
+    
 
     const total_count = result.rows[0]?.total_count || 0;
     const total_page = current_page !== null ? Math.ceil(total_count / per_page) : 1;
@@ -270,19 +291,23 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       forecastData.push(forecastEntry);
     }
 
-    const { status_code, description, ...rest } = defaultMisc;
-
     const misc = {
-      ...rest, 
+      version: defaultMisc.version,
+      timestamp: defaultMisc.timestamp,
+      method: defaultMisc.method,
       ...(current_page !== null && {
         current_page,
         per_page,
-        total_count,
-        total_page,
+        total_count: 0,
+        total_page: 1,
       }),
-      status_code,
-      description
+      status_code: statusCode,
+      description: isBadRequest
+        ? "Bad Request: Provided municipality, province, or region not found"
+        : "No content: No current forecast data found",
     };
+    
+    
 
         const firstRow = result.rows[0];
 
