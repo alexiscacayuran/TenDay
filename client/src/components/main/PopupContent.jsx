@@ -592,7 +592,7 @@ const PopupContent = React.memo(
                               <DirIcon sx={{ width: "14px", height: "auto" }} />
                               &nbsp;
                               <Typography
-                                level="body-xs"
+                                level="body-lg"
                                 sx={{ display: "inline", color: "gray" }}
                               >
                                 {direction}
