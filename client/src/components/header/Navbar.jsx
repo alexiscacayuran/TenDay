@@ -47,8 +47,6 @@ const Navbar = ({
   setScale,
   setIsLocationReady,
   selectedPolygon,
-  setOpenSnackbar,
-  setSnackbarContent,
 }) => {
   const theme = useTheme();
   const isBelowLaptop = useMediaQuery((theme) => theme.breakpoints.down("lg"));
@@ -90,7 +88,7 @@ const Navbar = ({
               display: "flex",
               alignItems: "center",
               pointerEvents: "auto",
-              width: !isBelowLaptop ? 400 : "auto",
+              width: !isBelowLaptop ? 280 : "auto",
               flexShrink: 5,
             }}
           >

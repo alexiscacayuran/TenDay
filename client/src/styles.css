@@ -78,6 +78,13 @@ html,
   text-decoration-style: dotted !important;
 }
 
+@media (max-width: 768px) {
+  .forecast-units {
+    color: #32383e !important;
+    text-decoration-color: #32383e !important;
+  }
+}
+
 .leaflet-control-attribution {
   color: white !important;
   background: none !important;
@@ -121,6 +128,12 @@ html,
   width: 350px !important;
 }
 
+/* @media (max-width: 768px) {
+  .leaflet-popup-content {
+    width: 300px !important;
+  }
+} */
+
 .leaflet-popup-content-wrapper {
   background-color: transparent !important;
   box-shadow: none !important;
@@ -129,7 +142,7 @@ html,
 .leaflet-popup-content,
 .leaflet-popup-content p {
   margin: 0 !important;
-  padding-right: 25px !important;
+  padding: 0 !important;
 }
 
 .leaflet-popup-tip-container {

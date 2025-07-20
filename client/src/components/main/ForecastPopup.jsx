@@ -11,7 +11,6 @@ import axios from "axios";
 import "leaflet/dist/leaflet.css";
 // import "../styles.css";
 import PopupContent from "./PopupContent";
-import { useTheme } from "@mui/joy/styles";
 import { useMediaQuery } from "@mui/material";
 
 const ForecastPopup = ({
@@ -30,7 +29,6 @@ const ForecastPopup = ({
   const [forecast, setForecast] = useState({});
   const [loading, setLoading] = useState(true);
   const [forecastRetrieval, setForecastRetrieval] = useState(false);
-  const theme = useTheme();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   useEffect(() => {
@@ -122,7 +120,7 @@ const ForecastPopup = ({
     >
       <Popup
         offset={[0, -30]}
-        minWidth="320"
+        minWidth={320}
         onClose={handlePopupClose}
         closeButton={false}
         autoPanPaddingTopLeft={!isMobile ? [200, 80] : [0, 0]}
