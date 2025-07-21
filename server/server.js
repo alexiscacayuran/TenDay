@@ -50,6 +50,11 @@ import {
   streamSeasonalFile,
 } from "./retrieveFile/seasonal.js";
 
+import {
+  retrieveCeramFiles,
+  streamCeramFile,
+} from "./retrieveFile/ceram.js";
+
 //import { processWindFiles } from "./tenDayData/uploadWind.js";
 import { uploadForecastWind } from "./tenDayData/uploadWind.js";
 
@@ -488,6 +493,83 @@ app.get("/api/v1/file/seasonal", async (req, res) => {
     console.error("❌ Error:", error);
     if (!res.headersSent) {
       res.status(500).send(`Internal Server Error: ${error.message}`);
+    }
+  }
+});
+
+app.get("/api/v1/file/ceram", async (req, res) => {
+  const { token, climate_indicator, indicator_code, percentile, ssp } = req.query;
+  const timestamp = new Date().toLocaleString("en-PH");
+
+  if (!token || !climate_indicator) {
+    return res.status(400).send("Missing required parameters: token or climate_indicator.");
+  }
+
+  try {
+    // 🔒 Validate token
+    const tokenQuery = `
+      SELECT id, organization, status, expires_at, api_ids
+      FROM api_tokens
+      WHERE token = $1
+      LIMIT 1
+    `;
+    const result = await pool.query(tokenQuery, [token]);
+
+    if (result.rows.length === 0) {
+      return res.status(403).send("Invalid token.");
+    }
+
+    const { status, expires_at, api_ids } = result.rows[0];
+
+    if (status !== 1) {
+      return res.status(403).send("Token not activated.");
+    }
+
+    if (expires_at && new Date(expires_at) < new Date()) {
+      return res.status(403).send("Token expired.");
+    }
+
+    if (!api_ids.includes(6)) { // Suppose 6 = CERAM access
+      return res.status(403).send("Unauthorized to access this API.");
+    }
+
+    const resultFiles = await retrieveCeramFiles(
+      climate_indicator,
+      indicator_code,
+      percentile,
+      ssp
+    );
+
+    if (!resultFiles || resultFiles.length === 0) {
+      return res.status(404).send("No files found for the given parameters.");
+    }
+
+    // Log request
+    const request_no = await logApiRequest(req, 6);
+    console.log(`📘 CERAM Logged request #${request_no}`);
+
+    if (resultFiles.length === 1) {
+      return res.redirect(resultFiles[0].url);
+    }
+
+    const zipFilename = `CERAM_${climate_indicator}_${timestamp.replace(/[^\d]/g, "")}.zip`;
+
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="${zipFilename}"`);
+
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    for (const f of resultFiles) {
+      const stream = await streamCeramFile(f.key);
+      archive.append(stream, { name: f.file });
+    }
+
+    archive.finalize();
+  } catch (error) {
+    console.error("❌ CERAM Error:", error);
+    if (!res.headersSent) {
+      return res.status(500).send("Internal Server Error.");
     }
   }
 });
