@@ -128,11 +128,11 @@ html,
   width: 350px !important;
 }
 
-/* @media (max-width: 768px) {
+@media (max-width: 768px) {
   .leaflet-popup-content {
-    width: 300px !important;
+    width: 280px !important;
   }
-} */
+}
 
 .leaflet-popup-content-wrapper {
   background-color: transparent !important;
@@ -332,3 +332,8 @@ html,
 .today-chip {
   color: "#32383E" !important;
 }
+
+/* .slick-slider,
+.slick-slide {
+  position: absolute !important;
+} */

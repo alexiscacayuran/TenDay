@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { format, addDays } from "date-fns";
 import { Box, Sheet, Typography, Stack } from "@mui/joy";
 import Slider from "react-slick";
@@ -16,16 +16,26 @@ const DateSlider = ({ initialDate, date, setDate, open, sliderRef }) => {
   const dateRange = useMemo(() => {
     const after = Array.from({ length: 4 }, () => null); //padding, empty date slides
     return [...generateDateRange(initialDate, 10), ...after];
-  }, [initialDate]);
+  }, []);
+
+  const [isSliderReady, setIsSliderReady] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsSliderReady(true);
+    }, 500); // can be 50ms if still glitchy
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     const idx = dateRange.findIndex(
       (d) => d.toDateString() === new Date(date).toDateString()
     );
-    if (idx >= 0 && sliderRef.current) {
+
+    if (idx >= 0 && isSliderReady) {
       sliderRef.current.slickGoTo(idx, true);
     }
-  }, []);
+  }, [isSliderReady]);
 
   const settings = {
     focusOnSelect: true,
@@ -38,7 +48,6 @@ const DateSlider = ({ initialDate, date, setDate, open, sliderRef }) => {
     swipeToSlide: true,
     afterChange: (current) => {
       const newDate = dateRange[current];
-
       if (newDate) setDate(newDate);
     },
   };
@@ -54,8 +63,8 @@ const DateSlider = ({ initialDate, date, setDate, open, sliderRef }) => {
       <Sheet
         variant="solid"
         sx={{
-          height: "75px", // 🧱 Set consistent height
-          overflow: "hidden", // 👈 Prevent pushing layout
+          height: "75px",
+          overflow: "hidden",
           position: "absolute",
           bottom: 0,
           width: "100%",
@@ -82,45 +91,48 @@ const DateSlider = ({ initialDate, date, setDate, open, sliderRef }) => {
             }}
           />
         </Box>
-        <Slider
-          {...settings}
-          ref={(slider) => {
-            sliderRef.current = slider;
-          }}
-        >
-          {dateRange.map((d, i) => {
-            if (!d) return <Box key={i} />; // empty pad slide
-            const isSelected =
-              format(d, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
-            return (
-              <Sheet variant="solid" key={i} sx={{ py: 1 }}>
-                <Stack
-                  alignItems="center"
-                  spacing={-0.5}
-                  sx={{
-                    backgroundColor: isSelected ? "neutral.700" : "none",
-                    borderRadius: "20px",
-                  }}
-                >
-                  <Typography
-                    level="title-lg"
-                    fontWeight={isSelected ? "bolder" : "normal"}
-                    color="common.white"
+
+        {isSliderReady && (
+          <Slider
+            {...settings}
+            ref={(slider) => {
+              sliderRef.current = slider;
+            }}
+          >
+            {dateRange.map((d, i) => {
+              if (!d) return <Box key={i} />;
+              const isSelected =
+                format(d, "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
+              return (
+                <Sheet variant="solid" key={i} sx={{ py: 1 }}>
+                  <Stack
+                    alignItems="center"
+                    spacing={-0.5}
+                    sx={{
+                      backgroundColor: isSelected ? "neutral.700" : "none",
+                      borderRadius: "20px",
+                    }}
                   >
-                    {format(d, "EEE")}
-                  </Typography>
-                  <Typography
-                    level="body-xs"
-                    fontWeight={isSelected ? "bold" : "normal"}
-                    color="common.white"
-                  >
-                    {format(d, "MMM d")}
-                  </Typography>
-                </Stack>
-              </Sheet>
-            );
-          })}
-        </Slider>
+                    <Typography
+                      level="title-lg"
+                      fontWeight={isSelected ? "bolder" : "normal"}
+                      color="common.white"
+                    >
+                      {format(d, "EEE")}
+                    </Typography>
+                    <Typography
+                      level="body-xs"
+                      fontWeight={isSelected ? "bold" : "normal"}
+                      color="common.white"
+                    >
+                      {format(d, "MMM d")}
+                    </Typography>
+                  </Stack>
+                </Sheet>
+              );
+            })}
+          </Slider>
+        )}
       </Sheet>
     </Slide>
   );

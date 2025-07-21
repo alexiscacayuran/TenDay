@@ -234,7 +234,7 @@ const ForecastTable = ({
                     onClick={() => {
                       if (isClickValid.current) {
                         setActiveColumn(index + 3);
-                        setDate(data.date);
+                        if (!isMobile) setDate(data.date);
                         const idx = dateRange.findIndex(
                           (d) =>
                             d.toDateString() ===

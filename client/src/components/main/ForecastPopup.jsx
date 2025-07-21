@@ -120,7 +120,6 @@ const ForecastPopup = ({
     >
       <Popup
         offset={[0, -30]}
-        minWidth={320}
         onClose={handlePopupClose}
         closeButton={false}
         autoPanPaddingTopLeft={!isMobile ? [200, 80] : [0, 0]}
