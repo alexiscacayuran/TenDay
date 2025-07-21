@@ -628,7 +628,7 @@ const ForecastContainer = ({
                             onMouseLeave={handleMouseLeave}
                             onClick={() => {
                               setActiveColumn(index + 3); // Adjust for first 2 columns
-                              setDate(data.date); // ✅ Set the date using setDate
+                              if (!isMobile) setDate(data.date);
                               const idx = dateRange.findIndex(
                                 (d) =>
                                   d.toDateString() ===
@@ -687,7 +687,7 @@ const ForecastContainer = ({
                             onClick={() => {
                               if (isClickValid.current) {
                                 setActiveColumn(index + 3);
-                                setDate(data.date);
+                                if (!isMobile) setDate(data.date);
                                 const idx = dateRange.findIndex(
                                   (d) =>
                                     d.toDateString() ===
@@ -750,7 +750,7 @@ const ForecastContainer = ({
                             onClick={() => {
                               if (isClickValid.current) {
                                 setActiveColumn(index + 3);
-                                setDate(data.date);
+                                if (!isMobile) setDate(data.date);
                                 const idx = dateRange.findIndex(
                                   (d) =>
                                     d.toDateString() ===

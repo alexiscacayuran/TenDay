@@ -159,7 +159,7 @@ const PopupContent = React.memo(
               className="glass"
               variant="plain"
               sx={{
-                minWidth: 365,
+                minWidth: 250,
                 userSelect: "none",
                 p: 1,
                 borderRadius: "40px",
@@ -193,8 +193,8 @@ const PopupContent = React.memo(
                   )}
                 </Box>
 
-                <Stack direction="column">
-                  <Typography level="title-sm" sx={{ fontWeight: "bold" }}>
+                <Stack direction="column" sx={{ mr: 2 }}>
+                  <Typography level="title-md" sx={{ fontWeight: "bold" }}>
                     <Skeleton
                       loading={loading}
                       sx={{ borderRadius: "md", opacity: 0.5 }}
@@ -203,45 +203,13 @@ const PopupContent = React.memo(
                     </Skeleton>
                   </Typography>
 
-                  <Typography level="body-sm" sx={{ color: "primary.500" }}>
-                    <Skeleton
-                      loading={loading}
-                      sx={{ borderRadius: "md", opacity: 0.5 }}
-                    >
-                      {loading ? "Friday, February 14, 2024" : ""}
-                    </Skeleton>
-                  </Typography>
-
                   {!loading && (
-                    <Typography level="body-sm" sx={{ color: "neutral.700" }}>
+                    <Typography level="body-xs" sx={{ color: "neutral.700" }}>
                       No municipal level forecast available
                     </Typography>
                   )}
                 </Stack>
               </CardContent>
-
-              <CardOverflow
-                color="neutral"
-                variant="solid"
-                sx={{
-                  width: 40,
-                  justifyContent: "center",
-                  backgroundColor: "neutral.700",
-                }}
-              >
-                <IconButton
-                  size="sm"
-                  color="inherit"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    markerRef.current.closePopup();
-                    setOpen(true);
-                  }}
-                  sx={{ color: "common.white" }}
-                >
-                  <ExpandMoreIcon sx={{ fontSize: "2rem" }} />
-                </IconButton>
-              </CardOverflow>
             </Card>
           ) : (
             // Original desktop version (unchanged)
@@ -498,7 +466,7 @@ const PopupContent = React.memo(
             className="glass"
             variant="plain"
             sx={{
-              minWidth: 365,
+              minWidth: 280,
               userSelect: "none",
               p: 1,
               borderRadius: "40px",
@@ -526,7 +494,7 @@ const PopupContent = React.memo(
             >
               <Box sx={{ m: 1 }}>{OVERLAY_CONFIG[overlay].icon}</Box>
 
-              <Stack direction="column">
+              <Stack direction="column" sx={{ mr: "auto" }}>
                 <Typography
                   level="title-sm"
                   sx={{
@@ -604,29 +572,20 @@ const PopupContent = React.memo(
                   )}
                 </Typography>
               </Stack>
-            </CardContent>
-            <CardOverflow
-              color="neutral"
-              variant="solid"
-              sx={{
-                width: 40,
-                justifyContent: "center",
-                backgroundColor: "neutral.700",
-              }}
-            >
               <IconButton
+                color="primary"
+                variant="solid"
                 size="sm"
-                color="inherit"
                 onClick={(e) => {
                   e.stopPropagation();
                   markerRef.current.closePopup();
                   setOpen(true);
                 }}
-                sx={{ color: "common.white" }}
+                sx={{ color: "common.white", borderRadius: "20px", m: 1 }}
               >
-                <ExpandMoreIcon sx={{ fontSize: "2rem" }} />
+                <ExpandMoreIcon sx={{ fontSize: "1.5rem" }} />
               </IconButton>
-            </CardOverflow>
+            </CardContent>
           </Card>
         )}
       </>
