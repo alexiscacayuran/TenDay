@@ -14,6 +14,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars } from "@fortawesome/free-solid-svg-icons";
 import Settings from "./Settings";
 import About from "./About";
+import { Link } from "react-router-dom";
 
 const Sidebar = ({ units, setUnits, scale, setScale }) => {
   const [openSidebar, setOpenSidebar] = useState(false);
@@ -98,7 +99,12 @@ const Sidebar = ({ units, setUnits, scale, setScale }) => {
             setOpenSidebar={setOpenSidebar}
           />
           <About openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
-          <ListItemButton>
+          <ListItemButton
+            component="a"
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <Typography
               level="title-lg"
               sx={{
