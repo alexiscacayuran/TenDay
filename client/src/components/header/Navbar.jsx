@@ -26,6 +26,7 @@ import {
   faBars,
 } from "@fortawesome/free-solid-svg-icons";
 import Sidebar from "./Sidebar";
+import { Link } from "react-router-dom";
 
 // Use existing Dexie instance for OverlayCache
 const db = new Dexie("WeatherLayerCache");
@@ -172,7 +173,12 @@ const Navbar = ({
 
             <About />
 
-            <Button color="inherit">
+            <Button 
+            component={Link}
+            to="/api"
+            color="inherit"
+            sx={{ textTransform: "none" }}
+            >
               <Typography
                 level="title-md"
                 sx={{
