@@ -108,7 +108,7 @@ router.post("/generate-token", async (req, res) => {
         </div>
     
         <p style="text-align: center; font-size: 12px; color: #999; margin-top: 30px;">
-          &copy; ${new Date().getFullYear()} API Services | TanawPH
+          &copy; ${new Date().getFullYear()} API Services | TenDay
         </p>
       </div>
     `,    

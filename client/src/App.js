@@ -1,6 +1,6 @@
 import React from "react";
 import "leaflet/dist/leaflet.css";
-import "./styles.css";
+
 import Map from "./components/Map";
 import { joyTheme, muiTheme } from "./theme";
 import {
@@ -9,13 +9,25 @@ import {
 } from "@mui/material/styles";
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+
+// Components
+import API from "./components/api/API";
 
 function App() {
   return (
     <CssVarsProvider theme={joyTheme}>
       <ThemeProvider theme={{ [MATERIAL_THEME_ID]: muiTheme }}>
         <CssBaseline enableColorScheme />
-        <Map />
+
+        <Router>
+          <Routes>
+            <Route path="/" element={<Map />} />
+            <Route path="/API" element={<API />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Router>
+
       </ThemeProvider>
     </CssVarsProvider>
   );
