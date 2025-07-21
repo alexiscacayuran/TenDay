@@ -174,8 +174,10 @@ const Navbar = ({
             <About />
 
             <Button 
-            component={Link}
-            to="/api"
+            component="a"
+            href="/docs"
+            target="_blank"
+            rel="noopener noreferrer"
             color="inherit"
             sx={{ textTransform: "none" }}
             >
