@@ -10,15 +10,15 @@ import {
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import ReactTypingEffect from "react-typing-effect";
+import { Typewriter } from "react-simple-typewriter";
 import logo from "../../assets/logo/logo-rgb-grad.png";
-import easitool from "../../assets/img/easitool2.png"; 
+import easitool from "../../assets/img/easitool2.png";
 
 export default function WelcomeSection() {
   const theme = useTheme();
   const textColor = "#617487";
 
-    const iconStyles = {
+  const iconStyles = {
     width: 50,
     height: 50,
     borderRadius: "50%",
@@ -31,23 +31,22 @@ export default function WelcomeSection() {
     backgroundSize: "200% 200%",
     backgroundPosition: "0% 50%",
     "&:hover": {
-        backgroundPosition: "100% 50%",
-        "& svg": {
+      backgroundPosition: "100% 50%",
+      "& svg": {
         animation: "shakeIcon 0.4s ease",
-        },
+      },
     },
     "& svg": {
-        fontSize: 28,
+      fontSize: 28,
     },
     "@keyframes shakeIcon": {
-        "0%": { transform: "translateX(0)" },
-        "25%": { transform: "translateX(-2px)" },
-        "50%": { transform: "translateX(2px)" },
-        "75%": { transform: "translateX(-2px)" },
-        "100%": { transform: "translateX(0)" },
+      "0%": { transform: "translateX(0)" },
+      "25%": { transform: "translateX(-2px)" },
+      "50%": { transform: "translateX(2px)" },
+      "75%": { transform: "translateX(-2px)" },
+      "100%": { transform: "translateX(0)" },
     },
-    };
-
+  };
 
   return (
     <Grid
@@ -144,17 +143,19 @@ export default function WelcomeSection() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              <ReactTypingEffect
-                text={[
+              <Typewriter
+                words={[
                   "Ten Day Forecast.",
                   "Seasonal Forecast.",
                   "Projections.",
                   "Climate Files.",
                 ]}
-                speed={100}
-                eraseSpeed={50}
-                eraseDelay={1000}
-                typingDelay={300}
+                loop={0}
+                cursor
+                cursorStyle="_"
+                typeSpeed={100}
+                deleteSpeed={50}
+                delaySpeed={1000}
               />
             </Box>
           </Box>
@@ -185,10 +186,10 @@ export default function WelcomeSection() {
 
           <Box mt={4}>
             <Button
-            component="a"
-            href="/api-guide.pdf"
-            download
-            sx={{
+              component="a"
+              href="/api-guide.pdf"
+              download
+              sx={{
                 px: 4,
                 py: 1.5,
                 fontSize: "1rem",
@@ -207,39 +208,40 @@ export default function WelcomeSection() {
                 WebkitTextFillColor: "transparent",
                 transition: "all 0.5s ease",
                 "&::before": {
-                content: '""',
-                position: "absolute",
-                top: 0,
-                left: 0,
-                height: "100%",
-                width: "100%",
-                backgroundImage: "linear-gradient(270deg, #09bdec, #3f79ff, #09bdec)",
-                backgroundSize: "400% 400%",
-                zIndex: -1,
-                transition: "all 0.5s ease",
-                transform: "scaleX(0)",
-                transformOrigin: "left",
-                opacity: 1,
+                  content: '""',
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  height: "100%",
+                  width: "100%",
+                  backgroundImage:
+                    "linear-gradient(270deg, #09bdec, #3f79ff, #09bdec)",
+                  backgroundSize: "400% 400%",
+                  zIndex: -1,
+                  transition: "all 0.5s ease",
+                  transform: "scaleX(0)",
+                  transformOrigin: "left",
+                  opacity: 1,
                 },
                 "&:hover::before": {
-                transform: "scaleX(1)",
-                opacity: 1,
-                animation: "gradientMove 3s linear infinite",
+                  transform: "scaleX(1)",
+                  opacity: 1,
+                  animation: "gradientMove 3s linear infinite",
                 },
                 "&:hover": {
-                WebkitTextFillColor: "#fff",
-                color: "#fff",
-                // Removed this line ↓ to keep the border
-                // border: "2px solid transparent",
+                  WebkitTextFillColor: "#fff",
+                  color: "#fff",
+                  // Removed this line ↓ to keep the border
+                  // border: "2px solid transparent",
                 },
                 "@keyframes gradientMove": {
-                "0%": { backgroundPosition: "0% 50%" },
-                "50%": { backgroundPosition: "100% 50%" },
-                "100%": { backgroundPosition: "0% 50%" },
+                  "0%": { backgroundPosition: "0% 50%" },
+                  "50%": { backgroundPosition: "100% 50%" },
+                  "100%": { backgroundPosition: "0% 50%" },
                 },
-            }}
+              }}
             >
-            Download API Guide
+              Download API Guide
             </Button>
           </Box>
 
@@ -254,7 +256,11 @@ export default function WelcomeSection() {
               Contact Us
             </Typography>
             <Box display="flex" gap={3}>
-              <Box component="a" href="mailto:sscisproject@gmail.com" sx={iconStyles}>
+              <Box
+                component="a"
+                href="mailto:sscisproject@gmail.com"
+                sx={iconStyles}
+              >
                 <EmailIcon />
               </Box>
               <Box component="a" href="tel:+63282840800" sx={iconStyles}>
