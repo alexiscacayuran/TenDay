@@ -1,19 +1,19 @@
-// API.js
 import React, { useState, useEffect, useRef } from "react";
 import { Box, CssBaseline, Typography } from "@mui/material";
 import Navbar from "./Navbar";
 import WelcomeSection from "./Welcome";
 import GettingStarted from "./gettingStarted";
 import Concept from "./Concept";
-import Load from "./Load"; // 👈 Loader component
+import Products from "./Products";
+import Load from "./Load";
 
 const sections = ["Welcome", "Getting Started", "Concepts", "Products"];
 
 export default function APIDocumentation() {
   const [selectedTab, setSelectedTab] = useState(0);
   const [scrolled, setScrolled] = useState(false);
-  const [loading, setLoading] = useState(true);     // 👈 show loader
-  const [fadeOut, setFadeOut] = useState(false);    // 👈 fade animation
+  const [loading, setLoading] = useState(true);   
+  const [fadeOut, setFadeOut] = useState(false); 
 
   const sectionRefs = useRef(sections.map(() => React.createRef()));
 
@@ -36,13 +36,12 @@ export default function APIDocumentation() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
 
-    // 👇 Simulate loading delay then fade out
     const timer = setTimeout(() => {
-      setFadeOut(true); // start fade-out
+      setFadeOut(true); 
       setTimeout(() => {
-        setLoading(false); // remove loader
-        window.dispatchEvent(new Event("resize")); // 👈 Force scrollbar calc
-      }, 500); // match fade transition
+        setLoading(false); 
+        window.dispatchEvent(new Event("resize")); 
+      }, 500);
     }, 1200);
 
     return () => {
@@ -107,16 +106,9 @@ export default function APIDocumentation() {
                 <GettingStarted />
               ) : label === "Concepts" ? (
                 <Concept />
-              ) : (
-                <Box sx={{ p: 4 }}>
-                  <Typography variant="h4" gutterBottom>
-                    {label}
-                  </Typography>
-                  <Typography variant="body1">
-                    This is the {label} section. You can replace this with actual documentation content.
-                  </Typography>
-                </Box>
-              )}
+              ) : label === "Products" ? (
+                <Products /> 
+              ) : null}
             </Box>
           ))}
         </Box>
