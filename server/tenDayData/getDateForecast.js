@@ -71,61 +71,64 @@ router.get("/tenday/date", authenticateToken(4), async (req, res) => {
         municity, province, region, 
         m_old AS "muniOld", p_old AS "provOld"
       FROM municities
-    `)).rows;    
-  
+    `)).rows;
+
     const fuseOptions = {
       location: 8,
-      threshold: 0.4,
+      threshold: 0.6,
       distance: 30,
       isCaseSensitive: false,
       includeScore: true,
       ignoreDiacritics: true,
       keys: ["municity", "province", "muniOld", "provOld"]
-    };    
-  
+    };
+
     const fuse = new Fuse(refRows, fuseOptions);
-  
     const values = [];
     const filters = [];
-  
+
+    // DATE filter
+    values.push(date);
+    filters.push(`TO_CHAR(d.date, 'MM-DD-YYYY') = $${values.length}`);
+
     if (municity) {
       const match = fuse.search(municity).at(0);
       const bestMatch = match?.item?.municity ?? municity;
-  
+
       values.push(bestMatch);
       filters.push(`(
         REGEXP_REPLACE(m.municity, ' CITY', '', 'gi') ILIKE '%' || REGEXP_REPLACE($${values.length}, ' CITY', '', 'gi') || '%' OR
         m.m_psgc ILIKE '%' || $${values.length} || '%'
       )`);
     }
-  
+
     if (province) {
       const match = fuse.search(province).at(0);
       const bestMatch = match?.item?.province ?? province;
-  
+
       values.push(bestMatch);
       filters.push(`(
         m.province ILIKE '%' || $${values.length} || '%' OR
         m.p_psgc ILIKE '%' || $${values.length} || '%'
       )`);
     }
-  
+
     if (region) {
       const inputKey = region.toLowerCase().replace(/\s/g, '');
       const regionInput = regionMap[inputKey] ?? region;
       const match = fuse.search(regionInput).at(0);
       const bestMatch = match?.item?.region ?? regionInput;
-  
+
       values.push(bestMatch);
       filters.push(`(
         m.region ILIKE '%' || $${values.length} || '%' OR
         m.r_psgc ILIKE '%' || $${values.length} || '%'
       )`);
     }
-    
 
     const offset = (pageNum - 1) * 10;
     const limitClause = isPageNone ? "" : `LIMIT 10 OFFSET ${offset}`;
+    const whereClause = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
 
     const query = `
       SELECT m.municity, m.province, m.region, d.date, d.start_date AS issuance_date,
@@ -139,25 +142,35 @@ router.get("/tenday/date", authenticateToken(4), async (req, res) => {
       JOIN temperature t ON d.id = t.date_id
       JOIN humidity h ON d.id = h.date_id
       JOIN wind w ON d.id = w.date_id
-      WHERE ${where.join(" AND ")}
+      ${whereClause}
       ORDER BY m.province, m.municity
       ${limitClause}`;
 
     const result = await pool.query(query, values);
-    const fullCount = await pool.query(`
+
+    const countResult = await pool.query(`
       SELECT COUNT(*) FROM municities m
       JOIN date d ON m.id = d.municity_id
-      WHERE ${where.join(" AND ")}`, values);
+      ${whereClause}`, values);
 
-    if (!result.rows.length) return res.status(404).json({ metadata: { request_no: requestNo, api: "Forecast by Date", forecast: "10-day Forecast" }, data: [], misc: { ...baseFooter, status_code: 404, description: "No content: No current forecast data found" } });
+    if (!result.rows.length) {
+      return res.status(404).json({
+        metadata: { request_no: requestNo, api: "Forecast by Date", forecast: "10-day Forecast" },
+        data: [],
+        misc: { ...baseFooter, status_code: 404, description: "No content: No current forecast data found" }
+      });
+    }
 
     const first = result.rows[0];
+    const formattedDate = new Date(first.date).toLocaleDateString("en-US", { timeZone: "Asia/Manila" });
+    const issuanceDate = new Date(first.issuance_date).toLocaleDateString("en-US", { timeZone: "Asia/Manila" });
+
     const metadata = {
       request_no: requestNo,
       api: "Forecast by Date",
       forecast: "10-day Forecast",
-      issuance_date: first.issuance_date.toLocaleString("en-PH").split(",")[0],
-      date: first.date.toLocaleString("en-PH").split(",")[0]
+      issuance_date: issuanceDate,
+      date: formattedDate
     };
 
     if (municity) {
@@ -213,26 +226,27 @@ router.get("/tenday/date", authenticateToken(4), async (req, res) => {
       }));
     }
 
-    const misc = isPageNone ? {
-      ...baseFooter,
-      status_code: 200,
-      description: "OK"
-    } : {
-      ...baseFooter,
-      total_count: parseInt(fullCount.rows[0].count, 10),
-      total_pages: Math.ceil(fullCount.rows[0].count / 10),
-      status_code: 200,
-      description: "OK"
-    };
+    const misc = isPageNone
+      ? { ...baseFooter, status_code: 200, description: "OK" }
+      : {
+          ...baseFooter,
+          total_count: parseInt(countResult.rows[0].count, 10),
+          total_pages: Math.ceil(countResult.rows[0].count / 10),
+          status_code: 200,
+          description: "OK"
+        };
 
     const response = { metadata, data, misc };
-
     const cacheKey = `dateForecast:${token}:${region}:${province}:${municity}:${date}`;
     await redisClient.set(cacheKey, JSON.stringify(response), "EX", 3600);
     return res.json(response);
   } catch (err) {
     console.error("Error executing query", err.stack);
-    res.status(500).json({ metadata: { api: "Forecast by Date" }, data: {}, misc: { ...baseFooter, status_code: 500, description: "Internal Server Error" } });
+    res.status(500).json({
+      metadata: { api: "Forecast by Date" },
+      data: {},
+      misc: { ...baseFooter, status_code: 500, description: "Internal Server Error" }
+    });
   }
 });
 
