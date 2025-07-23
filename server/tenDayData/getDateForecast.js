@@ -66,6 +66,18 @@ router.get("/tenday/date", authenticateToken(4), async (req, res) => {
       });
     }
 
+    if (!municity && !province && !region) {
+      return res.status(400).json({
+        metadata: { api: "Forecast by Date" },
+        data: {},
+        misc: {
+          ...baseFooter,
+          status_code: 400,
+          description: "Bad Request: You must provide at least one of municity, province, or region."
+        }
+      });
+    }    
+
     const refRows = (await pool.query(`
       SELECT DISTINCT 
         municity, province, region, 

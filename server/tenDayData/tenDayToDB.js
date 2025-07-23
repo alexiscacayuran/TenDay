@@ -44,7 +44,6 @@ const getMunicityMap = async (client) => {
   const municityMap = new Map(
     (await client.query(municityQuery)).rows.map((row) => {
       const key = `${row.municity}-${row.province}`;
-      //console.log("🟩 Available key from DB:", key);
       return [key, row.id];
     })
   );
@@ -60,12 +59,6 @@ const getMunicityMap = async (client) => {
 };
 
 const getExistingDates = async (client, batchDate) => {
-  let cachedDates = await redis.get(`existing_dates_${batchDate}`);
-
-  if (cachedDates) {
-    return new Map(JSON.parse(cachedDates));
-  }
-
   const dateQuery = `SELECT id, date, municity_id FROM date WHERE date = $1`;
   const existingDates = new Map(
     (await client.query(dateQuery, [batchDate])).rows.map((row) => [
@@ -73,14 +66,6 @@ const getExistingDates = async (client, batchDate) => {
       row.id,
     ])
   );
-
-  await redis.set(
-    `existing_dates_${batchDate}`,
-    JSON.stringify([...existingDates]),
-    "EX",
-    86400
-  ); // Cache for 1 day
-
   return existingDates;
 };
 
@@ -96,12 +81,9 @@ export const uploadBatchToDB = async (batch, userID) => {
 
     await logBatchActivity(client, batch, userID);
 
-    // Load cached municities & dates
     const municityMap = await getMunicityMap(client);
     let existingDates = await getExistingDates(client, batch.date);
 
-    // Prepare bulk insert arrays
-    const dateInsertValues = [];
     const weatherInsertValues = {
       cloud: [],
       humidity: [],
@@ -120,19 +102,28 @@ export const uploadBatchToDB = async (batch, userID) => {
         temperature,
         wind,
       } = record;
+
       const key = `${municity.trim().toLowerCase()}-${province
         .trim()
         .toLowerCase()}`;
       const municityId = municityMap.get(key);
 
       if (!municityId) {
-        missedRows.push(record);
+        missedRows.push({ ...record, reason: "Missing municityId" });
         continue;
       }
 
       let dateId = existingDates.get(`${municityId}-${batch.date}`);
+
+      // Validate dateId with DB
+      if (dateId) {
+        const check = await client.query(`SELECT 1 FROM date WHERE id = $1`, [dateId]);
+        if (check.rowCount === 0) {
+          dateId = null;
+        }
+      }
+
       if (!dateId) {
-        // Insert new date and retrieve ID
         const newDateRes = await client.query(
           `INSERT INTO date (date, start_date, municity_id) VALUES ($1, $2, $3) RETURNING id`,
           [batch.date, batch.start_date, municityId]
@@ -140,19 +131,15 @@ export const uploadBatchToDB = async (batch, userID) => {
         dateId = newDateRes.rows[0].id;
         existingDates.set(`${municityId}-${batch.date}`, dateId);
       } else {
-        // Update the start_date for existing records
         await client.query(`UPDATE date SET start_date = $1 WHERE id = $2`, [
           batch.start_date,
           dateId,
         ]);
       }
 
-      // Check if dateId is valid before pushing values
+      // Final safety check
       if (!dateId) {
-        console.error(
-          `Error: Missing dateId for municity '${municity}' in province '${province}'`
-        );
-        missedRows.push(record);
+        missedRows.push({ ...record, reason: "Missing dateId" });
         continue;
       }
 
@@ -163,7 +150,7 @@ export const uploadBatchToDB = async (batch, userID) => {
         `(${formatNumber(humidity.mean, true)}, ${dateId})`
       );
       weatherInsertValues.rainfall.push(
-        `('${rainfall.description}', ${rainfall.total}, ${dateId})`
+        `('${rainfall.description}', ${formatNumber(rainfall.total)}, ${dateId})`
       );
       weatherInsertValues.temp.push(
         `(${formatNumber(temperature.mean)}, ${formatNumber(
@@ -175,25 +162,26 @@ export const uploadBatchToDB = async (batch, userID) => {
       );
     }
 
-    // Function to perform batch inserts and update existing rows when there's a conflict
-    const MAX_BATCH_SIZE = 1000; // Set an optimal batch size
+    // Corrected bulkInsert using sliced values
+    const MAX_BATCH_SIZE = 1000;
     const bulkInsert = async (table, columns, values) => {
       for (let i = 0; i < values.length; i += MAX_BATCH_SIZE) {
-        const batch = values.slice(i, i + MAX_BATCH_SIZE);
+        const batchValues = values.slice(i, i + MAX_BATCH_SIZE);
         const res = await client.query(
           `INSERT INTO ${table} (${columns}) 
-          VALUES ${values.join(", ")} 
-          ON CONFLICT (date_id) 
-          DO UPDATE SET ${columns
-            .split(", ")
-            .map((col, i) => `${col} = EXCLUDED.${col}`)
-            .join(", ")} 
-          RETURNING *`
+           VALUES ${batchValues.join(", ")} 
+           ON CONFLICT (date_id) 
+           DO UPDATE SET ${columns
+             .split(", ")
+             .map((col) => `${col} = EXCLUDED.${col}`)
+             .join(", ")} 
+           RETURNING *`
         );
         successfullyInserted += res.rowCount;
       }
     };
 
+    // Insert to all weather tables
     await bulkInsert(
       "cloud_cover",
       "description, date_id",
@@ -218,10 +206,6 @@ export const uploadBatchToDB = async (batch, userID) => {
 
     await client.query("COMMIT");
     console.log("Batch uploaded successfully.");
-
-    // Clear Redis cache after successful upload
-    //await redis.flushall();
-    //console.log("Redis cache cleared.");
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("Error uploading batch:", error);
