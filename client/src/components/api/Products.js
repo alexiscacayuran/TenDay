@@ -277,62 +277,506 @@ const apiGroups = [
         
         tryItSamples: {
           curl: "curl -X GET 'https://tenday.pagasa.dost.gov.ph/api/v1/tenday/issuance'",
-          javascript: `fetch('https://tenday.pagasa.dost.gov.ph/api/v1/tenday/issuance', {\n  headers: { token: 'YOUR_TOKEN' }\n})\n  .then(res => res.json())\n  .then(data => console.log(data));`,
-          python: `import requests\nurl = 'https://tenday.pagasa.dost.gov.ph/api/v1/tenday/current?municity=Sorsogon%20City&province=Sorsogon'\nheaders = {'token': 'YOUR_TOKEN'}\nresponse = requests.get(url, headers=headers)\nprint(response.json())`,
-        },        
+          javascript: `fetch('https://tenday.pagasa.dost.gov.ph/api/v1/tenday/issuance')\n  .then(res => res.json())\n  .then(data => console.log(data));`,
+          python: `import requests\nurl = 'https://tenday.pagasa.dost.gov.ph/api/v1/tenday/issuance'\nresponse = requests.get(url)\nprint(response.json())`,
+        },            
         
         sampleResponse: {
-          metadata: {
-            request_no: 16893,
-            api: "Current Forecast",
-            forecast: "10-day Forecast",
-            issuance_date: "7/18/2025",
-            region: "Bicol Region (Region V)",
-            province: "Sorsogon",
-            municity: "City of Sorsogon"
-          },
-          data: {
-            date: "7/22/2025",
-            rainfall_desc: "MODERATE RAINS",
-            rainfall_total: "19.83",
-            cloud_cover: "CLOUDY",
-            tmean: "26.69",
-            tmin: "25.47",
-            tmax: "27.91",
-            humidity: "84",
-            wind_speed: "9.86",
-            wind_direction: "SW"
-          },
-          misc: {
-            version: "1.0",
-            timestamp: "7/22/2025 12:48:48 AM",
-            method: "GET",
-            current_page: 1,
-            per_page: 10,
-            total_count: "1",
-            total_page: 1,
-            status_code: 200,
-            description: "OK"
-          }
+              "latest_date": "2025-07-21",
+              "latest_time": "09:46:58 PM",
+              "start_date": "2025-07-21",
+              "end_date": "2025-07-30"
         }        
       },
     ]
   },
   {
     name: "Seasonal Forecast",
-    apis: []
+    apis: [
+      {
+        title: "Provincial Forecast",
+        description: "Provides a seasonal forecast for the next six months for each province.",
+        endpoint: "https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province",
+        params: [
+          [
+            {
+              name: "value",
+              requirement: "required",
+              description: `Specifies the type of data to retrieve:\n• pn – Percent Normal (climatological comparison)\n• mm – Forecasted Rainfall (in millimeters)\n• all – Retrieves both pn and mm`
+            },
+            {
+              name: "province",
+              requirement: "either required",
+              description: "Name of the province for which to retrieve the forecast.\n* For the full list, check the Location API under Validation."
+            },
+            {
+              name: "page",
+              requirement: "optional",
+              description: "Allows access to additional pages of the API response. Use none to disable pagination."
+            }
+          ]          
+        ],
+        
+        tryItSamples: {
+          curl: "curl -X GET 'https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province?province=Sorsogon&page=none&value=all' -H 'token: YOUR_TOKEN'",
+          javascript: `fetch('https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province?province=Sorsogon&page=none&value=all', {\n  headers: { token: 'YOUR_TOKEN' }\n})\n  .then(res => res.json())\n  .then(data => console.log(data));`,
+          python: `import requests\nurl = 'https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province?province=Sorsogon&page=none&value=all'\nheaders = {'token': 'YOUR_TOKEN'}\nresponse = requests.get(url, headers=headers)\nprint(response.json())`,
+        },    
+        
+        sampleResponse: {
+          "metadata": {
+              "api": "Province",
+              "forecast": "Seasonal Forecast",
+              "issuance_month": "May 2025",
+              "start_month": "June 2025",
+              "end_month": "November 2025",
+              "province": "Sorsogon",
+              "region": "Bicol Region (Region V)"
+          },
+          "data": [
+              {
+                  "month": "June 2025",
+                  "min_mm": 212.20132,
+                  "max_mm": 240.33804,
+                  "mean_mm": 224.83203,
+                  "percent_normal": 115.90077,
+                  "description": "Near Normal"
+              },
+              {
+                  "month": "November 2025",
+                  "min_mm": 361.5794,
+                  "max_mm": 673.2907,
+                  "mean_mm": 530.2558,
+                  "percent_normal": 123.15251,
+                  "description": "Above Normal"
+              }
+          ],
+          "misc": {
+              "version": "1.0",
+              "timestamp": "7/23/2025 9:23:51 AM",
+              "method": "GET",
+              "current_page": 1,
+              "per_page": 10,
+              "total_count": 1,
+              "total_pages": 1,
+              "status_code": 200,
+              "description": "OK"
+          }
+      },        
+      },
+      {
+        title: "Regional Forecast",
+        description: "Provides a seasonal forecast for the next six months per province, grouped by region.",
+        endpoint: "https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/region",
+        params: [
+          {
+            name: "value",
+            requirement: "required",
+            description: `Specifies the type of data to retrieve:\n• pn – Percent Normal (climatological comparison)\n• mm – Forecasted Rainfall (in millimeters)\n• all – Retrieves both pn and mm`
+          },
+          {
+            name: "region",
+            requirement: "either required",
+            description: `Use region code to filter by region.\n• Numerical: 1, 2, 3\n• Roman numerals: i, ii, iii\n• Alphanumeric: 4a, 4b\n• Alphabetical: ncr, car\n• PSGC: 0500000000\n* For available values, refer to the Location API under Validation.`
+          },
+          {
+            name: "page",
+            requirement: "optional",
+            description: "Allows access to additional pages of the API response. Use none to disable pagination."
+          }
+        ],
+        
+        tryItSamples: {
+          curl: "curl -X GET 'https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/region?region=5&&value=all' -H 'token: YOUR_TOKEN'",
+          javascript: `fetch('https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/region?region=5&value=all', {\n  headers: { token: 'YOUR_TOKEN' }\n})\n  .then(res => res.json())\n  .then(data => console.log(data));`,
+          python: `import requests\nurl = 'https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/region?region=5&value=all'\nheaders = {'token': 'YOUR_TOKEN'}\nresponse = requests.get(url, headers=headers)\nprint(response.json())`,
+        },            
+        
+        sampleResponse: {
+          "metadata": {
+              "api": "Regional Forecast",
+              "forecast": "Seasonal Forecast",
+              "issuance_month": "May 2025",
+              "start_month": "June 2025",
+              "end_month": "November 2025",
+              "region": "Bicol Region (Region V)"
+          },
+          "data": [
+              {
+                  "month": "June 2025",
+                  "province": "Albay",
+                  "region": "Bicol Region (Region V)",
+                  "mean_mm": 217.47647,
+                  "min_mm": 201.67645,
+                  "max_mm": 243.37228,
+                  "percent_normal": 110.95271,
+                  "description": "Near Normal"
+              },
+              //...
+              {
+                  "month": "November 2025",
+                  "province": "Sorsogon",
+                  "region": "Bicol Region (Region V)",
+                  "mean_mm": 530.2558,
+                  "min_mm": 361.5794,
+                  "max_mm": 673.2907,
+                  "percent_normal": 123.15251,
+                  "description": "Above Normal"
+              }
+          ],
+          "misc": {
+              "version": "1.0",
+              "timestamp": "7/23/2025 9:31:19 AM",
+              "method": "GET",
+              "current_page": 1,
+              "per_page": 10,
+              "total_count": 6,
+              "total_pages": 1,
+              "status_code": 200,
+              "description": "OK"
+          }
+      },  
+      },
+    ]
   },
   {
     name: "Projections",
-    apis: []
+    apis: [
+      {
+        title: "CERAM",
+        description: "Climate Exposure, Risk, and Adaptation Mapping — offers province-level climate risk data to support adaptation and vulnerability analysis.",
+        endpoint: "https://tenday.pagasa.dost.gov.ph/api/v1/projections/ceram",
+        parameters: [
+          {
+            name: "province",
+            requirement: "optional",
+            description: "Filter by province name"
+          },
+          {
+            name: "indicator_code",
+            requirement: "optional",
+            description: "Climate indicator code (e.g., temperature or rainfall metric)"
+          },
+          {
+            name: "range",
+            requirement: "optional",
+            description: "Projection range or quantile"
+          },
+          {
+            name: "observed_baseline",
+            requirement: "optional",
+            description: "Observed baseline value used for comparison"
+          },
+          {
+            name: "scenario",
+            requirement: "optional",
+            description: "Emissions scenario (based on SSPs)"
+          },
+          {
+            name: "start_period",
+            requirement: "optional",
+            description: "Starting year of projection"
+          },
+          {
+            name: "end_period",
+            requirement: "optional",
+            description: "Ending year of projection"
+          },
+          {
+            name: "page",
+            requirement: "optional",
+            description: "Allows access to additional pages of the API response. Use none to disable pagination."
+          }
+        ],        
+        
+        tryItSamples: {
+          curl: "curl -X GET 'https://tenday.pagasa.dost.gov.ph/api/v1/projections/ceram?province=Sorsogon&indicator_code=RX5day&observed_baseline=343.6&range=Median&scenario=585&start_period=2051' -H 'token: YOUR_TOKEN'",
+          javascript: `fetch('https://tenday.pagasa.dost.gov.ph/api/v1/projections/ceram?province=Sorsogon&indicator_code=RX5day&observed_baseline=343.6&range=Median&scenario=585&start_period=2051', {\n  headers: { token: 'YOUR_TOKEN' }\n})\n  .then(res => res.json())\n  .then(data => console.log(data));`,
+          python: `import requests\nurl = 'https://tenday.pagasa.dost.gov.ph/api/v1/projections/ceram?province=Sorsogon&indicator_code=RX5day&observed_baseline=343.6&range=Median&scenario=585&start_period=2051'\nheaders = {'token': 'YOUR_TOKEN'}\nresponse = requests.get(url, headers=headers)\nprint(response.json())`,
+        },                   
+        
+        sampleResponse: {
+          "metadata": {
+              "api": "Regional Forecast",
+              "forecast": "Seasonal Forecast",
+              "issuance_month": "May 2025",
+              "start_month": "June 2025",
+              "end_month": "November 2025",
+              "region": "Bicol Region (Region V)"
+          },
+          "data": [
+              {
+                  "month": "June 2025",
+                  "province": "Albay",
+                  "region": "Bicol Region (Region V)",
+                  "mean_mm": 217.47647,
+                  "min_mm": 201.67645,
+                  "max_mm": 243.37228,
+                  "percent_normal": 110.95271,
+                  "description": "Near Normal"
+              },
+              //...
+              {
+                  "month": "November 2025",
+                  "province": "Sorsogon",
+                  "region": "Bicol Region (Region V)",
+                  "mean_mm": 530.2558,
+                  "min_mm": 361.5794,
+                  "max_mm": 673.2907,
+                  "percent_normal": 123.15251,
+                  "description": "Above Normal"
+              }
+          ],
+          "misc": {
+              "version": "1.0",
+              "timestamp": "7/23/2025 9:31:19 AM",
+              "method": "GET",
+              "current_page": 1,
+              "per_page": 10,
+              "total_count": 6,
+              "total_pages": 1,
+              "status_code": 200,
+              "description": "OK"
+          }
+      },  
+      }
+    ]
   },
   {
     name: "File Retrieval",
-    apis: []
+    apis: [
+      {
+        title: "10-day File Retrieval API",
+        description: "Climate Exposure, Risk, and Adaptation Mapping — offers province-level climate risk data to support adaptation and vulnerability analysis.",
+        endpoint: "https://tenday.pagasa.dost.gov.ph/api/v1/file/tenday",
+        parameters: [
+          {
+            name: "issuance_date",
+            requirement: "required",
+            description: "The date the forecast was issued. (format: YYYYMMDD)\n* For the latest issuance date, check the Issuance API under 10-day."
+          },
+          {
+            name: "file",
+            requirement: "required",
+            description: `Specifies the forecast file to retrieve.\n• TMEAN – Mean Temperature\n• TMIN – Minimum Temperature\n• TMAX – Maximum Temperature\n• RH – Relative Humidity\n• TCC – Total Cloud Cover\n• TP – Total Precipitation\n• WD – Wind Direction\n• WS – Wind Speed`
+          },
+          {
+            name: "token",
+            requirement: "required",
+            description: "API token for authentication."
+          },
+          {
+            name: "target",
+            requirement: "optional",
+            description: "Specifies the forecast file date you want to download (format: YYYYMMDD)\n* To determine the target dates, use the start and end dates from the 10-day Issuance API as your reference range."
+          },
+          {
+            name: "masked",
+            requirement: "optional",
+            description: 'If "true" or "1", returns the masked version of the file (e.g., clipped to country boundaries). Default is "false" or "0".'
+          }
+        ],            
+      },
+      {
+        title: "Seasonal File Retrieval API",
+        description: "Lets you download weather forecast files for up to 10 days. You can get a single day’s file or all 10 days at once, making it easy to access and use the data.",
+        endpoint: "https://tenday.pagasa.dost.gov.ph/api/v1/file/seasonal",
+        parameters: [
+          {
+            name: "batch",
+            requirement: "required",
+            description: "The batch number representing the forecast period.\n* For the latest batch, check the Issuance API under Seasonal."
+          },
+          {
+            name: "value",
+            requirement: "required",
+            description: `Specifies which forecast file to retrieve:\n• PN – Percent Normal\n• MM – Forecast Rainfall\n• ALL – Both`
+          },
+          {
+            name: "token",
+            requirement: "required",
+            description: "API token for authentication."
+          }
+        ],                             
+      },
+      {
+        title: "CERAM File Retrieval API",
+        description: "Lets you download datasets used for the Climate Extremes Risk Analysis Matrix (CERAM). These files support analysis of extreme climate indicators under various future climate scenarios.",
+        endpoint: "https://tenday.pagasa.dost.gov.ph/api/v1/file/ceram",
+        parameters: [
+          {
+            name: "token",
+            requirement: "required",
+            description: "API token for authentication."
+          },
+          {
+            name: "climate_indicator",
+            requirement: "required",
+            description: `Main climate variable to filter data.\n• RR – Rainfall\n• TMAX – Max Temperature\n• TMIN – Min Temperature`
+          },
+          {
+            name: "indicator_code",
+            requirement: "optional",
+            description: `Specific indicator under the selected climate variable:\n• RR: rx1day, rx5day\n• TMAX: txm, txn, txx\n• TMIN: tnm, tnn, tnx`
+          },
+          {
+            name: "percentile",
+            requirement: "optional",
+            description: "Statistical level of the dataset.\n• 10, 25, 50, 75, 90, mean"
+          },
+          {
+            name: "ssp",
+            requirement: "optional",
+            description: "Shared Socioeconomic Pathway scenario.\n• 119, 126, 245, 370, 585"
+          }
+        ],                         
+      }
+    ]
   },
   {
     name: "Validation",
-    apis: []
+    apis: [
+      {
+        title: "Validate",
+        description: "Checks if the provided API token is valid, shows which APIs the token is authorized to access, and returns the token’s expiration date. Useful for verifying access rights and session status before making data requests.",
+        endpoint: "https://tenday.pagasa.dost.gov.ph/api/v1/validate",
+        params: [
+          {
+            name: "token",
+            requirement: "required",
+            description: "API token for authentication."
+          }
+        ],
+        
+        tryItSamples: {
+          curl: "curl -X GET 'https://tenday.pagasa.dost.gov.ph/api/v1/validate?token=YOUR_API'",
+          javascript: `fetch('https://tenday.pagasa.dost.gov.ph/api/v1/validate?token=YOUR_API')\n  .then(res => res.json())\n  .then(data => console.log(data));`,
+          python: `import requests\nurl = 'https://tenday.pagasa.dost.gov.ph/api/v1/validate?token=YOUR_API'\nresponse = requests.get(url)\nprint(response.json())`
+        },             
+        
+        sampleResponse: {
+          "message": "Token is already activated",
+          "expiration": "Lifetime Access",
+          "authorized_apis": [
+              "Full",
+              "Date",
+              "Region",
+              "CERAM",
+              "Province",
+              "Location",
+              "Files (10-day)"
+          ]
+      },  
+      },
+      {
+        title: "Location",
+        description: "Provides a list of regions, provinces, and municipalities with corresponding PSGC codes. Supports location-based filtering for forecast and projection data.",
+        endpoint: "https://tenday.pagasa.dost.gov.ph/api/v1/location",
+        params: [
+          {
+            name: "region",
+            requirement: "optional",
+            description: "Filter results by region"
+          },
+          {
+            name: "province",
+            requirement: "optional",
+            description: "Filter results by province"
+          }
+        ],
+        
+        tryItSamples: {
+          curl: "curl -X GET 'https://tenday.pagasa.dost.gov.ph/api/v1/location?province=Sorsogon'",
+        
+          javascript: `fetch('https://tenday.pagasa.dost.gov.ph/api/v1/location?province=Sorsogon')\n  .then(res => res.json())\n  .then(data => console.log(data));`,
+        
+          python: `import requests\nurl = 'https://tenday.pagasa.dost.gov.ph/api/v1/location?province=Sorsogon'\nresponse = requests.get(url)\nprint(response.json())`
+        },                   
+        
+        sampleResponse: {
+          "metadata": {
+              "request_no": 17901,
+              "api": "Location",
+              "forecast": "Municipalities, Provinces, and Regions",
+              "province": "Sorsogon",
+              "region": "Bicol Region (Region V)"
+          },
+          "data": [
+              {
+                  "name": "Barcelona",
+                  "psgc_code": "0506202000"
+              },
+              {
+                  "name": "Bulan",
+                  "psgc_code": "0506203000"
+              },
+              {
+                  "name": "Bulusan",
+                  "psgc_code": "0506204000"
+              },
+              {
+                  "name": "Casiguran",
+                  "psgc_code": "0506205000"
+              },
+              {
+                  "name": "Castilla",
+                  "psgc_code": "0506206000"
+              },
+              {
+                  "name": "City of Sorsogon",
+                  "psgc_code": "0506216000"
+              },
+              {
+                  "name": "Donsol",
+                  "psgc_code": "0506207000"
+              },
+              {
+                  "name": "Gubat",
+                  "psgc_code": "0506208000"
+              },
+              {
+                  "name": "Irosin",
+                  "psgc_code": "0506209000"
+              },
+              {
+                  "name": "Juban",
+                  "psgc_code": "0506210000"
+              },
+              {
+                  "name": "Magallanes",
+                  "psgc_code": "0506211000"
+              },
+              {
+                  "name": "Matnog",
+                  "psgc_code": "0506212000"
+              },
+              {
+                  "name": "Pilar",
+                  "psgc_code": "0506213000"
+              },
+              {
+                  "name": "Prieto Diaz",
+                  "psgc_code": "0506214000"
+              },
+              {
+                  "name": "Santa Magdalena",
+                  "psgc_code": "0506215000"
+              }
+          ],
+          "footer": {
+              "version": "1.0",
+              "timestamp": "7/23/2025 9:33:01 PM",
+              "method": "GET",
+              "current_page": 1,
+              "per_page": 15,
+              "total_count": 15,
+              "total_pages": 1,
+              "status_code": 200,
+              "description": "OK"
+          }
+      },
+      },
+    ]
   }
 ];
 
