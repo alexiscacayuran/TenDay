@@ -279,22 +279,58 @@ const apiGroups = [
               }
             ],
             tryItSamples: {
-              curl: "curl -X GET 'https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province?value=pn&province=Laguna'",
-              javascript: `fetch('https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province?value=pn&province=Laguna')\n  .then(res => res.json())\n  .then(data => console.log(data));`,
-              python: `import requests\nurl = 'https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province?value=pn&province=Laguna'\nresponse = requests.get(url)\nprint(response.json())`
-            },
+                curl: "curl -X GET 'https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province?value=pn&province=Sorsogon' -H 'token: YOUR_API_TOKEN'",
+                javascript: `fetch('https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province?value=pn&province=Sorsogon', {
+                headers: { 'token': 'YOUR_API_TOKEN' }
+              })
+                .then(res => res.json())
+                .then(data => console.log(data));`,
+                python: `import requests
+              url = 'https://tenday.pagasa.dost.gov.ph/api/v1/seasonal/province?value=pn&province=Sorsogon'
+              headers = { 'token': 'YOUR_API_TOKEN' }
+              response = requests.get(url, headers=headers)
+              print(response.json())`
+              },              
             sampleResponse: {
-              "province": "Laguna",
-              "value": "pn",
-              "forecast": [
-                { "month": "Aug", "mean": 102.5, "description": "Above Normal" },
-                { "month": "Sep", "mean": 89.7, "description": "Normal" },
-                { "month": "Oct", "mean": 76.2, "description": "Below Normal" },
-                { "month": "Nov", "mean": 68.3, "description": "Below Normal" },
-                { "month": "Dec", "mean": 91.1, "description": "Normal" },
-                { "month": "Jan", "mean": 110.0, "description": "Above Normal" }
-              ]
-            }
+                "metadata": {
+                    "api": "Province",
+                    "forecast": "Seasonal Forecast",
+                    "issuance_month": "May 2025",
+                    "start_month": "June 2025",
+                    "end_month": "November 2025",
+                    "province": "Sorsogon",
+                    "region": "Bicol Region (Region V)"
+                },
+                "data": [
+                    {
+                        "month": "June 2025",
+                        "min_mm": 212.20132,
+                        "max_mm": 240.33804,
+                        "mean_mm": 224.83203,
+                        "percent_normal": 115.90077,
+                        "description": "Near Normal"
+                    },
+                    {
+                        "month": "November 2025",
+                        "min_mm": 361.5794,
+                        "max_mm": 673.2907,
+                        "mean_mm": 530.2558,
+                        "percent_normal": 123.15251,
+                        "description": "Above Normal"
+                    }
+                ],
+                "misc": {
+                    "version": "1.0",
+                    "timestamp": "7/23/2025 9:23:51 AM",
+                    "method": "GET",
+                    "current_page": 1,
+                    "per_page": 10,
+                    "total_count": 1,
+                    "total_pages": 1,
+                    "status_code": 200,
+                    "description": "OK"
+                }
+            },                
           },
           {
             title: "Regional Forecast",
@@ -712,7 +748,7 @@ const apiGroups = [
           },
           },
         ]
-      }     
+      }   
          
   ];
   
