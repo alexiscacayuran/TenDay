@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { format } from "date-fns";
 import Button from "@mui/joy/Button";
 import Box from "@mui/joy/Box";
@@ -44,7 +44,7 @@ import {
   NNWIcon,
 } from "../utils/CustomIcons";
 
-const PopupContent = React.memo(
+const PopupContent = memo(
   ({
     forecast,
     setOpen,
@@ -216,7 +216,7 @@ const PopupContent = React.memo(
             <Card
               className="glass"
               variant="plain"
-              sx={{ minWidth: 365, userSelect: "none" }}
+              sx={{ minWidth: 365, userSelect: "none", borderRadius: "lg" }}
             >
               <Stack>
                 <Typography level="title-lg">
@@ -302,7 +302,7 @@ const PopupContent = React.memo(
           <Card
             className="glass"
             variant="plain"
-            sx={{ minWidth: 365, userSelect: "none" }}
+            sx={{ minWidth: 365, userSelect: "none", borderRadius: "lg" }}
           >
             <Stack>
               <Typography level="title-lg">
@@ -356,7 +356,7 @@ const PopupContent = React.memo(
                       sx={{
                         position: "relative",
                         top: 7,
-                        color: "var(--joy-palette-primary-700, #12467B)",
+                        color: "neutral.600",
                       }}
                     >
                       {loading ? "Mean Temp" : OVERLAY_CONFIG[overlay].title}

@@ -59,11 +59,7 @@ const LayerMenu = ({
   setIsBoundaryHidden,
   startDate,
 }) => {
-  const [localOverlay, setLocalOverlay] = useState(overlay);
-  const [localTemp, setLocalTemp] = useState(temp);
-  const isLaptop = useMediaQuery((theme) => theme.breakpoints.up("lg"));
   const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
-  const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   const [open, setOpen] = useState(false);
 
@@ -85,8 +81,8 @@ const LayerMenu = ({
   }, [openContainer, controls]);
 
   const tooltipButtons = [
-    { title: "Temperature", value: temp, icon: faTemperatureHalf },
     { title: "Rainfall", value: "rainfall", icon: faCloudShowersHeavy },
+    { title: "Temperature", value: temp, icon: faTemperatureHalf },
     { title: "Humidity", value: "humidity", icon: faDroplet },
     { title: "Wind", value: "wind", icon: faWind },
     { title: "Clouds", value: "cloud", icon: faCloud },
@@ -112,6 +108,16 @@ const LayerMenu = ({
 
   const sidebarButtons = [
     {
+      title: "Rainfall",
+      value: "rainfall",
+      icon: (
+        <FontAwesomeIcon
+          icon={faCloudShowersHeavy}
+          style={{ fontSize: "1.25rem" }}
+        />
+      ),
+    },
+    {
       title: "Max Temp",
       value: "temperature_maximum",
       icon: <TMaxIcon sx={{ fontSize: "1.5rem" }} />,
@@ -126,16 +132,7 @@ const LayerMenu = ({
       value: "temperature_minimum",
       icon: <TMinIcon sx={{ fontSize: "1.5rem" }} />,
     },
-    {
-      title: "Rainfall",
-      value: "rainfall",
-      icon: (
-        <FontAwesomeIcon
-          icon={faCloudShowersHeavy}
-          style={{ fontSize: "1.25rem" }}
-        />
-      ),
-    },
+
     {
       title: "Humidity",
       value: "humidity",
@@ -183,10 +180,9 @@ const LayerMenu = ({
               variant="solid"
               spacing={0.5}
               sx={{ borderRadius: "md" }}
-              value={localOverlay}
+              value={overlay}
               onChange={(event, value) => {
                 if (value) {
-                  setLocalOverlay(value);
                   setOverlay(value);
                   setIsMenuOpen(value.startsWith("temperature"));
                   setActiveTooltip(
@@ -278,13 +274,11 @@ const LayerMenu = ({
                   color="neutral"
                   variant="solid"
                   spacing={0.5}
-                  value={localTemp}
+                  value={temp}
                   sx={{ borderRadius: "md" }}
                   onChange={(event, value) => {
                     if (value) {
                       setTemp(value);
-                      setLocalTemp(value);
-                      setLocalOverlay(value);
                       setOverlay(value);
                       setActiveTooltip("Temperature");
                     }
@@ -382,16 +376,14 @@ const LayerMenu = ({
               >
                 {
                   (
-                    sidebarButtons.find(
-                      (button) => button.value === localOverlay
-                    ) || {}
+                    sidebarButtons.find((button) => button.value === overlay) ||
+                    {}
                   ).icon
                 }
                 {!openContainer &&
                   (
-                    sidebarButtons.find(
-                      (button) => button.value === localOverlay
-                    ) || {}
+                    sidebarButtons.find((button) => button.value === overlay) ||
+                    {}
                   ).title}
               </Stack>
             </Button>
@@ -439,9 +431,8 @@ const LayerMenu = ({
                       <ListItemButton
                         color="neutral"
                         variant="solid"
-                        selected={value === localOverlay}
+                        selected={value === overlay}
                         onClick={() => {
-                          setLocalOverlay(value);
                           setOverlay(value);
                           setOpen(false);
                         }}
@@ -449,7 +440,7 @@ const LayerMenu = ({
                           userSelect: "none",
                           borderRadius: "sm",
                           // backgroundColor:
-                          //   localOverlay === value
+                          //   overlay === value
                           //     ? "neutral.700"
                           //     : "transparent",
                           '&:not(.Mui-selected, [aria-selected="true"]):active':

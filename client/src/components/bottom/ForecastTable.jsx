@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, memo } from "react";
 import chroma from "chroma-js";
 import { Typography, Link } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -7,12 +7,16 @@ import { motion } from "framer-motion";
 import { getColorScale } from "../utils/OverlayList";
 import ToggleUnits from "../utils/ToggleUnits";
 import ForecastValue from "../utils/ForecastValue";
-import { useTheme } from "@mui/joy/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { generateDateRange } from "./DateSlider";
 
-// Weather parameters configuration
 const weatherParams = [
+  {
+    name: "Rainfall",
+    key: "rainfall.total",
+    overlay: "rainfall",
+    overlayRef: "rainfall",
+  },
   {
     name: "Temperature",
     key: "temperature",
@@ -24,12 +28,7 @@ const weatherParams = [
     },
     icon: faCaretDown,
   },
-  {
-    name: "Rainfall",
-    key: "rainfall.total",
-    overlay: "rainfall",
-    overlayRef: "rainfall",
-  },
+
   {
     name: "Humidity",
     key: "humidity",
@@ -44,7 +43,6 @@ const weatherParams = [
   },
 ];
 
-// Function to compute median
 const getMedian = (a, b) => (a + b) / 2;
 
 const ForecastTable = ({
@@ -66,20 +64,12 @@ const ForecastTable = ({
   sliderRef,
   initialDate,
 }) => {
-  const theme = useTheme();
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
-
-  const [localOverlay, setLocalOverlay] = useState(overlay);
-  const [lastTempOverlay, setLastTempOverlay] = useState("temperature_mean"); // Stores last selected temperature overlay
+  const [lastTempOverlay, setLastTempOverlay] = useState("temperature_mean");
+  console.log("lastTempOverlay", lastTempOverlay);
   const [hovered, setHovered] = useState(false);
 
-  const dateRange = useMemo(() => {
-    const after = Array.from({ length: 4 }, () => null); //padding, empty date slides
-    return [...generateDateRange(initialDate, 10), ...after];
-  }, [initialDate]);
-
   useEffect(() => {
-    // If the selected overlay is a temperature type, update lastTempOverlay
     if (
       [
         "temperature_mean",
@@ -88,41 +78,53 @@ const ForecastTable = ({
       ].includes(overlay)
     ) {
       setLastTempOverlay(overlay);
-      setLocalOverlay(overlay); // Sync with local state
     }
   }, [overlay]);
+
+  const dateRange = useMemo(() => {
+    const padding = Array.from({ length: 4 }, () => null);
+    return [...generateDateRange(initialDate, 10), ...padding];
+  }, [initialDate]);
 
   return (
     <>
       {weatherParams.map(
-        ({ name, key, overlay: paramOverlay, overlays, icon, overlayRef }) => {
-          let activeOverlay = paramOverlay || localOverlay;
-          let displayName = name;
-          let dataKey = key;
-
-          if (overlays) {
-            activeOverlay = lastTempOverlay;
-            displayName =
-              ` ${overlays[lastTempOverlay]}`.replace(/\b\w/g, (str) =>
-                str.toUpperCase()
-              ) + " Temperature";
-            dataKey = `${key}.${overlays[lastTempOverlay]}`;
-          }
-
+        ({
+          name,
+          key,
+          overlay: paramOverlay,
+          overlays = {},
+          icon,
+          overlayRef,
+        }) => {
+          const isTemperature = Object.keys(overlays).length > 0;
+          const activeOverlay = isTemperature ? lastTempOverlay : paramOverlay;
           const colorScale = getColorScale(activeOverlay);
 
+          let displayName = name;
+          let dataKey;
+
+          if (isTemperature) {
+            const label = overlays?.[lastTempOverlay] ?? "";
+            displayName = `${
+              label.charAt(0).toUpperCase() + label.slice(1)
+            } Temperature`;
+            dataKey = `${key}.${label}`;
+          }
+
           const handleRowClick = () => {
-            if (overlays) {
-              const overlayKeys = Object.keys(overlays);
+            if (isTemperature) {
+              const keys = Object.keys(overlays);
               const nextIndex =
-                (overlayKeys.indexOf(lastTempOverlay) + 1) % overlayKeys.length;
-              const newOverlay = overlayKeys[nextIndex];
+                (keys.indexOf(lastTempOverlay) + 1) % keys.length;
+              const newOverlay = keys[nextIndex];
+              console.log("newOverlay", newOverlay);
 
               setLastTempOverlay(newOverlay);
               setOverlay(newOverlay);
-              setTemp(newOverlay); // Update temp in LayerMenu
-              setIsMenuOpen(true); // Open the menu
-              setActiveTooltip("Temperature"); // Sync tooltip to Temperature
+              setTemp(newOverlay);
+              setIsMenuOpen(true);
+              setActiveTooltip("Temperature");
             }
           };
 
@@ -133,10 +135,10 @@ const ForecastTable = ({
               onMouseLeave={() => name === "Temperature" && setHovered(false)}
             >
               <th
-                onClick={overlays ? handleRowClick : undefined}
-                style={{ cursor: overlays ? "pointer" : "default" }}
+                onClick={isTemperature ? handleRowClick : undefined}
+                style={{ cursor: isTemperature ? "pointer" : "default" }}
               >
-                {overlays ? (
+                {isTemperature ? (
                   <Link
                     color="neutral"
                     underline="always"
@@ -144,21 +146,16 @@ const ForecastTable = ({
                     startDecorator={
                       icon && (
                         <motion.div
-                          animate={{
-                            y: hovered ? [-2, 2, -2] : 0, // Slide only if hovered
-                          }}
+                          animate={{ y: hovered ? [-2, 2, -2] : 0 }}
                           transition={{
-                            duration: hovered ? 0.6 : 0, // Only animate when hovered
+                            duration: hovered ? 0.6 : 0,
                             ease: "easeInOut",
-                            repeat: hovered ? Infinity : 0, // Only repeat when hovered
+                            repeat: hovered ? Infinity : 0,
                           }}
                         >
                           <FontAwesomeIcon
                             icon={icon}
-                            style={{
-                              fontSize: "1rem",
-                              marginRight: "8px",
-                            }}
+                            style={{ fontSize: "1rem", marginRight: "8px" }}
                           />
                         </motion.div>
                       )
@@ -167,7 +164,6 @@ const ForecastTable = ({
                       justifyContent: "flex-end",
                       textDecorationStyle: "dotted",
                     }}
-                    sxProps={{}}
                   >
                     {displayName}
                   </Link>
@@ -175,6 +171,7 @@ const ForecastTable = ({
                   <Typography>{displayName}</Typography>
                 )}
               </th>
+
               <th>
                 <ToggleUnits
                   color="neutral"
@@ -190,9 +187,10 @@ const ForecastTable = ({
                   setUnits={setUnits}
                 />
               </th>
+
               {forecast.forecasts.map((data, index, arr) => {
                 const values = arr.map((d) => {
-                  let val = key.split(".").reduce((o, k) => o?.[k], d);
+                  const val = key.split(".").reduce((o, k) => o?.[k], d);
                   return typeof val === "object"
                     ? val[overlays?.[lastTempOverlay]]
                     : val ?? 0;
@@ -205,7 +203,7 @@ const ForecastTable = ({
                 const background =
                   activeOverlay === overlay
                     ? isDiscrete
-                      ? `${colorScale(current).css()}`
+                      ? colorScale(current).css()
                       : `linear-gradient(to right, ${colorScale(
                           getMedian(left, current)
                         ).css()}, ${colorScale(current).css()}, ${colorScale(
@@ -225,22 +223,21 @@ const ForecastTable = ({
                 return (
                   <td
                     key={index}
-                    style={{
-                      background,
-                      color,
-                    }}
+                    style={{ background, color }}
                     onMouseEnter={() => handleMouseEnter(index + 2)}
                     onMouseLeave={handleMouseLeave}
                     onClick={() => {
                       if (isClickValid.current) {
                         setActiveColumn(index + 3);
                         if (!isMobile) setDate(data.date);
+
                         const idx = dateRange.findIndex(
                           (d) =>
-                            d.toDateString() ===
+                            d?.toDateString() ===
                             new Date(data.date).toDateString()
                         );
-                        if (idx >= 0 && sliderRef.current) {
+
+                        if (sliderRef.current && idx >= 0) {
                           sliderRef.current.slickGoTo(idx, true);
                         }
                       }
@@ -250,7 +247,7 @@ const ForecastTable = ({
                       value={current}
                       overlay={overlayRef}
                       units={units}
-                      context={"table"}
+                      context="table"
                     />
                   </td>
                 );
@@ -263,4 +260,11 @@ const ForecastTable = ({
   );
 };
 
-export default ForecastTable;
+const areEqual = (prev, next) =>
+  prev.overlay === next.overlay &&
+  prev.forecast === next.forecast &&
+  prev.units === next.units &&
+  prev.hoveredColumn === next.hoveredColumn &&
+  prev.initialDate === next.initialDate;
+
+export default memo(ForecastTable, areEqual);

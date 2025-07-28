@@ -92,7 +92,7 @@ const Feedback = ({ setOpenSnackbar, setSnackbarContent }) => {
               "--ModalDialog-maxWidth": "450px",
             }}
           >
-            <DialogTitle>Submit feedback/support</DialogTitle>
+            <DialogTitle>Send feedback/support</DialogTitle>
             <DialogContent sx={{ color: "neutral.400", fontSize: "sm" }}>
               Let us know your thoughts about the app.
             </DialogContent>

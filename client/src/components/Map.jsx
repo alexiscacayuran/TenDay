@@ -99,6 +99,7 @@ const Map = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [temp, setTemp] = useState("temperature_mean");
+  console.log("temp", temp);
   const [activeTooltip, setActiveTooltip] = useState("Rainfall");
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
