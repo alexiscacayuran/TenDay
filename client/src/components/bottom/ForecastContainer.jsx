@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  memo,
+  useCallback,
+} from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -100,12 +107,12 @@ const ForecastContainer = ({
   }, [initialDate]);
 
   // Handles column highlight
-  const handleMouseEnter = (index) => {
+  const handleMouseEnter = useCallback((index) => {
     // Highlight columns only from 3rd to 12th (zero-indexed: 2 to 11)
     if (index >= 2 && index <= 11 && index + 1) {
       setHoveredColumn(index);
     }
-  };
+  }, []);
 
   const handleMouseLeave = () => {
     setHoveredColumn(null);
@@ -639,29 +646,6 @@ const ForecastContainer = ({
                               }
                             }}
                           >
-                            {/* {todayColumn === index + 3 ? (
-                              <Chip
-                                color="primary"
-                                size="sm"
-                                variant="plain"
-                                className="today-chip"
-                                sx={{
-                                  tableLayout: "fixed",
-                                  position: "absolute",
-                                  transform: "translate(-25px, -30px)",
-                                  fontWeight: "bold",
-                                  backgroundColor:
-                                    hoveredColumn === index + 2
-                                      ? "primary.300"
-                                      : "primary.100",
-                                  color: "primary.700",
-                                  padding: "0 10px",
-                                  fontSize: "0.85em",
-                                }}
-                              >
-                                TODAY
-                              </Chip>
-                            ) : null} */}
                             <Typography
                               level="title-sm"
                               sx={{
@@ -669,7 +653,9 @@ const ForecastContainer = ({
                                 fontSize: !isMobile ? "0.8rem" : "0.7rem",
                               }}
                             >
-                              {format(data.date, "EEE d")}
+                              {todayColumn === index + 3
+                                ? "TODAY"
+                                : format(data.date, "EEE d")}
                             </Typography>
                           </th>
                         ))}
@@ -1089,4 +1075,15 @@ const ForecastContainer = ({
   );
 };
 
-export default ForecastContainer;
+const areEqual = (prevProps, nextProps) => {
+  return (
+    prevProps.forecast === nextProps.forecast &&
+    prevProps.overlay === nextProps.overlay &&
+    prevProps.units === nextProps.units &&
+    prevProps.hoveredColumn === nextProps.hoveredColumn &&
+    prevProps.isDiscrete === nextProps.isDiscrete &&
+    prevProps.initialDate === nextProps.initialDate
+  );
+};
+
+export default memo(ForecastContainer, areEqual);
