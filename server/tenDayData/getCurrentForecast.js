@@ -298,16 +298,12 @@ const results = fuse.search(fuseQuery);
       ...(current_page !== null && {
         current_page,
         per_page,
-        total_count: 0,
-        total_page: 1,
+        total_count,
+        total_page,
       }),
-      status_code: statusCode,
-      description: isBadRequest
-        ? "Bad Request: Provided municipality, province, or region not found"
-        : "No content: No current forecast data found",
-    };
-    
-    
+      status_code: 200,
+      description: "OK",
+    };    
 
         const firstRow = result.rows[0];
 
@@ -316,10 +312,19 @@ const results = fuse.search(fuseQuery);
           api: "Current Forecast",
           forecast: "10-day Forecast",
           issuance_date,
-          ...(firstRow?.region && { region: firstRow.region }),
-          ...(firstRow?.province && { province: firstRow.province }),
-          ...(firstRow?.municity && { municity: firstRow.municity }),
-        };        
+        };
+        
+        // Only add location-related fields if query params exist
+        if (req.query.region && firstRow?.region) {
+          metadata.region = firstRow.region;
+        }
+        if (req.query.province && firstRow?.province) {
+          metadata.province = firstRow.province;
+        }
+        if (req.query.municity && firstRow?.municity) {
+          metadata.municity = firstRow.municity;
+        }        
+               
 
     return res.status(200).json({
       metadata,

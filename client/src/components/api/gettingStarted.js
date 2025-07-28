@@ -6,13 +6,13 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 const steps = [
   {
-    title: "Step 1: Prepare Your Request Letter",
+    title: "Step 1: Prepare Your Request Letter and Request Form",
     details: `Draft an official request letter addressed to:
 NATHANIEL T. SERVANDO
 Administrator
 
 Thru:
-THELMA A. CINCO – Project Leader, CIS4A&H
+THELMA A. CINCO – Chief, Climatology and Agrometeorology Division
 MAXIMO F. PERALTA – Chief, Engineering and Technical Services Division
 
 Your letter must include:

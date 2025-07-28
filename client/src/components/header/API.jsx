@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const API = () => {
   return (
     <div>
-      <Link to="/api">API</Link>
+      <Link to="/docs">API</Link>
     </div>
   );
 };
