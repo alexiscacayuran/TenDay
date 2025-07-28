@@ -192,11 +192,72 @@ const concepts = [
             "wind_direction": "SSW",
         }`}
         </SyntaxHighlighter>
+        <br />
+        <TableContainer component={Paper} elevation={0}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>Field</strong></TableCell>
+              <TableCell><strong>Unit</strong></TableCell>
+              <TableCell><strong>Description</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>date</TableCell>
+              <TableCell>N/A</TableCell>
+              <TableCell>The date of the forecast (MM/DD/YY format).</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>province</TableCell>
+              <TableCell>N/A</TableCell>
+              <TableCell>The name of the province where the forecast applies.</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>municity</TableCell>
+              <TableCell>N/A</TableCell>
+              <TableCell>The municipality or city within the province.</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>rainfall_desc</TableCell>
+              <TableCell>desc</TableCell>
+              <TableCell>Text description of expected rainfall intensity (e.g., LIGHT RAINS).</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>rainfall_total</TableCell>
+              <TableCell>mm/day</TableCell>
+              <TableCell>Total forecasted rainfall in millimeters per day.</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>cloud_cover</TableCell>
+              <TableCell>desc</TableCell>
+              <TableCell>General cloud condition description (e.g., CLOUDY, PARTLY CLOUDY).</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>temp_unit<br />- tmean<br />- tmin<br />- tmax</TableCell>
+              <TableCell>°C</TableCell>
+              <TableCell>Daily temperature</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>humidity</TableCell>
+              <TableCell>%</TableCell>
+              <TableCell>Average relative humidity.</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>wind_speed</TableCell>
+              <TableCell>m/s</TableCell>
+              <TableCell>Forecasted wind speed in meters per second.</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>wind_direction</TableCell>
+              <TableCell>desc</TableCell>
+              <TableCell>Cardinal direction from which the wind is expected to blow (e.g., SSW).</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <br />
         <Typography mb={2} sx={{fontFamily: "Commissioner"}}>
-            What it includes:<br /><br />
-            • Location-based forecast (province and municipality)<br />
-            • Weather variables: rainfall, wind speed, temperature<br />
-            • Target forecast date (date)<br /><br />
             This section is the primary content users are requesting.
         </Typography>
         <br />

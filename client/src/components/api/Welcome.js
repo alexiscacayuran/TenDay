@@ -13,6 +13,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { Typewriter } from "react-simple-typewriter";
 import logo from "../../assets/logo/logo-rgb-grad.png";
 import easitool from "../../assets/img/easitool2.png";
+import apiDoc from "../../assets/img/api-doc.pdf";
 
 export default function WelcomeSection() {
   const theme = useTheme();
@@ -187,7 +188,7 @@ export default function WelcomeSection() {
           <Box mt={4}>
             <Button
               component="a"
-              href="/api-guide.pdf"
+              href={apiDoc}
               download
               sx={{
                 px: 4,
