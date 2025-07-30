@@ -5,8 +5,9 @@ import s3 from '../aws.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 
 export const uploadForecastXLSX = async (year, month, day) => {
-  const SOURCE_PATH = 'C:\\Users\\gabri\\TenDay\\Data';
+  //const SOURCE_PATH = 'C:\\Users\\gabri\\TenDay\\Data';
   //const SOURCE_PATH = '\\\\10.10.3.118\\climps\\10_Day\\Data';
+  const SOURCE_PATH = "/mnt/climps/10_Day/Data";
   const BUCKET_NAME = 'tendayforecast';
 
   const baseDate = moment(`${year}-${month}-${day}`, 'YYYY-MM-DD');
