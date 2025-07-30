@@ -78,7 +78,7 @@ html,
   text-decoration-style: dotted !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .forecast-units {
     color: #32383e !important;
     text-decoration-color: #32383e !important;

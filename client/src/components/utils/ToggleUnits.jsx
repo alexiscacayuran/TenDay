@@ -92,23 +92,43 @@ const ToggleUnits = ({ context, overlay, units, setUnits, ...props }) => {
         ) : overlay === "cloud" ? null : null
       ) : context === "container" ? (
         overlay.includes("temperature") ? (
-          <Button {...props} onClick={toggleUnits}>
+          <Link
+            {...props}
+            underline="always"
+            sx={{ mx: 1, my: 0.2, textDecorationStyle: "dotted" }}
+            onClick={toggleUnits}
+          >
             {units.temperature}
-          </Button>
+          </Link>
         ) : overlay === "rainfall" ? (
-          <Button {...props} onClick={toggleUnits}>
+          <Link
+            {...props}
+            underline="always"
+            sx={{ mx: 1, my: 0.2, textDecorationStyle: "dotted" }}
+            onClick={toggleUnits}
+          >
             {units.rainfall}
-          </Button>
+          </Link>
         ) : overlay === "humidity" ? (
-          <Box sx={{ margin: "4px 12px" }}>%</Box>
+          <Box sx={{ mx: 1, my: 0.2 }}>%</Box>
         ) : overlay === "wind_speed" ? (
-          <Button {...props} onClick={toggleUnits}>
+          <Link
+            {...props}
+            underline="always"
+            sx={{ mx: 1, my: 0.2, textDecorationStyle: "dotted" }}
+            onClick={toggleUnits}
+          >
             {units.windSpeed}
-          </Button>
+          </Link>
         ) : overlay === "wind_direction" ? (
-          <Button {...props} onClick={toggleUnits}>
+          <Link
+            {...props}
+            underline="always"
+            sx={{ mx: 1, my: 0.2, textDecorationStyle: "dotted" }}
+            onClick={toggleUnits}
+          >
             {units.windDirection}
-          </Button>
+          </Link>
         ) : null
       ) : context === "legend" ? (
         overlay.includes("temperature") ? (
