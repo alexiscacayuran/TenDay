@@ -291,143 +291,144 @@ const Search = ({
                 }
               }}
             />
-            {(searchLayout || (isFocused && showFavorites)) && (
-              <Sheet
-                color="neutral"
-                variant="solid"
-                sx={{
-                  width: !searchLayout ? "max-content" : "91vw",
-                  borderRadius: "lg",
-                  position: "absolute",
-                  top: { lg: 70, md: 50, xs: 70 },
-                  left: { lg: 160, md: 280, xs: 25 },
-                  userSelect: "none",
-                }}
-                onMouseDownCapture={(e) => {
-                  if (isInteractive(e.target)) {
-                    setIsUsing(true);
-                  }
-                }}
-                onMouseUp={() => {
-                  setTimeout(() => {
-                    setIsUsing(false);
-                  }, 100);
-                }}
-              >
-                <Box sx={{ mx: 1 }}>
-                  <List
-                    sx={{
-                      minWidth: 300,
-                      maxWidth: !searchLayout ? 300 : "none",
-                    }}
-                  >
-                    <Stack
-                      direction="row"
+            {(searchLayout || (isFocused && showFavorites)) &&
+              suggestions.length === 0 && (
+                <Sheet
+                  color="neutral"
+                  variant="solid"
+                  sx={{
+                    width: !searchLayout ? "max-content" : "91vw",
+                    borderRadius: "lg",
+                    position: "absolute",
+                    top: { lg: 70, md: 50, xs: 70 },
+                    left: { lg: 160, md: 280, xs: 25 },
+                    userSelect: "none",
+                  }}
+                  onMouseDownCapture={(e) => {
+                    if (isInteractive(e.target)) {
+                      setIsUsing(true);
+                    }
+                  }}
+                  onMouseUp={() => {
+                    setTimeout(() => {
+                      setIsUsing(false);
+                    }, 100);
+                  }}
+                >
+                  <Box sx={{ mx: 1 }}>
+                    <List
                       sx={{
-                        justifyContent: "space-between",
+                        minWidth: 300,
+                        maxWidth: !searchLayout ? 300 : "none",
                       }}
                     >
-                      <ListSubheader sx={{ color: "common.white" }}>
-                        Favorites
-                      </ListSubheader>
-                      {Array.isArray(favorites) && favorites.length > 0 && (
-                        <Button
-                          size="sm"
-                          color="neutral"
-                          variant="solid"
-                          sx={{
-                            backgroundColor: "neutral.600",
-                            borderRadius: "20px",
-                            fontSize: "0.75rem",
-                            fontWeight: "normal",
-                            paddingInline: "0.75rem",
-                            height: "0.75rem",
-                            m: 1,
-                          }}
-                          onClick={clearFavorites}
-                        >
-                          Clear
-                        </Button>
-                      )}
-                    </Stack>
-
-                    {Array.isArray(favorites) && favorites.length === 0 ? (
-                      <ListItem>
-                        <Typography
-                          level="body-sm"
-                          sx={{
-                            color: "white",
-                            width: "100%",
-                            fontStyle: "italic",
-                          }}
-                        >
-                          No locations saved yet. Add by clicking the{" "}
-                          <FontAwesomeIcon
-                            icon={faStar}
-                            animate={{
-                              color: "#32383E",
+                      <Stack
+                        direction="row"
+                        sx={{
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <ListSubheader sx={{ color: "common.white" }}>
+                          Favorites
+                        </ListSubheader>
+                        {Array.isArray(favorites) && favorites.length > 0 && (
+                          <Button
+                            size="sm"
+                            color="neutral"
+                            variant="solid"
+                            sx={{
+                              backgroundColor: "neutral.600",
+                              borderRadius: "20px",
+                              fontSize: "0.75rem",
+                              fontWeight: "normal",
+                              paddingInline: "0.75rem",
+                              height: "0.75rem",
+                              m: 1,
                             }}
-                            transition={{ duration: 0.1 }}
-                            style={{ fontSize: "1rem" }}
-                          />{" "}
-                          in the forecast panel.
-                        </Typography>
-                      </ListItem>
-                    ) : (
-                      Array.isArray(favorites) &&
-                      favorites.map((loc, i) => (
-                        <div key={i}>
-                          <ListItem>
-                            <ListItemButton
-                              sx={{
-                                '&:not(.Mui-selected, [aria-selected="true"]):hover':
-                                  {
-                                    backgroundColor: "neutral.700",
-                                    borderRadius: "lg",
-                                  },
-                                '&:not(.Mui-selected, [aria-selected="true"]):active':
-                                  {
-                                    backgroundColor: "neutral.700",
-                                    borderRadius: "lg",
-                                  },
+                            onClick={clearFavorites}
+                          >
+                            Clear
+                          </Button>
+                        )}
+                      </Stack>
+
+                      {Array.isArray(favorites) && favorites.length === 0 ? (
+                        <ListItem>
+                          <Typography
+                            level="body-sm"
+                            sx={{
+                              color: "white",
+                              width: "100%",
+                              fontStyle: "italic",
+                            }}
+                          >
+                            No locations saved yet. Add by clicking the{" "}
+                            <FontAwesomeIcon
+                              icon={faStar}
+                              animate={{
+                                color: "#32383E",
                               }}
-                              onClick={() => {
-                                setShowFavorites(false);
-                                handleSelectFavorite(loc);
-                              }}
-                            >
-                              <Stack spacing={0}>
-                                <Typography
-                                  level="title-md"
-                                  sx={{
-                                    color: "primary.400",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  {loc.municity}
-                                </Typography>
-                                <Typography
-                                  level="body-xs"
-                                  sx={{ color: "white" }}
-                                >
-                                  {loc.province}
-                                </Typography>
-                              </Stack>
-                            </ListItemButton>
-                          </ListItem>
-                          {i < favorites.length - 1 && (
-                            <ListDivider
-                              sx={{ backgroundColor: "white" }}
-                              inset="gutter"
-                            />
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </List>
-                </Box>
-              </Sheet>
-            )}
+                              transition={{ duration: 0.1 }}
+                              style={{ fontSize: "1rem" }}
+                            />{" "}
+                            in the forecast panel.
+                          </Typography>
+                        </ListItem>
+                      ) : (
+                        Array.isArray(favorites) &&
+                        favorites.map((loc, i) => (
+                          <div key={i}>
+                            <ListItem>
+                              <ListItemButton
+                                sx={{
+                                  '&:not(.Mui-selected, [aria-selected="true"]):hover':
+                                    {
+                                      backgroundColor: "neutral.700",
+                                      borderRadius: "lg",
+                                    },
+                                  '&:not(.Mui-selected, [aria-selected="true"]):active':
+                                    {
+                                      backgroundColor: "neutral.700",
+                                      borderRadius: "lg",
+                                    },
+                                }}
+                                onClick={() => {
+                                  setShowFavorites(false);
+                                  handleSelectFavorite(loc);
+                                }}
+                              >
+                                <Stack spacing={0}>
+                                  <Typography
+                                    level="title-md"
+                                    sx={{
+                                      color: "primary.400",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    {loc.municity}
+                                  </Typography>
+                                  <Typography
+                                    level="body-xs"
+                                    sx={{ color: "white" }}
+                                  >
+                                    {loc.province}
+                                  </Typography>
+                                </Stack>
+                              </ListItemButton>
+                            </ListItem>
+                            {i < favorites.length - 1 && (
+                              <ListDivider
+                                sx={{ backgroundColor: "white" }}
+                                inset="gutter"
+                              />
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </List>
+                  </Box>
+                </Sheet>
+              )}
             {suggestions.length > 0 && (
               <Sheet
                 color="neutral"

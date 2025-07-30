@@ -32,7 +32,7 @@ const DateSlider = ({ initialDate, date, setDate, open, sliderRef }) => {
       (d) => d.toDateString() === new Date(date).toDateString()
     );
 
-    if (idx >= 0 && isSliderReady) {
+    if (isSliderReady && idx >= 0) {
       sliderRef.current.slickGoTo(idx, true);
     }
   }, [isSliderReady]);
