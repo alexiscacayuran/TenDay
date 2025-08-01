@@ -3,7 +3,7 @@ import Header from "./Header";
 import Search from "./Search";
 import Settings from "./Settings";
 import About from "./About";
-import { PAGASALogo } from "../utils/CustomIcons";
+import { PAGASALogo } from "../utils/Assets";
 import { useTheme } from "@mui/joy/styles";
 import { useMediaQuery } from "@mui/material";
 import Dexie from "dexie";
@@ -173,13 +173,13 @@ const Navbar = ({
 
             <About />
 
-            <Button 
-            component="a"
-            href="/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            color="inherit"
-            sx={{ textTransform: "none" }}
+            <Button
+              component="a"
+              href="/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              color="inherit"
+              sx={{ textTransform: "none" }}
             >
               <Typography
                 level="title-md"

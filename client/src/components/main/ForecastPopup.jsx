@@ -9,7 +9,6 @@ import { Popup, Marker, useMap } from "react-leaflet";
 import { DivIcon } from "leaflet";
 import axios from "axios";
 import "leaflet/dist/leaflet.css";
-// import "../styles.css";
 import PopupContent from "./PopupContent";
 import { useMediaQuery } from "@mui/material";
 
@@ -23,9 +22,10 @@ const ForecastPopup = ({
   units,
   setUnits,
   selectedPolygon,
+  markerRef,
 }) => {
   const map = useMap();
-  const markerRef = useRef(null);
+
   const [forecast, setForecast] = useState({});
   const [loading, setLoading] = useState(true);
   const [forecastRetrieval, setForecastRetrieval] = useState(false);
@@ -36,6 +36,11 @@ const ForecastPopup = ({
       if (event.key === "Escape") {
         if (markerLayer.current && markerRef.current) {
           markerLayer.current.removeLayer(markerRef.current);
+        }
+
+        if (selectedPolygon.current) {
+          map.removeLayer(selectedPolygon.current);
+          selectedPolygon.current = null;
         }
       }
     };
@@ -93,7 +98,7 @@ const ForecastPopup = ({
       map.removeLayer(selectedPolygon.current);
       selectedPolygon.current = null;
     }
-  }, [markerLayer, selectedPolygon, map]);
+  }, [map]);
 
   const markerIcon = useMemo(
     () =>
@@ -119,7 +124,8 @@ const ForecastPopup = ({
       }}
     >
       <Popup
-        offset={[0, -30]}
+        className="popup-forecast"
+        offset={[0, -50]}
         onClose={handlePopupClose}
         closeButton={false}
         autoPanPaddingTopLeft={!isMobile ? [200, 80] : [0, 0]}

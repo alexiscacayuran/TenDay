@@ -66,7 +66,7 @@ const ForecastTable = ({
 }) => {
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
   const [lastTempOverlay, setLastTempOverlay] = useState("temperature_mean");
-  console.log("lastTempOverlay", lastTempOverlay);
+
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
@@ -118,7 +118,6 @@ const ForecastTable = ({
               const nextIndex =
                 (keys.indexOf(lastTempOverlay) + 1) % keys.length;
               const newOverlay = keys[nextIndex];
-              console.log("newOverlay", newOverlay);
 
               setLastTempOverlay(newOverlay);
               setOverlay(newOverlay);

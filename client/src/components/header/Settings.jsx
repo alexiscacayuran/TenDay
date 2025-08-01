@@ -37,7 +37,6 @@ const Settings = ({
   openSidebar,
   setOpenSidebar,
 }) => {
-  const theme = useTheme();
   const isLaptop = useMediaQuery((theme) => theme.breakpoints.up("lg"));
   const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
@@ -54,9 +53,9 @@ const Settings = ({
         <FormLabel sx={{ typography: "title-sm" }}>{label}</FormLabel>
       </Box>
       <ToggleButtonGroup
-        color="primary"
+        color="neutral"
         size="sm"
-        variant="outlined"
+        variant="soft"
         value={value}
         onChange={onChange}
         sx={{ minWidth: 200 }}
@@ -65,7 +64,12 @@ const Settings = ({
           <Button
             key={val}
             value={val}
-            sx={{ flexShrink: 1, flexGrow: 1, maxWidth: 150 }}
+            sx={{
+              flexShrink: 1,
+              flexGrow: 1,
+              maxWidth: 150,
+              fontWeight: "500",
+            }}
           >
             {label}
           </Button>
