@@ -33,6 +33,7 @@ import ZoomLevel from "./utils/ZoomLevel";
 import { Stack, Box, Snackbar } from "@mui/joy";
 
 import { motion, AnimatePresence } from "framer-motion";
+import Stations from "./main/Stations";
 
 const Map = () => {
   const theme = useTheme();
@@ -86,11 +87,12 @@ const Map = () => {
 
   const startDate = useRef(null);
 
+  const markerRef = useRef(null);
   const markerLayer = useRef(null);
-  const overlayLayer = useRef(null);
   const selectedPolygon = useRef(null);
+  const overlayLayer = useRef(null);
 
-  const [map, setMap] = useState(null); // External state for the map instance
+  const [map, setMap] = useState(null);
   const [open, setOpen] = useState(false); // Slide up bottom container state
   const [date, setDate] = useState(new Date());
   const [dateReady, setDateReady] = useState(false);
@@ -99,7 +101,7 @@ const Map = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [temp, setTemp] = useState("temperature_mean");
-  console.log("temp", temp);
+
   const [activeTooltip, setActiveTooltip] = useState("Rainfall");
   const [isDiscrete, setIsDiscrete] = useState(false);
   const [isAnimHidden, setIsAnimHidden] = useState(false);
@@ -174,10 +176,17 @@ const Map = () => {
           maxBoundsViscosity={0.5}
           zoomControl={false}
         >
+          <Stations
+            markerRef={markerRef}
+            markerLayer={markerLayer}
+            selectedPolygon={selectedPolygon}
+            setOpen={setOpen}
+          />
           <ZoomLevel setZoomLevel={setZoomLevel} />
           {isLocationReady ? (
             <ForecastPopup
               location={location}
+              markerRef={markerRef}
               markerLayer={markerLayer}
               setLocation={setLocation}
               setOpen={setOpen}
@@ -400,24 +409,26 @@ const Map = () => {
           </Stack>
         )}
 
-        <Snackbar
-          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-          autoHideDuration={4000}
-          open={openSnackbar}
-          onClose={(event, reason) => {
-            if (reason === "clickaway") {
-              return;
-            }
-            setOpenSnackbar(false);
-          }}
-          size="md"
-          variant="solid"
-          color={snackbarContent.color}
-          sx={{ maxWidth: "350px" }}
-          startDecorator={snackbarContent.icon}
-        >
-          {snackbarContent.message}
-        </Snackbar>
+        {snackbarContent && (
+          <Snackbar
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            autoHideDuration={4000}
+            open={openSnackbar}
+            onClose={(event, reason) => {
+              if (reason === "clickaway") {
+                return;
+              }
+              setOpenSnackbar(false);
+            }}
+            size="md"
+            variant="solid"
+            color={snackbarContent?.color}
+            sx={{ maxWidth: "350px" }}
+            startDecorator={snackbarContent?.icon}
+          >
+            {snackbarContent.message}
+          </Snackbar>
+        )}
 
         {!isMobile && <MapControl map={map} />}
         {dateReady && (

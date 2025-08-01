@@ -5,14 +5,6 @@
   --breakpoint-xl: 1312px;
 }
 
-/* body,
-html,
-#root {
-  overflow: hidden;
-  position: relative;
-  height: 100%;
-} */
-
 /* commissioner-latin-wght-normal */
 @font-face {
   font-family: "Commissioner Variable";
@@ -51,7 +43,7 @@ html,
 }
 
 .leaflet-esri-labels-pane {
-  z-index: 450 !important;
+  z-index: 400 !important;
 }
 
 .esri-dynamic-attribution {
@@ -120,37 +112,64 @@ html,
   margin-top: 63px !important;
 }
 
-.app-bar {
-  min-height: 53px !important;
+/* feature layer */
+.leaflet-overlay-pane {
+  z-index: 350 !important;
 }
 
-.leaflet-popup-content {
-  width: 350px !important;
+/* station markers */
+.leaflet-station-pane {
+  z-index: 450 !important;
+}
+
+.leaflet-popup {
+  margin: 0 !important;
+  z-index: 500 !important;
+}
+
+.popup-forecast .leaflet-popup-content {
+  width: 365px !important;
 }
 
 @media (max-width: 768px) {
-  .leaflet-popup-content {
+  .popup-forecast .leaflet-popup-content {
     width: 280px !important;
   }
 }
 
-.leaflet-popup-content-wrapper {
+.popup-station .leaflet-popup-content {
+  width: 250px !important;
+}
+
+.popup-forecast .leaflet-popup-content-wrapper,
+.popup-station .leaflet-popup-content-wrapper {
   background-color: transparent !important;
   box-shadow: none !important;
 }
 
-.leaflet-popup-content,
-.leaflet-popup-content p {
+.popup-forecast .leaflet-popup-content,
+.popup-forecast .leaflet-popup-content p,
+.popup-station .leaflet-popup-content,
+.popup-station .leaflet-popup-content p {
   margin: 0 !important;
   padding: 0 !important;
 }
 
-.leaflet-popup-tip-container {
+.popup-forecast .leaflet-popup-tip-container {
   height: 56px;
   overflow: auto;
 }
 
-.leaflet-popup-tip {
+.popup-station .leaflet-popup-tip-container {
+  height: 10px;
+}
+
+.popup-station .leaflet-popup-tip {
+  background: #12467b;
+  box-shadow: none;
+}
+
+.popup-forecast .leaflet-popup-tip {
   width: 4px;
   height: 56px;
   padding: 1px;
@@ -161,12 +180,23 @@ html,
   box-shadow: none;
 }
 
+.station-marker {
+  height: 15px !important;
+  width: 15px !important;
+  background-color: #0b6bcb;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 0.75px rgba(0, 0, 0, 0.2);
+  z-index: 500 !important;
+}
+
 .regular-marker {
   height: 15px;
   width: 30px;
   background-color: var(--joy-palette-primary-500, #0b6bcb);
   border-radius: 50%;
   box-sizing: border-box;
+  z-index: 500 !important;
 }
 
 .pulsating-marker {

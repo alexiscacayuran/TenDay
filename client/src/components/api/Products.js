@@ -40,7 +40,7 @@ export default function Products() {
   const handleCopy = () => setSnackbar(true);
 
   const handleCodeTabChange = (apiIndex, newValue) => {
-    setCodeTabs(prev => ({ ...prev, [apiIndex]: newValue }));
+    setCodeTabs((prev) => ({ ...prev, [apiIndex]: newValue }));
   };
 
   return (
@@ -85,7 +85,9 @@ export default function Products() {
               },
             }}
           >
-            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "white" }} />}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon sx={{ color: "white" }} />}
+            >
               <Typography fontWeight="bold">{api.title}</Typography>
             </AccordionSummary>
 
@@ -137,9 +139,15 @@ export default function Products() {
                   <Table size="small">
                     <TableHead>
                       <TableRow>
-                        <TableCell><b>Parameter</b></TableCell>
-                        <TableCell><b>Requirement</b></TableCell>
-                        <TableCell><b>Description</b></TableCell>
+                        <TableCell>
+                          <b>Parameter</b>
+                        </TableCell>
+                        <TableCell>
+                          <b>Requirement</b>
+                        </TableCell>
+                        <TableCell>
+                          <b>Description</b>
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -166,7 +174,9 @@ export default function Products() {
                 >
                   <Tabs
                     value={currentCodeTab}
-                    onChange={(e, newValue) => handleCodeTabChange(index, newValue)}
+                    onChange={(e, newValue) =>
+                      handleCodeTabChange(index, newValue)
+                    }
                     sx={{ borderBottom: "1px solid #555", px: 2 }}
                   >
                     <Tab label="Curl" />
@@ -177,7 +187,9 @@ export default function Products() {
                   <Box sx={{ position: "absolute", top: 8, right: 16 }}>
                     <CopyToClipboard
                       text={
-                        api.tryItSamples?.[["curl", "javascript", "python"][currentCodeTab]] || ""
+                        api.tryItSamples?.[
+                          ["curl", "javascript", "python"][currentCodeTab]
+                        ] || ""
                       }
                       onCopy={handleCopy}
                     >
@@ -199,8 +211,9 @@ export default function Products() {
                       margin: 0,
                     }}
                   >
-                    {api.tryItSamples?.[["curl", "javascript", "python"][currentCodeTab]] ||
-                      "// No sample available"}
+                    {api.tryItSamples?.[
+                      ["curl", "javascript", "python"][currentCodeTab]
+                    ] || "// No sample available"}
                   </SyntaxHighlighter>
                 </Box>
               )}
@@ -234,7 +247,11 @@ export default function Products() {
         onClose={() => setSnackbar(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={() => setSnackbar(false)} severity="success" sx={{ width: "100%" }}>
+        <Alert
+          onClose={() => setSnackbar(false)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
           Copied to clipboard!
         </Alert>
       </Snackbar>

@@ -11,11 +11,7 @@ import {
   ListItemDecorator,
 } from "@mui/joy";
 
-import {
-  LayerStyleIcon,
-  GradientIcon,
-  ParticlesIcon,
-} from "../utils/CustomIcons";
+import { LayerStyleIcon, GradientIcon, ParticlesIcon } from "../utils/Assets";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faScissors, faVectorSquare } from "@fortawesome/free-solid-svg-icons";
@@ -96,9 +92,9 @@ const LayerOptionMenu = ({
               color="neutral"
               variant="solid"
               sx={{
-                minWidth: 250,
-                maxWidth: 300,
+                width: 260,
                 borderRadius: "sm",
+                userSelect: "none",
               }}
             >
               <ListItem
@@ -259,7 +255,7 @@ const LayerOptionMenu = ({
                   sx={{ color: "common.white" }}
                   level="title-sm"
                 >
-                  Show boundaries
+                  Show PAGASA domains
                 </Typography>
               </ListItem>
             </List>

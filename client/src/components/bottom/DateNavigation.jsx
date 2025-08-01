@@ -175,7 +175,6 @@ const DateNavigation = ({ initialDate, setDate, date, open }) => {
               "&::-webkit-scrollbar": { display: "none" },
               msOverflowStyle: "none",
               scrollbarWidth: "none",
-              "-ms-overflow-style": "none",
               scrollBehavior: "auto",
             }}
           >

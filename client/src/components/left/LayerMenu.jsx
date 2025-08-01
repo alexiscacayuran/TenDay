@@ -28,7 +28,7 @@ import {
 import LayerOptionMenu from "./LayerOptionMenu";
 import { useAnimation, motion } from "framer-motion";
 
-import { TMaxIcon, TMeanIcon, TMinIcon } from "../utils/CustomIcons";
+import { TMaxIcon, TMeanIcon, TMinIcon } from "../utils/Assets";
 
 import Search from "../header/Search";
 import Issuance from "../right/Issuance";

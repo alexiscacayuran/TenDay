@@ -120,7 +120,7 @@ export default class ScalarField extends Field {
       let zs = rasters[bandIndex]; // left-right and top-down order
       if (fileDirectory.GDAL_NODATA) {
         let noData = parseFloat(fileDirectory.GDAL_NODATA);
-        // console.log(noData);
+
         let simpleZS = Array.from(zs); // to simple array, so null is allowed | TODO efficiency??
         zs = simpleZS.map((z) => {
           return z === noData ? null : z;
@@ -149,7 +149,6 @@ export default class ScalarField extends Field {
 
     this.grid = this._buildGrid();
     this._updateRange();
-    //console.log(`ScalarField created (${this.nCols} x ${this.nRows})`);
   }
 
   /**

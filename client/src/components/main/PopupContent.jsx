@@ -42,7 +42,7 @@ import {
   WNWIcon,
   NWIcon,
   NNWIcon,
-} from "../utils/CustomIcons";
+} from "../utils/Assets";
 
 const PopupContent = memo(
   ({
@@ -239,15 +239,16 @@ const PopupContent = memo(
                 <IconButton
                   variant="plain"
                   color="inherit"
-                  sx={{
-                    position: "absolute",
-                    top: "0.5rem",
-                    right: "0.5rem",
-                    fontSize: "1.5rem",
-                  }}
+                  size="sm"
+                  sx={{ position: "absolute", top: "0.5rem", right: "0.5rem" }}
                   onClick={handlePopupClose}
                 >
-                  <CloseIcon />
+                  <CloseIcon
+                    sx={{
+                      fontSize: "1.5rem",
+                      color: "var(--joy-palette-neutral-700, #32383E)",
+                    }}
+                  />
                 </IconButton>
               </Stack>
 
@@ -285,7 +286,7 @@ const PopupContent = memo(
                       variant="rectangular"
                       width={106}
                       height={30}
-                      sx={{ borderRadius: "md", ml: "auto" }}
+                      sx={{ borderRadius: "20px", ml: "auto" }}
                     />
                   )}
                 </CardContent>
@@ -444,7 +445,7 @@ const PopupContent = memo(
                     ml: "auto",
                     alignSelf: "center",
                     fontWeight: 600,
-                    borderRadius: "lg",
+                    borderRadius: "20px",
                   }}
                   endDecorator={<ExpandMoreIcon sx={{ fontSize: "1.5rem" }} />}
                   onClick={(e) => {
