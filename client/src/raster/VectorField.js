@@ -49,7 +49,6 @@ export default class VectorField extends Field {
     params["vs"] = [];
   }
   _pushValueToArrays(params, value) {
-    //console.log(value);
     params["us"].push(value.u);
     params["vs"].push(value.v);
   }

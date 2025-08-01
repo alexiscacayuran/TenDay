@@ -17,20 +17,14 @@ const Base = ({ arcgisToken, selectedPolygon }) => {
   const isMobile = useMediaQuery((theme) => theme.breakpoints.down("md"));
 
   useEffect(() => {
-    if (!map.getPane("basemapPane")) {
-      map.createPane("basemapPane");
-      map.getPane("basemapPane").style.zIndex = 200;
-    }
+    map.createPane("basemapPane");
+    map.getPane("basemapPane").style.zIndex = 200;
 
-    if (!map.getPane("activeFeaturePane")) {
-      map.createPane("activeFeaturePane");
-      map.getPane("activeFeaturePane").style.zIndex = 400;
-    }
+    map.createPane("activeFeaturePane");
+    map.getPane("activeFeaturePane").style.zIndex = 400;
 
-    if (!map.getPane("hillshadePane")) {
-      map.createPane("hillshadePane");
-      map.getPane("hillshadePane").style.zIndex = 250;
-    }
+    map.createPane("hillshadePane");
+    map.getPane("hillshadePane").style.zIndex = 250;
   }, []);
 
   useEffect(() => {

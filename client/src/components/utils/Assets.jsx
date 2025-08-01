@@ -3,113 +3,113 @@ import { Tooltip } from "@mui/joy";
 import { SvgIcon } from "@mui/material";
 import { Image } from "@react-pdf/renderer";
 
-import Sunny from "../../assets/icons/weather/0-sunny.svg";
+import Sunny from "../../assets/icon/weather/0-sunny.svg";
 
-import NoRainParCloudy from "../../assets/icons/weather/1-no-rain_partly-cloudy.svg";
-import NoRainMosCloudy from "../../assets/icons/weather/2-no-rain_mostly-cloudy.svg";
-import NoRainCloudy from "../../assets/icons/weather/3-no-rain_cloudy.svg";
+import NoRainParCloudy from "../../assets/icon/weather/1-no-rain_partly-cloudy.svg";
+import NoRainMosCloudy from "../../assets/icon/weather/2-no-rain_mostly-cloudy.svg";
+import NoRainCloudy from "../../assets/icon/weather/3-no-rain_cloudy.svg";
 
-import LightRainsParCloudy from "../../assets/icons/weather/4-light-rains_partly-cloudy.svg";
-import LightRainsMosCloudy from "../../assets/icons/weather/5-light-rains_mostly-cloudy.svg";
-import LightRainsCloudy from "../../assets/icons/weather/6-light-rains_cloudy.svg";
+import LightRainsParCloudy from "../../assets/icon/weather/4-light-rains_partly-cloudy.svg";
+import LightRainsMosCloudy from "../../assets/icon/weather/5-light-rains_mostly-cloudy.svg";
+import LightRainsCloudy from "../../assets/icon/weather/6-light-rains_cloudy.svg";
 
-import ModRainsParCloudy from "../../assets/icons/weather/7-mod-rains_partly-cloudy.svg";
-import ModRainsMosCloudy from "../../assets/icons/weather/8-mod-rains_mostly-cloudy.svg";
-import ModRainsCloudy from "../../assets/icons/weather/9-mod-rains_cloudy.svg";
+import ModRainsParCloudy from "../../assets/icon/weather/7-mod-rains_partly-cloudy.svg";
+import ModRainsMosCloudy from "../../assets/icon/weather/8-mod-rains_mostly-cloudy.svg";
+import ModRainsCloudy from "../../assets/icon/weather/9-mod-rains_cloudy.svg";
 
-import HeavyRainsParCloudy from "../../assets/icons/weather/10-heavy-rains_partly-cloudy.svg";
-import HeavyRainsMosCloudy from "../../assets/icons/weather/11-heavy-rains_mostly-cloudy.svg";
-import HeavyRainsCloudy from "../../assets/icons/weather/12-heavy-rains_cloudy.svg";
+import HeavyRainsParCloudy from "../../assets/icon/weather/10-heavy-rains_partly-cloudy.svg";
+import HeavyRainsMosCloudy from "../../assets/icon/weather/11-heavy-rains_mostly-cloudy.svg";
+import HeavyRainsCloudy from "../../assets/icon/weather/12-heavy-rains_cloudy.svg";
 
-import LightRainsSunny from "../../assets/icons/weather/13-light-rains_sunny.svg";
+import LightRainsSunny from "../../assets/icon/weather/13-light-rains_sunny.svg";
 
-import SunnyPNG from "../../assets/icons/weather/0-sunny.png";
+import SunnyPNG from "../../assets/icon/weather/0-sunny.png";
 
-import NoRainParCloudyPNG from "../../assets/icons/weather/1-no-rain_partly-cloudy.png";
-import NoRainMosCloudyPNG from "../../assets/icons/weather/2-no-rain_mostly-cloudy.png";
-import NoRainCloudyPNG from "../../assets/icons/weather/3-no-rain_cloudy.png";
+import NoRainParCloudyPNG from "../../assets/icon/weather/1-no-rain_partly-cloudy.png";
+import NoRainMosCloudyPNG from "../../assets/icon/weather/2-no-rain_mostly-cloudy.png";
+import NoRainCloudyPNG from "../../assets/icon/weather/3-no-rain_cloudy.png";
 
-import LightRainsParCloudyPNG from "../../assets/icons/weather/4-light-rains_partly-cloudy.png";
-import LightRainsMosCloudyPNG from "../../assets/icons/weather/5-light-rains_mostly-cloudy.png";
-import LightRainsCloudyPNG from "../../assets/icons/weather/6-light-rains_cloudy.png";
+import LightRainsParCloudyPNG from "../../assets/icon/weather/4-light-rains_partly-cloudy.png";
+import LightRainsMosCloudyPNG from "../../assets/icon/weather/5-light-rains_mostly-cloudy.png";
+import LightRainsCloudyPNG from "../../assets/icon/weather/6-light-rains_cloudy.png";
 
-import ModRainsParCloudyPNG from "../../assets/icons/weather/7-mod-rains_partly-cloudy.png";
-import ModRainsMosCloudyPNG from "../../assets/icons/weather/8-mod-rains_mostly-cloudy.png";
-import ModRainsCloudyPNG from "../../assets/icons/weather/9-mod-rains_cloudy.png";
+import ModRainsParCloudyPNG from "../../assets/icon/weather/7-mod-rains_partly-cloudy.png";
+import ModRainsMosCloudyPNG from "../../assets/icon/weather/8-mod-rains_mostly-cloudy.png";
+import ModRainsCloudyPNG from "../../assets/icon/weather/9-mod-rains_cloudy.png";
 
-import HeavyRainsParCloudyPNG from "../../assets/icons/weather/10-heavy-rains_partly-cloudy.png";
-import HeavyRainsMosCloudyPNG from "../../assets/icons/weather/11-heavy-rains_mostly-cloudy.png";
-import HeavyRainsCloudyPNG from "../../assets/icons/weather/12-heavy-rains_cloudy.png";
+import HeavyRainsParCloudyPNG from "../../assets/icon/weather/10-heavy-rains_partly-cloudy.png";
+import HeavyRainsMosCloudyPNG from "../../assets/icon/weather/11-heavy-rains_mostly-cloudy.png";
+import HeavyRainsCloudyPNG from "../../assets/icon/weather/12-heavy-rains_cloudy.png";
 
-import LightRainsSunnyPNG from "../../assets/icons/weather/13-light-rains_sunny.png";
+import LightRainsSunnyPNG from "../../assets/icon/weather/13-light-rains_sunny.png";
 
-import SunnyLgPNG from "../../assets/icons/weather/0-sunny-lg.png";
+import SunnyLgPNG from "../../assets/icon/weather/0-sunny-lg.png";
 
-import NoRainParCloudyLgPNG from "../../assets/icons/weather/1-no-rain_partly-cloudy-lg.png";
-import NoRainMosCloudyLgPNG from "../../assets/icons/weather/2-no-rain_mostly-cloudy-lg.png";
-import NoRainCloudyLgPNG from "../../assets/icons/weather/3-no-rain_cloudy-lg.png";
+import NoRainParCloudyLgPNG from "../../assets/icon/weather/1-no-rain_partly-cloudy-lg.png";
+import NoRainMosCloudyLgPNG from "../../assets/icon/weather/2-no-rain_mostly-cloudy-lg.png";
+import NoRainCloudyLgPNG from "../../assets/icon/weather/3-no-rain_cloudy-lg.png";
 
-import LightRainsParCloudyLgPNG from "../../assets/icons/weather/4-light-rains_partly-cloudy-lg.png";
-import LightRainsMosCloudyLgPNG from "../../assets/icons/weather/5-light-rains_mostly-cloudy-lg.png";
-import LightRainsCloudyLgPNG from "../../assets/icons/weather/6-light-rains_cloudy-lg.png";
+import LightRainsParCloudyLgPNG from "../../assets/icon/weather/4-light-rains_partly-cloudy-lg.png";
+import LightRainsMosCloudyLgPNG from "../../assets/icon/weather/5-light-rains_mostly-cloudy-lg.png";
+import LightRainsCloudyLgPNG from "../../assets/icon/weather/6-light-rains_cloudy-lg.png";
 
-import ModRainsParCloudyLgPNG from "../../assets/icons/weather/7-mod-rains_partly-cloudy-lg.png";
-import ModRainsMosCloudyLgPNG from "../../assets/icons/weather/8-mod-rains_mostly-cloudy-lg.png";
-import ModRainsCloudyLgPNG from "../../assets/icons/weather/9-mod-rains_cloudy-lg.png";
+import ModRainsParCloudyLgPNG from "../../assets/icon/weather/7-mod-rains_partly-cloudy-lg.png";
+import ModRainsMosCloudyLgPNG from "../../assets/icon/weather/8-mod-rains_mostly-cloudy-lg.png";
+import ModRainsCloudyLgPNG from "../../assets/icon/weather/9-mod-rains_cloudy-lg.png";
 
-import HeavyRainsParCloudyLgPNG from "../../assets/icons/weather/10-heavy-rains_partly-cloudy-lg.png";
-import HeavyRainsMosCloudyLgPNG from "../../assets/icons/weather/11-heavy-rains_mostly-cloudy-lg.png";
-import HeavyRainsCloudyLgPNG from "../../assets/icons/weather/12-heavy-rains_cloudy-lg.png";
+import HeavyRainsParCloudyLgPNG from "../../assets/icon/weather/10-heavy-rains_partly-cloudy-lg.png";
+import HeavyRainsMosCloudyLgPNG from "../../assets/icon/weather/11-heavy-rains_mostly-cloudy-lg.png";
+import HeavyRainsCloudyLgPNG from "../../assets/icon/weather/12-heavy-rains_cloudy-lg.png";
 
-import LightRainsSunnyLgPNG from "../../assets/icons/weather/13-light-rains_sunny-lg.png";
+import LightRainsSunnyLgPNG from "../../assets/icon/weather/13-light-rains_sunny-lg.png";
 
-import { ReactComponent as N } from "../../assets/icons/wind-direction/0-n.svg";
-import { ReactComponent as NNE } from "../../assets/icons/wind-direction/1-nne.svg";
-import { ReactComponent as NE } from "../../assets/icons/wind-direction/2-ne.svg";
-import { ReactComponent as ENE } from "../../assets/icons/wind-direction/3-ene.svg";
+import { ReactComponent as N } from "../../assets/icon/wind-direction/0-n.svg";
+import { ReactComponent as NNE } from "../../assets/icon/wind-direction/1-nne.svg";
+import { ReactComponent as NE } from "../../assets/icon/wind-direction/2-ne.svg";
+import { ReactComponent as ENE } from "../../assets/icon/wind-direction/3-ene.svg";
 
-import { ReactComponent as E } from "../../assets/icons/wind-direction/4-e.svg";
-import { ReactComponent as ESE } from "../../assets/icons/wind-direction/5-ese.svg";
-import { ReactComponent as SE } from "../../assets/icons/wind-direction/6-se.svg";
-import { ReactComponent as SSE } from "../../assets/icons/wind-direction/7-sse.svg";
+import { ReactComponent as E } from "../../assets/icon/wind-direction/4-e.svg";
+import { ReactComponent as ESE } from "../../assets/icon/wind-direction/5-ese.svg";
+import { ReactComponent as SE } from "../../assets/icon/wind-direction/6-se.svg";
+import { ReactComponent as SSE } from "../../assets/icon/wind-direction/7-sse.svg";
 
-import { ReactComponent as S } from "../../assets/icons/wind-direction/8-s.svg";
-import { ReactComponent as SSW } from "../../assets/icons/wind-direction/9-ssw.svg";
-import { ReactComponent as SW } from "../../assets/icons/wind-direction/10-sw.svg";
-import { ReactComponent as WSW } from "../../assets/icons/wind-direction/11-wsw.svg";
+import { ReactComponent as S } from "../../assets/icon/wind-direction/8-s.svg";
+import { ReactComponent as SSW } from "../../assets/icon/wind-direction/9-ssw.svg";
+import { ReactComponent as SW } from "../../assets/icon/wind-direction/10-sw.svg";
+import { ReactComponent as WSW } from "../../assets/icon/wind-direction/11-wsw.svg";
 
-import { ReactComponent as W } from "../../assets/icons/wind-direction/12-w.svg";
-import { ReactComponent as WNW } from "../../assets/icons/wind-direction/13-wnw.svg";
-import { ReactComponent as NW } from "../../assets/icons/wind-direction/14-nw.svg";
-import { ReactComponent as NNW } from "../../assets/icons/wind-direction/15-nnw.svg";
+import { ReactComponent as W } from "../../assets/icon/wind-direction/12-w.svg";
+import { ReactComponent as WNW } from "../../assets/icon/wind-direction/13-wnw.svg";
+import { ReactComponent as NW } from "../../assets/icon/wind-direction/14-nw.svg";
+import { ReactComponent as NNW } from "../../assets/icon/wind-direction/15-nnw.svg";
 
-import NPNG from "../../assets/icons/wind-direction/0-n.png";
-import NNEPNG from "../../assets/icons/wind-direction/1-nne.png";
-import NEPNG from "../../assets/icons/wind-direction/2-ne.png";
-import ENEPNG from "../../assets/icons/wind-direction/3-ene.png";
+import NPNG from "../../assets/icon/wind-direction/0-n.png";
+import NNEPNG from "../../assets/icon/wind-direction/1-nne.png";
+import NEPNG from "../../assets/icon/wind-direction/2-ne.png";
+import ENEPNG from "../../assets/icon/wind-direction/3-ene.png";
 
-import EPNG from "../../assets/icons/wind-direction/4-e.png";
-import ESEPNG from "../../assets/icons/wind-direction/5-ese.png";
-import SEPNG from "../../assets/icons/wind-direction/6-se.png";
-import SSEPNG from "../../assets/icons/wind-direction/7-sse.png";
+import EPNG from "../../assets/icon/wind-direction/4-e.png";
+import ESEPNG from "../../assets/icon/wind-direction/5-ese.png";
+import SEPNG from "../../assets/icon/wind-direction/6-se.png";
+import SSEPNG from "../../assets/icon/wind-direction/7-sse.png";
 
-import SPNG from "../../assets/icons/wind-direction/8-s.png";
-import SSWPNG from "../../assets/icons/wind-direction/9-ssw.png";
-import SWPNG from "../../assets/icons/wind-direction/10-sw.png";
-import WSWPNG from "../../assets/icons/wind-direction/11-wsw.png";
+import SPNG from "../../assets/icon/wind-direction/8-s.png";
+import SSWPNG from "../../assets/icon/wind-direction/9-ssw.png";
+import SWPNG from "../../assets/icon/wind-direction/10-sw.png";
+import WSWPNG from "../../assets/icon/wind-direction/11-wsw.png";
 
-import WPNG from "../../assets/icons/wind-direction/12-w.png";
-import WNWPNG from "../../assets/icons/wind-direction/13-wnw.png";
-import NWPNG from "../../assets/icons/wind-direction/14-nw.png";
-import NNWPNG from "../../assets/icons/wind-direction/15-nnw.png";
+import WPNG from "../../assets/icon/wind-direction/12-w.png";
+import WNWPNG from "../../assets/icon/wind-direction/13-wnw.png";
+import NWPNG from "../../assets/icon/wind-direction/14-nw.png";
+import NNWPNG from "../../assets/icon/wind-direction/15-nnw.png";
 
-import { ReactComponent as TMax } from "../../assets/icons/buttons/tmax.svg";
-import { ReactComponent as TMean } from "../../assets/icons/buttons/tmean.svg";
-import { ReactComponent as TMin } from "../../assets/icons/buttons/tmin.svg";
+import { ReactComponent as TMax } from "../../assets/icon/buttons/tmax.svg";
+import { ReactComponent as TMean } from "../../assets/icon/buttons/tmean.svg";
+import { ReactComponent as TMin } from "../../assets/icon/buttons/tmin.svg";
 
-import { ReactComponent as LayerStyle } from "../../assets/icons/buttons/layer-style.svg";
-import { ReactComponent as Gradient } from "../../assets/icons/buttons/gradient.svg";
-import { ReactComponent as Particles } from "../../assets/icons/buttons/particles.svg";
+import { ReactComponent as LayerStyle } from "../../assets/icon/buttons/layer-style.svg";
+import { ReactComponent as Gradient } from "../../assets/icon/buttons/gradient.svg";
+import { ReactComponent as Particles } from "../../assets/icon/buttons/particles.svg";
 
 import Logo from "../../assets/logo/logo-rgb-light.png";
 import { ReactComponent as Logotype } from "../../assets/logo/logotype-light.svg";
@@ -117,7 +117,7 @@ import LogoDark from "../../assets/logo/logo-rgb-dark.png";
 import PAGASA from "../../assets/logo/pagasa-logo.png";
 import BMUVIK from "../../assets/logo/bmuv-iki-logo.png";
 import GIZ from "../../assets/logo/giz-logo.png";
-import NoResult from "../../assets/images/no-result.png";
+import NoResult from "../../assets/img/no-result.png";
 
 const ImgPDFWrapper = ({ src, style, ...props }) => (
   <Image src={src} style={{ width: "30px", ...style }} {...props} />
@@ -144,8 +144,11 @@ const SvgWrapper = ({ Icon, ...props }) => (
   </SvgIcon>
 );
 
+// export const NoResultImage = (props) => (
+//   <img alt="No result" src={NoResult} style={{ width: "210px" }} {...props} />
+// );
 export const NoResultImage = (props) => (
-  <img alt="No result" src={NoResult} style={{ width: "210px" }} {...props} />
+  <img alt="No result" src={NoResult} style={{ width: "1600px" }} {...props} />
 );
 
 export const TenDayLogo = (props) => {

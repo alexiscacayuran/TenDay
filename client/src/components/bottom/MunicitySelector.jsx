@@ -6,6 +6,7 @@ import { geocodeService } from "esri-leaflet-geocoder";
 import { query } from "esri-leaflet";
 import { useTheme } from "@mui/joy/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { sort } from "fast-sort";
 
 const MunicitySelector = ({
   map,
@@ -28,7 +29,6 @@ const MunicitySelector = ({
   _query.token(arcgisToken);
 
   const executeQuery = (result) => {
-    // console.log(result);
     _query.nearby(result.latlng, 1);
 
     _query.run(function (error, featureCollection, response) {
@@ -74,7 +74,9 @@ const MunicitySelector = ({
           },
         });
 
-        setMunicities(response.data);
+        const sorted = sort(response.data).asc();
+
+        setMunicities(sorted);
 
         // Set default selected value only when data is loaded
         if (response.data.includes(forecast.municity)) {
@@ -91,8 +93,6 @@ const MunicitySelector = ({
   }, [forecast]);
 
   const handleChange = (event, newValue) => {
-    // console.log("Selected:", newValue + " " + forecast.province);
-
     if (selectedPolygon.current) {
       map.removeLayer(selectedPolygon.current);
       selectedPolygon.current = null;
@@ -108,7 +108,6 @@ const MunicitySelector = ({
       .city(newValue + " " + forecast.province)
       .run((error, res) => {
         if (!error) {
-          // console.log("Geocode result", res);
           const result = res.results[0];
 
           setLocation({
@@ -145,7 +144,7 @@ const MunicitySelector = ({
         "&:hover": {
           backgroundColor: "transparent",
         },
-
+        minWidth: "180px",
         maxWidth: "180px",
       }}
       slotProps={{
