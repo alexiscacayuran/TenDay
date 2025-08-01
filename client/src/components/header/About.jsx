@@ -26,8 +26,8 @@ import {
   faEnvelope,
   faPhone,
 } from "@fortawesome/free-solid-svg-icons";
-import { GIZLogo, BMUVIKILogo } from "../utils/CustomIcons";
-import Ana from "../../assets/images/ana-portrait.jpg";
+import { GIZLogo, BMUVIKILogo } from "../utils/Assets";
+import Ana from "../../assets/img/ana-portrait.jpg";
 import LogoDark from "../../assets/logo/logo-rgb-dark.png";
 
 const About = ({ openSidebar, setOpenSidebar }) => {
@@ -136,7 +136,7 @@ const About = ({ openSidebar, setOpenSidebar }) => {
             <Box sx={{ mt: 3 }}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <img
-                  src="https://pubfiles.pagasa.dost.gov.ph/pagasaweb/images/pagasa-logo.png"
+                  src="https://pubfiles.pagasa.dost.gov.ph/pagasaweb/img/pagasa-logo.png"
                   alt="PAGASA Logo"
                   height={isTablet ? 35 : 25}
                 />
@@ -150,8 +150,8 @@ const About = ({ openSidebar, setOpenSidebar }) => {
 
             <Box sx={{ mr: 1 }}>
               <Typography
-                level={isTablet ? "body-md" : "body-sm"}
-                sx={{ mt: 1, textAlign: "justify" }}
+                level={isTablet ? "body-md" : "body-xs"}
+                sx={{ mt: 1 }}
               >
                 TenDay is a{" "}
                 <Typography sx={{ fontWeight: "bold" }}>
@@ -163,16 +163,16 @@ const About = ({ openSidebar, setOpenSidebar }) => {
               </Typography>
 
               <Typography
-                level={isTablet ? "body-md" : "body-sm"}
-                sx={{ mt: 2, textAlign: "justify" }}
+                level={isTablet ? "body-md" : "body-xs"}
+                sx={{ mt: 2 }}
               >
                 This could serve as input/basis to formulate local climate
                 advisories for farmers, fisherfolks, and disaster preparedness.
               </Typography>
 
               <Typography
-                level={isTablet ? "body-md" : "body-sm"}
-                sx={{ mt: 2, textAlign: "justify" }}
+                level={isTablet ? "body-md" : "body-xs"}
+                sx={{ mt: 2 }}
               >
                 This app is updated every Monday, Wednesday, and Friday, UTC+8
                 by the Climate Monitoring and Prediction Section (CLIMPS) under
@@ -181,7 +181,7 @@ const About = ({ openSidebar, setOpenSidebar }) => {
             </Box>
 
             <Box sx={{ mt: 1, mr: 1 }}>
-              <Typography level={isTablet ? "title-lg" : "title-md"}>
+              <Typography level={isTablet ? "title-lg" : "title-sm"}>
                 Data Sources
               </Typography>
               <Stack
@@ -197,7 +197,7 @@ const About = ({ openSidebar, setOpenSidebar }) => {
                   height="50"
                 />
                 <Typography
-                  level={isTablet ? "body-md" : "body-sm"}
+                  level={isTablet ? "body-md" : "body-xs"}
                   sx={{ textAlign: "justify" }}
                 >
                   This product is based on forecasts from the Global Forecast
@@ -215,11 +215,11 @@ const About = ({ openSidebar, setOpenSidebar }) => {
             </Box>
 
             <Box sx={{ mt: 1, mr: 1 }}>
-              <Typography level={isTablet ? "title-lg" : "title-md"}>
+              <Typography level={isTablet ? "title-lg" : "title-sm"}>
                 Contact
               </Typography>
               <Typography
-                level={isTablet ? "body-md" : "body-sm"}
+                level={isTablet ? "body-md" : "body-xs"}
                 sx={{ mt: 1 }}
               >
                 For inquiries or feedback, contact:
@@ -251,11 +251,14 @@ const About = ({ openSidebar, setOpenSidebar }) => {
                         Ana Liza S. Solis
                       </Typography>
                       <Typography level={isTablet ? "body-sm" : "body-xs"}>
-                        Chief, Climate Monitoring and Prediction Section
+                        Section Chief
                       </Typography>
                     </Stack>
                   </Box>
                   <CardContent>
+                    <Typography level={isTablet ? "body-sm" : "body-xs"}>
+                      Climate Monitoring and Prediction Section
+                    </Typography>
                     <Typography level={isTablet ? "body-sm" : "body-xs"}>
                       Climatology and Agrometeorology Division
                     </Typography>

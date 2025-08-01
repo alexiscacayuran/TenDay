@@ -57,7 +57,7 @@ import {
   WNWIconPDF,
   NWIconPDF,
   NNWIconPDF,
-} from "../utils/CustomIcons";
+} from "../utils/Assets";
 import VerticalBarGraph from "./VerticalBarGraph";
 import { getColorScale } from "../utils/OverlayList";
 import { convertValue } from "../utils/ForecastValue";

@@ -18,6 +18,7 @@ import {
   IconButton,
   Table,
   Button,
+  AspectRatio,
 } from "@mui/joy";
 
 import CloseIcon from "@mui/icons-material/Close";
@@ -53,7 +54,7 @@ import {
   NWIcon,
   NNWIcon,
   NoResultImage,
-} from "../utils/CustomIcons";
+} from "../utils/Assets";
 
 import ForecastTable from "./ForecastTable";
 import MunicitySelector from "./MunicitySelector";
@@ -65,6 +66,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 
 import { generateDateRange } from "./DateSlider";
+import NoResult from "../../assets/img/no-result.png";
 
 let isInitial = true;
 
@@ -522,8 +524,6 @@ const ForecastContainer = ({
         comment: "",
         email: "",
       });
-
-      // console.log("Feedback submitted:", response.data.feedback);
     } catch (err) {
       if (err.response) {
         console.error("Server error:", err.response.data.error);
@@ -642,7 +642,7 @@ const ForecastContainer = ({
                                   new Date(data.date).toDateString()
                               );
                               if (idx >= 0 && sliderRef.current) {
-                                sliderRef.current.slickGoTo(idx, true);
+                                sliderRef?.current.slickGoTo(idx, true);
                               }
                             }}
                           >
@@ -915,159 +915,135 @@ const ForecastContainer = ({
               </Stack>
             </>
           ) : (
-            <Box
+            <Sheet
               sx={{
                 width: "100%",
                 maxWidth: "1200px",
-                height: "231.81px",
-                bgcolor: "common.white",
+                height: "204.19px",
+
                 borderRadius: !isMobile ? "lg" : "none",
                 boxSizing: "border-box",
+                backgroundImage: `url(${NoResult})`,
               }}
             >
-              <Stack
-                direction="row"
-                spacing={0}
+              <IconButton
+                size="sm"
+                color="inherit"
+                variant="outlined"
+                aria-label="close"
                 sx={{
-                  justifyContent: "flex-end",
-                  alignItems: "flex-start",
+                  position: "absolute",
+                  top: "0.5rem",
+                  right: "0.5rem",
+                  zIndex: 1200,
+                }}
+                onClick={() => {
+                  markerLayer.current.eachLayer((layer) => {
+                    if (layer.getLatLng().equals(location.latLng)) {
+                      layer.openPopup();
+                    }
+                  });
+
+                  setOpen(false);
                 }}
               >
-                <IconButton
-                  size="sm"
-                  color="inherit"
-                  variant="outlined"
-                  aria-label="close"
+                <CloseIcon
                   sx={{
-                    position: "absolute",
-                    top: "0.5rem",
-                    right: "0.5rem",
-                    zIndex: 1200,
+                    fontSize: "1.5rem",
+                    color: "var(--joy-palette-neutral-700, #32383E)",
                   }}
-                  onClick={() => {
-                    markerLayer.current.eachLayer((layer) => {
-                      if (layer.getLatLng().equals(location.latLng)) {
-                        layer.openPopup();
-                      }
-                    });
-
-                    setOpen(false);
-                  }}
-                >
-                  <CloseIcon
-                    sx={{
-                      fontSize: "1.5rem",
-                      color: "var(--joy-palette-neutral-700, #32383E)",
-                    }}
-                  />
-                </IconButton>
-              </Stack>
-
-              <Stack
+                />
+              </IconButton>
+              <Box
                 sx={{
-                  justifyContent: "center",
+                  display: "flex",
                   alignItems: "center",
+                  justifyContent: "flex-start",
+                  height: "204px",
                 }}
               >
-                <Box
+                <Stack
+                  direction="column"
+                  spacing={2}
                   sx={{
-                    display: "flex",
-                    justifyContent: "flex-start",
-                    position: "relative",
+                    justifyContent: "center",
+                    alignItems: "flex-start",
+                    ml: "250px",
+                    mr: 5,
                   }}
                 >
+                  <Typography level="h3" component="div">
+                    Oops, sorry...
+                  </Typography>
+                  <Typography level="body-sm" component="div">
+                    No municipal level forecast available. If you believe this
+                    is a mistake, please submit a report.
+                  </Typography>
+
                   <Stack
                     direction="row"
-                    spacing={4}
+                    spacing={0.5}
                     sx={{
-                      justifyContent: "center",
-                      alignItems: "center",
+                      alignSelf: "flex-end",
                     }}
                   >
-                    <NoResultImage />
-                    <Stack
-                      direction="column"
-                      spacing={2}
-                      sx={{
-                        justifyContent: "center",
-                        alignItems: "flex-start",
-                        width: "40%",
+                    <Button
+                      color="neutral"
+                      onClick={() => {
+                        markerLayer.current.eachLayer((layer) => {
+                          layer.remove();
+                        });
+
+                        markerLayer.current = null;
+
+                        if (selectedPolygon.current) {
+                          map.removeLayer(selectedPolygon.current);
+                          selectedPolygon.current = null;
+                        }
+                        setOpen(false);
+                      }}
+                      variant="plain"
+                    >
+                      Close
+                    </Button>
+                    <form
+                      onSubmit={async (event) => {
+                        event.preventDefault();
+                        const formData = new FormData(event.currentTarget);
+                        const location = formData.get("location");
+                        await submitFeedback(location);
+
+                        markerLayer.current.eachLayer((layer) => {
+                          layer.remove();
+                        });
+
+                        markerLayer.current = null;
+
+                        if (selectedPolygon.current) {
+                          map.removeLayer(selectedPolygon.current);
+                          selectedPolygon.current = null;
+                        }
+                        setOpen(false);
                       }}
                     >
-                      <Typography level="h4" component="div">
-                        Oops, sorry...
-                      </Typography>
-                      <Typography level="body-sm" component="div">
-                        No municipal level forecast available. If you believe
-                        this is a mistake, please submit a report.
-                      </Typography>
-
-                      <Stack
-                        direction="row"
-                        spacing={0.5}
-                        sx={{
-                          alignSelf: "flex-end",
-                        }}
+                      <input
+                        type="hidden"
+                        name="location"
+                        value={location.municity + ", " + location.province}
+                      />
+                      <Button
+                        type="submit"
+                        color="neutral"
+                        onClick={() => {}}
+                        variant="soft"
                       >
-                        <Button
-                          color="neutral"
-                          onClick={() => {
-                            markerLayer.current.eachLayer((layer) => {
-                              layer.remove();
-                            });
-
-                            markerLayer.current = null;
-
-                            if (selectedPolygon.current) {
-                              map.removeLayer(selectedPolygon.current);
-                              selectedPolygon.current = null;
-                            }
-                            setOpen(false);
-                          }}
-                          variant="plain"
-                        >
-                          Close
-                        </Button>
-                        <form
-                          onSubmit={async (event) => {
-                            event.preventDefault();
-                            const formData = new FormData(event.currentTarget);
-                            const location = formData.get("location");
-                            await submitFeedback(location);
-
-                            markerLayer.current.eachLayer((layer) => {
-                              layer.remove();
-                            });
-
-                            markerLayer.current = null;
-
-                            if (selectedPolygon.current) {
-                              map.removeLayer(selectedPolygon.current);
-                              selectedPolygon.current = null;
-                            }
-                            setOpen(false);
-                          }}
-                        >
-                          <input
-                            type="hidden"
-                            name="location"
-                            value={location.municity + ", " + location.province}
-                          />
-                          <Button
-                            type="submit"
-                            color="neutral"
-                            onClick={() => {}}
-                            variant="soft"
-                          >
-                            Report
-                          </Button>
-                        </form>
-                      </Stack>
-                    </Stack>
+                        Report
+                      </Button>
+                    </form>
                   </Stack>
-                </Box>
-              </Stack>
-            </Box>
+                </Stack>
+              </Box>
+            </Sheet>
           )}
         </Stack>
       </Sheet>

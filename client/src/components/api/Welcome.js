@@ -19,7 +19,7 @@ export default function WelcomeSection() {
   const theme = useTheme();
   const textColor = "#617487";
 
-  const iconStyles = {
+  const icontyles = {
     width: 50,
     height: 50,
     borderRadius: "50%",
@@ -260,11 +260,11 @@ export default function WelcomeSection() {
               <Box
                 component="a"
                 href="mailto:sscisproject@gmail.com"
-                sx={iconStyles}
+                sx={icontyles}
               >
                 <EmailIcon />
               </Box>
-              <Box component="a" href="tel:+63282840800" sx={iconStyles}>
+              <Box component="a" href="tel:+63282840800" sx={icontyles}>
                 <PhoneIphoneIcon />
               </Box>
               <Box
@@ -272,7 +272,7 @@ export default function WelcomeSection() {
                 href="https://maps.app.goo.gl/xT4Qk2XpoA3VZZDD7"
                 target="_blank"
                 rel="noopener noreferrer"
-                sx={iconStyles}
+                sx={icontyles}
               >
                 <LocationOnIcon />
               </Box>

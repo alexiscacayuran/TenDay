@@ -18,12 +18,17 @@ import CloseIcon from "@mui/icons-material/Close";
 import logo from "../../assets/logo/logo-rgb-dev.png";
 import logo2 from "../../assets/logo/logo-rgb-grad.png";
 
-export default function Navbar({ selectedTab, handleTabChange, scrolled, sections }) {
+export default function Navbar({
+  selectedTab,
+  handleTabChange,
+  scrolled,
+  sections,
+}) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const theme = useTheme();
 
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));  // xs, sm
-  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));   // md and up
+  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // xs, sm
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md")); // md and up
 
   const handleDrawerToggle = () => setDrawerOpen(!drawerOpen);
   const handleDrawerItemClick = (index) => {
@@ -76,64 +81,59 @@ export default function Navbar({ selectedTab, handleTabChange, scrolled, section
             <IconButton
               edge="end"
               onClick={handleDrawerToggle}
-              sx={
-                useTransparent
-                  ? gradientText
-                  : { color: "#fff" }
-              }
+              sx={useTransparent ? gradientText : { color: "#fff" }}
             >
               <MenuIcon />
             </IconButton>
           ) : (
             // Desktop: Tabs
             <Tabs
-                value={selectedTab}
-                onChange={handleTabChange}
-                TabIndicatorProps={{
-                    style: {
-                    background: useTransparent
-                        ? "linear-gradient(90deg, #09bdec, #3f79ff)"
-                        : "#ffffff",
-                    height: "3px",
-                    },
-                }}
-                sx={{
-                    ".MuiTab-root": {
-                    fontFamily: "Commissioner",
-                    textTransform: "none",
-                    fontSize: "16px",
-                    fontWeight: "bold",
-                    ...(useTransparent
-                        ? {
-                            background: "linear-gradient(90deg, #09bdec, #3f79ff)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                        }
-                        : {
-                            color: "#fff",
-                            WebkitTextFillColor: "#fff",
-                        }),
-                    },
-                    ".Mui-selected": {
-                    fontWeight: "bold",
-                    ...(useTransparent
-                        ? {
-                            background: "linear-gradient(90deg, #09bdec, #3f79ff)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                        }
-                        : {
-                            color: "#fff",
-                            WebkitTextFillColor: "#fff",
-                        }),
-                    },
-                }}
-                >
-                {sections.map((label, i) => (
-                    <Tab key={i} label={label} />
-                ))}
-                </Tabs>
-
+              value={selectedTab}
+              onChange={handleTabChange}
+              TabIndicatorProps={{
+                style: {
+                  background: useTransparent
+                    ? "linear-gradient(90deg, #09bdec, #3f79ff)"
+                    : "#ffffff",
+                  height: "3px",
+                },
+              }}
+              sx={{
+                ".MuiTab-root": {
+                  fontFamily: "Commissioner",
+                  textTransform: "none",
+                  fontSize: "16px",
+                  fontWeight: "bold",
+                  ...(useTransparent
+                    ? {
+                        background: "linear-gradient(90deg, #09bdec, #3f79ff)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                      }
+                    : {
+                        color: "#fff",
+                        WebkitTextFillColor: "#fff",
+                      }),
+                },
+                ".Mui-selected": {
+                  fontWeight: "bold",
+                  ...(useTransparent
+                    ? {
+                        background: "linear-gradient(90deg, #09bdec, #3f79ff)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                      }
+                    : {
+                        color: "#fff",
+                        WebkitTextFillColor: "#fff",
+                      }),
+                },
+              }}
+            >
+              {sections.map((label, i) => (
+                <Tab key={i} label={label} />
+              ))}
+            </Tabs>
           )}
         </Toolbar>
       </AppBar>
