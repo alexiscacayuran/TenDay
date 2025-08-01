@@ -45,7 +45,7 @@ app.get("/", (req, res) => {
 
       <script>
         // Call backend API to get the current forecast
-        fetch("/api/current-sorsogon")
+        fetch("/api/demo")
           .then(res => res.json())
           .then(data => {
             // Get today’s date
@@ -91,8 +91,8 @@ app.get("/", (req, res) => {
   `);
 });
 
-// Route: Backend API that fetches forecast data from PAGASA API
-app.get("/api/current-sorsogon", async (req, res) => {
+// Route: Backend API that fetches forecast data from TenDay API
+app.get("/api/demo", async (req, res) => {
   try {
     // PAGASA endpoint with PSGC codes for Sorsogon province and city
     const url = "https://tenday.pagasa.dost.gov.ph/api/v1/tenday/current?province=0506200000&municity=0506216000";
