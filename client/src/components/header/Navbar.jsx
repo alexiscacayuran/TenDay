@@ -89,7 +89,7 @@ const Navbar = ({
               display: "flex",
               alignItems: "center",
               pointerEvents: "auto",
-              width: !isBelowLaptop ? 250 : "auto",
+              width: !isBelowLaptop ? 218 : "auto", //adjust width based on rightmost menu size to center search menu
               flexShrink: 5,
             }}
           >
