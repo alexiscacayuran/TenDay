@@ -395,7 +395,6 @@ const LayerMenu = ({
             onClose={() => {
               setOpen(false);
             }}
-            sx={{}}
             slotProps={{
               content: {
                 sx: {

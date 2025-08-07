@@ -136,7 +136,7 @@ const About = ({ openSidebar, setOpenSidebar }) => {
             <Box sx={{ mt: 3 }}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <img
-                  src="https://pubfiles.pagasa.dost.gov.ph/pagasaweb/img/pagasa-logo.png"
+                  src="https://pubfiles.pagasa.dost.gov.ph/pagasaweb/images/pagasa-logo.png"
                   alt="PAGASA Logo"
                   height={isTablet ? 35 : 25}
                 />
