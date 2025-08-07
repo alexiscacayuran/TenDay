@@ -32,6 +32,7 @@
   height: 100vh;
   width: 100%;
   background-color: #696969 !important;
+  font-family: "Commissioner Variable" !important;
 }
 
 .leaflet-container a {
@@ -112,6 +113,10 @@
   margin-top: 63px !important;
 }
 
+.leaflet-marker-pane {
+  z-index: 450 !important;
+}
+
 /* feature layer */
 .leaflet-overlay-pane {
   z-index: 350 !important;
@@ -178,6 +183,22 @@
   transform: rotate(0deg);
   background: var(--joy-palette-primary-500, #0b6bcb);
   box-shadow: none;
+}
+
+.cluster-icon {
+  width: 25px;
+  height: 25px;
+  background-color: #0b6bcb;
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  text-align: center;
+  align-items: center;
+  z-index: 450 !important;
+}
+
+.cluster-icon-count {
+  font-weight: 700 !important;
 }
 
 .station-marker {

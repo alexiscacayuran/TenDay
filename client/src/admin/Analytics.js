@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import {
-  Box, Typography
-} from '@mui/material';
-import Sidebar from './Sidebar';
-import Navbar from './Navbar';
-import Slide from '@mui/material/Slide';
+import React, { useEffect, useState } from "react";
+import { Box, Typography } from "@mui/material";
+import Sidebar from "./Sidebar";
+import Navbar from "./Navbar";
+import Slide from "@mui/material/Slide";
 import { useContext } from "react";
-import { useUser } from './UserContext'; 
+import { useUser } from "./UserContext";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -23,7 +21,7 @@ const Analytics = ({ setIsAuthenticated }) => {
   const [isLifetime, setIsLifetime] = useState(false);
 
   const handleClickAway = () => setShowSearch(false);
-  const toggleWeatherMode = () => setWeatherMode(prev => !prev);
+  const toggleWeatherMode = () => setWeatherMode((prev) => !prev);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const handleMenuClick = (e) => setAnchorEl(e.currentTarget);
@@ -42,11 +40,11 @@ const Analytics = ({ setIsAuthenticated }) => {
     const fetchReport = async () => {
       try {
         const res = await fetch("/api/report", {
-          method: "POST", 
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
-            token: localStorage.token
-          }
+            token: localStorage.token,
+          },
         });
 
         const data = await res.json();
@@ -68,21 +66,33 @@ const Analytics = ({ setIsAuthenticated }) => {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', padding: '1%', backgroundColor: weatherMode ? '#dae7f0' : '#f5f5f9' }}>
-      <Sidebar open={sidebarOpen} weatherMode={weatherMode} userName={userData?.name} userType={userData?.type}  />
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <Navbar
-        open={open}
-        toggleSidebar={toggleSidebar}
+    <Box
+      sx={{
+        display: "flex",
+        minHeight: "100vh",
+        padding: "1%",
+        backgroundColor: weatherMode ? "#dae7f0" : "#f5f5f9",
+      }}
+    >
+      <Sidebar
+        open={sidebarOpen}
         weatherMode={weatherMode}
-        anchorEl={anchorEl}
-        handleMenuClick={handleMenuClick}
-        handleMenuClose={handleMenuClose}
-        openMenu={openMenu}
-        toggleWeatherMode={toggleWeatherMode}
-        logout={logout}
         userName={userData?.name}
-        userType={userData?.type} 
+        userType={userData?.type}
+      />
+      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+        <Navbar
+          open={open}
+          toggleSidebar={toggleSidebar}
+          weatherMode={weatherMode}
+          anchorEl={anchorEl}
+          handleMenuClick={handleMenuClick}
+          handleMenuClose={handleMenuClose}
+          openMenu={openMenu}
+          toggleWeatherMode={toggleWeatherMode}
+          logout={logout}
+          userName={userData?.name}
+          userType={userData?.type}
         />
 
         <Box sx={{ p: 3 }}>
