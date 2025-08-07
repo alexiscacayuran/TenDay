@@ -422,7 +422,7 @@ const Map = () => {
             }}
             size="md"
             variant="solid"
-            color={snackbarContent?.color}
+            color={snackbarContent?.color === "success" ? "success" : "danger"}
             sx={{ maxWidth: "350px" }}
             startDecorator={snackbarContent?.icon}
           >

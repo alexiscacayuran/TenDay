@@ -99,7 +99,7 @@ const Sidebar = ({ units, setUnits, scale, setScale }) => {
             setOpenSidebar={setOpenSidebar}
           />
           <About openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
-          <ListItemButton
+          {/* <ListItemButton
             component="a"
             href="/docs"
             target="_blank"
@@ -120,7 +120,7 @@ const Sidebar = ({ units, setUnits, scale, setScale }) => {
             >
               API
             </Typography>
-          </ListItemButton>
+          </ListItemButton> */}
         </List>
       </Drawer>
     </React.Fragment>

@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef } from "react";
 import axios from "axios";
 import L from "leaflet";
 import { Pane, Marker, Popup, useMap } from "react-leaflet";
 import { DivIcon } from "leaflet";
-import { Box, Button, Stack, Typography, IconButton } from "@mui/joy";
+import { Box, Stack, Typography, IconButton } from "@mui/joy";
 import Station from "../../assets/img/station.png";
 import CloseIcon from "@mui/icons-material/Close";
+import MarkerClusterGroup from "@changey/react-leaflet-markercluster";
+import StationsPanel from "./StationsPanel";
 
 const Stations = ({ markerRef, markerLayer, selectedPolygon, setOpen }) => {
   const stations = useRef([]);
@@ -38,110 +40,115 @@ const Stations = ({ markerRef, markerLayer, selectedPolygon, setOpen }) => {
     });
   };
 
+  const createClusterCustomIcon = (cluster) => {
+    return L.divIcon({
+      html: `<b class="cluster-icon-count">${cluster.getChildCount()}</b>`,
+      className: "cluster-icon",
+      iconSize: L.point(25, 25, true),
+    });
+  };
+
   return (
     <Pane name="station">
-      {stations.current.map((stn, i) => (
-        <Marker
-          key={i}
-          ref={markerRef}
-          icon={stationMarker}
-          position={[stn.lat, stn.long]}
-          eventHandlers={{
-            click: () => {
-              if (markerLayer.current && markerRef.current) {
-                markerLayer.current.removeLayer(markerRef.current);
-              }
-              if (selectedPolygon.current) {
-                map.removeLayer(selectedPolygon.current);
-                selectedPolygon.current = null;
-              }
+      <MarkerClusterGroup
+        chunkedLoading
+        iconCreateFunction={createClusterCustomIcon}
+        showCoverageOnHover={false}
+        animate={false}
 
-              setOpen(false);
-            },
-          }}
-        >
-          <Popup
-            className="popup-station"
-            closeButton={false}
-            offset={[0, -20]}
+        // animateAddingMarkers={true}
+        // singleMarkerMode={true}
+      >
+        {stations.current.map((stn, i) => (
+          <Marker
+            key={i}
+            ref={markerRef}
+            icon={stationMarker}
+            position={[stn.lat, stn.long]}
+            eventHandlers={{
+              click: () => {
+                if (markerLayer.current && markerRef.current) {
+                  markerLayer.current.removeLayer(markerRef.current);
+                }
+                if (selectedPolygon.current) {
+                  map.removeLayer(selectedPolygon.current);
+                  selectedPolygon.current = null;
+                }
+
+                setOpen(false);
+              },
+            }}
           >
-            <Box
-              sx={{
-                width: "100%",
-                maxWidth: "250px",
-                height: "250px",
-                boxSizing: "border-box",
-                backgroundImage: `url(${Station})`,
-                borderRadius: "12px",
-                userSelect: "none",
-                cursor: "default",
-              }}
+            <Popup
+              className="popup-station"
+              closeButton={false}
+              offset={[0, -20]}
             >
-              <IconButton
-                variant="plain"
-                color="inherit"
+              <Box
                 sx={{
-                  position: "absolute",
-                  top: "0.5rem",
-                  right: "0.5rem",
-                  fontSize: "1.5rem",
-                  color: "common.white",
+                  width: "100%",
+                  maxWidth: "250px",
+                  height: "250px",
+                  boxSizing: "border-box",
+                  backgroundImage: `url(${Station})`,
+                  borderRadius: "12px",
+                  userSelect: "none",
+                  cursor: "default",
                 }}
-                onClick={handlePopupClose}
               >
-                <CloseIcon />
-              </IconButton>
-              <Stack direction="column" sx={{ p: 2 }}>
-                <Typography
-                  level="body-xs"
-                  sx={{ color: "common.white", fontSize: "0.6rem" }}
+                <IconButton
+                  variant="plain"
+                  color="inherit"
+                  sx={{
+                    position: "absolute",
+                    top: "0.5rem",
+                    right: "0.5rem",
+                    fontSize: "1.5rem",
+                    color: "common.white",
+                  }}
+                  onClick={handlePopupClose}
                 >
-                  {stn.type === "synoptic"
-                    ? "SYNOPTIC STATION"
-                    : stn.type === "agromet"
-                    ? "AGROMETEOROLOGICAL STATION"
-                    : "WEATHER STATION"}
-                </Typography>
-
-                <Box sx={{ mt: 1 }}>
+                  <CloseIcon />
+                </IconButton>
+                <Stack direction="column" sx={{ p: 2 }}>
                   <Typography
-                    level="title-md"
-                    sx={{ color: "common.white", fontWeight: "bolder" }}
+                    level="body-xs"
+                    sx={{ color: "common.white", fontSize: "0.6rem" }}
                   >
-                    {stn.station}
+                    {stn.type === "synoptic"
+                      ? "SYNOPTIC STATION"
+                      : stn.type === "agromet"
+                      ? "AGROMET STATION"
+                      : "WEATHER STATION"}
                   </Typography>
-                </Box>
-                <Typography level="body-xs" sx={{ color: "primary.300" }}>
-                  {"[" + stn.lat + ", " + stn.long + "]"}
-                </Typography>
-                <Typography level="body-xs" sx={{ color: "primary.300" }}>
-                  {"Elevation: " +
-                    (stn.elev != null ? stn.elev + "m" : "no data")}
-                </Typography>
-                <Box sx={{ mt: 3 }}>
-                  <Typography level="body-xs" sx={{ color: "common.white" }}>
-                    Explore the climatology information from this station
+
+                  <Box sx={{ mt: 1 }}>
+                    <Typography
+                      level="title-md"
+                      sx={{ color: "common.white", fontWeight: "bolder" }}
+                    >
+                      {stn.station}
+                    </Typography>
+                  </Box>
+                  <Typography level="body-xs" sx={{ color: "primary.300" }}>
+                    {"[" + stn.lat + ", " + stn.long + "]"}
                   </Typography>
-                  <Button
-                    color="primary"
-                    variant="outlined"
-                    sx={{
-                      mt: 1,
-                      borderRadius: "lg",
-                      color: "common.white",
-                      fontWeight: "bold",
-                      width: "100%",
-                      "&:hover": { color: "primary.500" },
-                    }}
-                  >
-                    View
-                  </Button>
-                </Box>
-              </Stack>
-            </Box>
-          </Popup>
-        </Marker>
-      ))}
+                  <Typography level="body-xs" sx={{ color: "primary.300" }}>
+                    {"Elevation: " +
+                      (stn.elev != null ? stn.elev + "m" : "no data")}
+                  </Typography>
+                  <Box sx={{ mt: 3 }}>
+                    <Typography level="body-xs" sx={{ color: "common.white" }}>
+                      Explore the climatology information from this station
+                    </Typography>
+                    <StationsPanel />
+                  </Box>
+                </Stack>
+              </Box>
+            </Popup>
+          </Marker>
+        ))}
+      </MarkerClusterGroup>
     </Pane>
   );
 };
