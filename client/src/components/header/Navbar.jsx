@@ -89,7 +89,7 @@ const Navbar = ({
               display: "flex",
               alignItems: "center",
               pointerEvents: "auto",
-              width: !isBelowLaptop ? 280 : "auto",
+              width: !isBelowLaptop ? 218 : "auto", //adjust width based on rightmost menu size to center search menu
               flexShrink: 5,
             }}
           >
@@ -173,7 +173,7 @@ const Navbar = ({
 
             <About />
 
-            <Button
+            {/* <Button
               component="a"
               href="/docs"
               target="_blank"
@@ -194,7 +194,7 @@ const Navbar = ({
               >
                 API
               </Typography>
-            </Button>
+            </Button> */}
           </Stack>
         </Box>
       ) : (
