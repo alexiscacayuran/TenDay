@@ -8,7 +8,7 @@ const formatNumber = (value, roundToInt = false) => {
 
 const logBatchActivity = async (client, batch, userID) => {
   const fileName = batch.fileName;
-  const logDate = moment().format("YYYY-MM-DD HH:mm:ss");
+  const logDate = moment.utc().add(8, 'hours').format("YYYY-MM-DD HH:mm:ss");
 
   const status =
     (await client.query(`SELECT id FROM date WHERE date = $1`, [batch.date]))
