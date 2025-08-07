@@ -171,19 +171,19 @@ app.use("/auth", jwtAuth);
 app.use("/api", markSolvedRoute);
 
 // PieChart
-app.use("/", pieChart);
+app.use("/api", pieChart);
 
 // BarChart
-app.use("/", barChart);
+app.use("/api", barChart);
 
 // CityChart
-app.use("/", cityChart);
+app.use("/api", cityChart);
 
 // CountryChart
-app.use("/", countryChart);
+app.use("/api", countryChart);
 
 // Route for dashboard
-app.use("/dashboard", dashboard);
+app.use("/api/dashboard", dashboard);
 app.use("/api/token", tokenPage);
 
 //report
@@ -191,7 +191,7 @@ app.use("/api/report", reportPage);
 app.use("/api", getFeedbackRouter);
 
 // Route for dashboard
-app.use("/dashboardAdmin", dashboardAdmin);
+app.use("/api/dashboardAdmin", dashboardAdmin);
 
 // Route to handle data retrieval
 app.use("/api/files", filesRoutes);
@@ -739,7 +739,7 @@ app.get("/uploadExtremesTIF", async (req, res) => {
 });
 
 //HEALTH CHECK
-app.get("/health", async (req, res) => {
+app.get("/api/health", async (req, res) => {
   const isActive = await checkWebsiteStatus("https://tenday.pagasa.dost.gov.ph/");
   res.status(isActive ? 200 : 503).json({
     status: isActive ? "ACTIVE" : "OFFLINE",
