@@ -5,12 +5,12 @@ import { logApiRequest } from "../middleware/logMiddleware.js";
 
 const router = express.Router();
 
-router.get("/normals", authenticateToken(1), async (req, res) => {
+router.get("/normals", authenticateToken(12), async (req, res) => {
   const { stn_code, month, page, per_page } = req.query;
 
   const baseMetadata = {
-    api: "Climate Normals",
-    forecast: "Climate",
+    api: "Climatological Normals",
+    forecast: "Climatological Data",
   };
   const timestamp = new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" });
 
@@ -33,7 +33,7 @@ router.get("/normals", authenticateToken(1), async (req, res) => {
     }
 
     // ✅ Log API request
-    const request_no = await logApiRequest(req, 1);
+    const request_no = await logApiRequest(req, 12);
     if (!request_no) {
       return res.status(401).json({
         metadata: baseMetadata,
