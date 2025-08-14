@@ -96,7 +96,8 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
           municity, province, region, 
           m_old AS "muniOld", p_old AS "provOld"
         FROM municities
-      `)).rows;    
+      `)).rows;   
+   
     
       const fuseOptions = {
         location: 8,
@@ -110,6 +111,8 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
     
       const fuse = new Fuse(refRows, fuseOptions);
     
+      console.log("refRows provinces:", [...new Set(refRows.map(r => r.province))]);
+
       const values = [];
       const filters = [];
     
@@ -125,9 +128,18 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
       }
     
       if (province) {
-        const match = fuse.search(province).at(0);
-        const bestMatch = match?.item?.province ?? province;
-    
+        // Search only by province in refRows
+        const provinceFuse = new Fuse(refRows, {
+          keys: ["province"],
+          threshold: 0.2,
+          isCaseSensitive: false,
+          includeScore: true,
+          ignoreDiacritics: true,
+        });
+      
+        const match = provinceFuse.search(province).at(0);
+        const bestMatch = (match && match.score < 0.2) ? match.item.province : province;
+      
         values.push(bestMatch);
         filters.push(`(
           m.province ILIKE '%' || $${values.length} || '%' OR

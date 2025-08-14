@@ -123,6 +123,10 @@ import envTokenRoutes from './admin/env.js';
 //stations
 import stationsRouter from "./synopagro/stations.js";
 
+//normals
+import { uploadNormals } from './synopagro/uploadNormals.js';
+import climateNormals from './synopagro/climateNormals.js';
+
 // Show time in Manila
 const manilaTime = DateTime.now()
   .setZone("Asia/Manila")
@@ -250,6 +254,10 @@ app.use("/api", analyticsRoutes);
 
 //Stations
 app.use("/api/stations", stationsRouter);
+
+//Normals
+app.use("/api/uploadNormals", uploadNormals);
+app.use("/api/v1/climate", climateNormals);
 
 // Route for uploading Ten Day Data
 app.get("/uploadForecastData", authenticate, async (req, res) => {
