@@ -117,8 +117,8 @@ export const authenticateToken = (api_id) => {
       const burstKey = `burst_count:${token}:${api_id}`;
       const cooldownKey = `last_request_time:${token}:${api_id}`;
 
-      const MAX_REQUESTS = 1000;              // daily limit
-      const MAX_BURST = 100;                 // max requests in short window
+      const MAX_REQUESTS = 5000;              // daily limit
+      const MAX_BURST = 500;                 // max requests in short window
       const COOL_DOWN_TIME = 60 * 60;     // 1 hour cooldown after burst
       //const COOL_DOWN_TIME = 10;           // 10 seconds cooldown after burst
 
