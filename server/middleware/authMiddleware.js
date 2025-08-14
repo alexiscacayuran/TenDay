@@ -104,13 +104,23 @@ export const authenticateToken = (api_id) => {
         return next();
       }
 
+      // Function to get seconds until next midnight
+      function secondsUntilMidnight() {
+        const now = new Date();
+        const midnight = new Date();
+        midnight.setHours(24, 0, 0, 0); // set to next midnight
+        return Math.floor((midnight - now) / 1000);
+      }
+
       // 🔁 Redis-based rate limiting
       const rateLimitKey = `rate_limit:${token}:${api_id}`;
       const burstKey = `burst_count:${token}:${api_id}`;
       const cooldownKey = `last_request_time:${token}:${api_id}`;
-      const MAX_REQUESTS = 100;
-      const MAX_BURST = 50;
-      const COOL_DOWN_TIME = 60; // seconds
+
+      const MAX_REQUESTS = 1000;              // daily limit
+      const MAX_BURST = 100;                 // max requests in short window
+      const COOL_DOWN_TIME = 60 * 60;     // 1 hour cooldown after burst
+      //const COOL_DOWN_TIME = 10;           // 10 seconds cooldown after burst
 
       const currentCount = parseInt(await redisClient.get(rateLimitKey)) || 0;
       const burstCount = parseInt(await redisClient.get(burstKey)) || 0;
@@ -127,17 +137,15 @@ export const authenticateToken = (api_id) => {
               misc: {
                 ...baseMisc,
                 status_code: 429,
-                description: `Too many requests. Please wait ${COOL_DOWN_TIME} seconds.`
+                description: `Too many requests. Please wait ${Math.ceil((COOL_DOWN_TIME * 1000 - timeElapsed) / 1000)} seconds.`
               }
             });
           }
         }
-
-        // Reset burst after cooldown
-        await redisClient.del(burstKey);
+        await redisClient.del(burstKey); // Reset burst after cooldown
       }
 
-      // Hourly limit
+      // Daily limit check
       if (currentCount >= MAX_REQUESTS) {
         return res.status(429).json({
           metadata: baseMetadata,
@@ -145,7 +153,7 @@ export const authenticateToken = (api_id) => {
           misc: {
             ...baseMisc,
             status_code: 429,
-            description: `Hourly limit of ${MAX_REQUESTS} requests exceeded. Try again later.`
+            description: `Daily limit of ${MAX_REQUESTS} requests exceeded. Try again tomorrow.`
           }
         });
       }
@@ -153,7 +161,7 @@ export const authenticateToken = (api_id) => {
       // Increment counters
       await redisClient.multi()
         .incr(rateLimitKey)
-        .expire(rateLimitKey, 3600)
+        .expire(rateLimitKey, secondsUntilMidnight()) // reset at midnight
         .incr(burstKey)
         .expire(burstKey, COOL_DOWN_TIME + 5)
         .set(cooldownKey, Date.now())

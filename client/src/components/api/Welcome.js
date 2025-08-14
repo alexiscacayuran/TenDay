@@ -172,13 +172,15 @@ export default function WelcomeSection() {
           />
 
           <Typography
-            variant="body1"
-            sx={{
-              mt: 2,
-              mb: 1,
-              color: textColor,
-              fontFamily: "Commissioner",
-            }}
+                        variant="body1"
+                        sx={{
+                            mt: 2,
+                            mb: 1,
+                            color: textColor,
+                            fontFamily: "Commissioner",
+                            maxWidth: "700px", // limit paragraph width
+                            wordBreak: "break-word", // force wrap if needed
+                        }}
           >
             Designed for <strong>developers,</strong> trusted by{" "}
             <strong>forecasters</strong> — learn how to connect with our APIs
@@ -289,10 +291,10 @@ export default function WelcomeSection() {
         md={6}
         sx={{
           display: { xs: "none", sm: "none", md: "flex" },
-          alignItems: "flex-end",
+          alignItems: "center", // vertically center instead of bottom
           justifyContent: "flex-end",
+          marginTop: "60px",
           pr: 4,
-          pb: 0,
         }}
       >
         <Box
@@ -300,9 +302,9 @@ export default function WelcomeSection() {
           src={easitool}
           alt="EasiTool"
           sx={{
-            maxWidth: "100%",
-            height: "auto",
-            objectFit: "contain",
+            maxWidth: "100%",       // keep it responsive horizontally
+            maxHeight: "90vh",     // prevents overflow vertically
+            objectFit: "contain",  // keeps aspect ratio
           }}
         />
       </Grid>

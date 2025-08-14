@@ -92,7 +92,7 @@ async function insertOrUpdateRows(rows, start_date, end_date) {
     INSERT INTO normals (
       stn_code, start_date, end_date, month, r_amount, r_days,
       t_mean, t_max, t_min, t_dbulb, t_wbulb, vapor_pressure, rh,
-      mslp, w_dir, w_spd, cloud, tstm, ltlng, dew_point
+      mslp, w_dir, w_spd, cloud, tstm, ltng, dew_point
     ) VALUES ${placeholders.join(',')}
     ON CONFLICT (stn_code, start_date, end_date, month)
     DO UPDATE SET
@@ -110,7 +110,7 @@ async function insertOrUpdateRows(rows, start_date, end_date) {
       w_spd = EXCLUDED.w_spd,
       cloud = EXCLUDED.cloud,
       tstm = EXCLUDED.tstm,
-      ltlng = EXCLUDED.ltlng,
+      ltng = EXCLUDED.ltng,
       dew_point = EXCLUDED.dew_point
   `;
 
