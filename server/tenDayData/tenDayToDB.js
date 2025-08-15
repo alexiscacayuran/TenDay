@@ -32,7 +32,6 @@ const logBatchActivity = async (client, batch, userID) => {
 
 const getMunicityMap = async (client) => {
   let cachedMunicities = await redis.get("municities_map");
-
   if (cachedMunicities) {
     return new Map(JSON.parse(cachedMunicities));
   }
@@ -47,65 +46,50 @@ const getMunicityMap = async (client) => {
       return [key, row.id];
     })
   );
-
   await redis.set(
     "municities_map",
     JSON.stringify([...municityMap]),
     "EX",
     86400
-  ); // Cache for 1 day
-
+  );
   return municityMap;
 };
 
 const getExistingDates = async (client, batchDate) => {
   const dateQuery = `SELECT id, date, municity_id FROM date WHERE date = $1`;
-  const existingDates = new Map(
+  return new Map(
     (await client.query(dateQuery, [batchDate])).rows.map((row) => [
       `${row.municity_id}-${batchDate}`,
       row.id,
     ])
   );
-  return existingDates;
 };
 
 export const uploadBatchToDB = async (batch, userID) => {
   console.log("Received userID:", userID);
-
   const client = await pool.connect();
+
   let successfullyInserted = 0;
   const missedRows = [];
 
-  try {
-    await client.query("BEGIN");
+  // hold all weather values then chunk them afterwards
+  const weatherInsertValues = {
+    cloud: [],
+    humidity: [],
+    rainfall: [],
+    temp: [],
+    wind: [],
+  };
 
+  try {
     await logBatchActivity(client, batch, userID);
 
     const municityMap = await getMunicityMap(client);
     let existingDates = await getExistingDates(client, batch.date);
 
-    const weatherInsertValues = {
-      cloud: [],
-      humidity: [],
-      rainfall: [],
-      temp: [],
-      wind: [],
-    };
-
     for (const record of batch.data) {
-      const {
-        municity,
-        province,
-        cloud_cover,
-        humidity,
-        rainfall,
-        temperature,
-        wind,
-      } = record;
-
-      const key = `${municity.trim().toLowerCase()}-${province
-        .trim()
-        .toLowerCase()}`;
+      const { municity, province, cloud_cover, humidity, rainfall, temperature, wind } = record;
+      const key = `${municity.trim().toLowerCase()}-${province.trim().toLowerCase()}`;
       const municityId = municityMap.get(key);
 
       if (!municityId) {
@@ -114,15 +98,6 @@ export const uploadBatchToDB = async (batch, userID) => {
       }
 
       let dateId = existingDates.get(`${municityId}-${batch.date}`);
-
-      // Validate dateId with DB
-      if (dateId) {
-        const check = await client.query(`SELECT 1 FROM date WHERE id = $1`, [dateId]);
-        if (check.rowCount === 0) {
-          dateId = null;
-        }
-      }
-
       if (!dateId) {
         const newDateRes = await client.query(
           `INSERT INTO date (date, start_date, municity_id) VALUES ($1, $2, $3) RETURNING id`,
@@ -131,83 +106,50 @@ export const uploadBatchToDB = async (batch, userID) => {
         dateId = newDateRes.rows[0].id;
         existingDates.set(`${municityId}-${batch.date}`, dateId);
       } else {
-        await client.query(`UPDATE date SET start_date = $1 WHERE id = $2`, [
-          batch.start_date,
-          dateId,
-        ]);
+        await client.query(
+          `UPDATE date SET start_date = $1 WHERE id = $2`,
+          [batch.start_date, dateId]
+        );
       }
 
-      // Final safety check
-      if (!dateId) {
-        missedRows.push({ ...record, reason: "Missing dateId" });
-        continue;
-      }
-
-      weatherInsertValues.cloud.push(
-        `('${cloud_cover.description}', ${dateId})`
-      );
-      weatherInsertValues.humidity.push(
-        `(${formatNumber(humidity.mean, true)}, ${dateId})`
-      );
-      weatherInsertValues.rainfall.push(
-        `('${rainfall.description}', ${formatNumber(rainfall.total)}, ${dateId})`
-      );
-      weatherInsertValues.temp.push(
-        `(${formatNumber(temperature.mean)}, ${formatNumber(
-          temperature.min
-        )}, ${formatNumber(temperature.max)}, ${dateId})`
-      );
-      weatherInsertValues.wind.push(
-        `(${formatNumber(wind.speed)}, '${wind.direction}', ${dateId})`
-      );
+      weatherInsertValues.cloud.push(`('${cloud_cover.description}', ${dateId})`);
+      weatherInsertValues.humidity.push(`(${formatNumber(humidity.mean, true)}, ${dateId})`);
+      weatherInsertValues.rainfall.push(`('${rainfall.description}', ${formatNumber(rainfall.total)}, ${dateId})`);
+      weatherInsertValues.temp.push(`(${formatNumber(temperature.mean)}, ${formatNumber(temperature.min)}, ${formatNumber(temperature.max)}, ${dateId})`);
+      weatherInsertValues.wind.push(`(${formatNumber(wind.speed)}, '${wind.direction}', ${dateId})`);
     }
 
-    // Corrected bulkInsert using sliced values
-    const MAX_BATCH_SIZE = 1000;
-    const bulkInsert = async (table, columns, values) => {
-      for (let i = 0; i < values.length; i += MAX_BATCH_SIZE) {
-        const batchValues = values.slice(i, i + MAX_BATCH_SIZE);
-        const res = await client.query(
-          `INSERT INTO ${table} (${columns}) 
-           VALUES ${batchValues.join(", ")} 
-           ON CONFLICT (date_id) 
-           DO UPDATE SET ${columns
-             .split(", ")
-             .map((col) => `${col} = EXCLUDED.${col}`)
-             .join(", ")} 
-           RETURNING *`
-        );
-        successfullyInserted += res.rowCount;
+    // Bulk insert in chunks of 500 rows per transaction
+    const MAX_CHUNK = 500;
+    const bulkInsertChunked = async (table, columns, values) => {
+      for (let i = 0; i < values.length; i += MAX_CHUNK) {
+        const chunk = values.slice(i, i + MAX_CHUNK);
+        try {
+          await client.query("BEGIN");
+          const res = await client.query(
+            `INSERT INTO ${table} (${columns})
+             VALUES ${chunk.join(", ")}
+             ON CONFLICT (date_id)
+             DO UPDATE SET ${columns.split(", ").map((col) => `${col} = EXCLUDED.${col}`).join(", ")}
+             RETURNING *`
+          );
+          successfullyInserted += res.rowCount;
+          await client.query("COMMIT");
+        } catch (err) {
+          await client.query("ROLLBACK");
+          console.error(`Error inserting chunk into ${table}:`, err);
+        }
       }
     };
 
-    // Insert to all weather tables
-    await bulkInsert(
-      "cloud_cover",
-      "description, date_id",
-      weatherInsertValues.cloud
-    );
-    await bulkInsert("humidity", "mean, date_id", weatherInsertValues.humidity);
-    await bulkInsert(
-      "rainfall",
-      "description, total, date_id",
-      weatherInsertValues.rainfall
-    );
-    await bulkInsert(
-      "temperature",
-      "mean, min, max, date_id",
-      weatherInsertValues.temp
-    );
-    await bulkInsert(
-      "wind",
-      "speed, direction, date_id",
-      weatherInsertValues.wind
-    );
+    await bulkInsertChunked("cloud_cover", "description, date_id", weatherInsertValues.cloud);
+    await bulkInsertChunked("humidity", "mean, date_id", weatherInsertValues.humidity);
+    await bulkInsertChunked("rainfall", "description, total, date_id", weatherInsertValues.rainfall);
+    await bulkInsertChunked("temperature", "mean, min, max, date_id", weatherInsertValues.temp);
+    await bulkInsertChunked("wind", "speed, direction, date_id", weatherInsertValues.wind);
 
-    await client.query("COMMIT");
     console.log("Batch uploaded successfully.");
   } catch (error) {
-    await client.query("ROLLBACK");
     console.error("Error uploading batch:", error);
     throw error;
   } finally {
