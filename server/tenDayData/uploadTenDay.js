@@ -6,8 +6,8 @@ import limit from 'p-limit';
 import { Router } from 'express';
 import { uploadBatchToDB } from './tenDayToDB.js';
 
-//const SOURCE_PATH = path.join('\\\\10.10.3.118', 'climps', '10_Day', 'Data');
-const SOURCE_PATH = path.join('/mnt/climps', '10_Day', 'Data');
+const SOURCE_PATH = path.join('\\\\10.10.3.118', 'climps', '10_Day', 'Data');
+//const SOURCE_PATH = path.join('/mnt/climps', '10_Day', 'Data');
 //const SOURCE_PATH = path.join('C:', 'Users', 'gabri', 'TenDay', 'Data');
 const router = Router();
 

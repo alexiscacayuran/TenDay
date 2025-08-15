@@ -86,6 +86,9 @@ import seasonalValidRoute from "./seasonalData/valid.js";
 
 import tokenRoutes from "./API/tokenRoutes.js";
 
+//APILogs
+import apiLogsRouter from './API/logs.js';
+
 //activateToken
 import activateTokenRoute from "./API/activate.js";
 
@@ -710,6 +713,9 @@ app.get("/seasonalprocess", async (req, res) => {
 
 // Use API routes
 app.use("/api", tokenRoutes);
+
+//API Logs
+app.use(apiLogsRouter);
 
 app.use("/api/v1/seasonal", regionalDataRoute);
 app.use("/api/v1/seasonal", provinceDataRoute);
