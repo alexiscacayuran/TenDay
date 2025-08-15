@@ -40,6 +40,7 @@ router.get("/", async (req, res) => {
         location: 8,
         threshold: 0.6,
         distance: 20,
+        useExtendedSearch: true,
         isCaseSensitive: false,
         includeScore: true,
         ignoreDiacritics: true,

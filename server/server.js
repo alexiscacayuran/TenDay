@@ -596,7 +596,9 @@ app.get("/seasonal-date", authenticate, async (req, res) => {
     // Construct folder path
     const startYear = 2025 + Math.floor((batch - 180) / 12);
     const startMonth = getMonthName(batch);
-    const folderPath = `\\\\10.10.3.118\\climps\\Seasonal_forecasts\\${batch}_${startMonth}${startYear}`;
+    //const folderPath = `\\\\10.10.3.118\\climps\\Seasonal_forecasts\\${batch}_${startMonth}${startYear}`;
+    const folderPath = `/mnt/climps/Seasonal_forecasts/${batch}_${startMonth}${startYear}`;
+
 
     // Check if folder exists
     if (!fs.existsSync(folderPath)) {
