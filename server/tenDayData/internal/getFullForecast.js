@@ -58,6 +58,7 @@ router.get("/", authenticateToken(2), async (req, res) => {
         location: 8,
         threshold: 0.6,
         distance: 30,
+        useExtendedSearch: true,
         isCaseSensitive: false,
         includeScore: true,
         ignoreDiacritics: true,
@@ -82,6 +83,9 @@ router.get("/", authenticateToken(2), async (req, res) => {
           },
         ],
       });
+
+      console.log("Fuse results:", results);
+
       if (results.length === 0) {
         return res.status(404).json({ error: "Location not found" });
       }

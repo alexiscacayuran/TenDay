@@ -58,7 +58,9 @@ const uploadToS3 = async (filePath, batch, newFileName) => {
 
 // Main processing function
 export const processSeasonalFiles = async (batch) => {
-    const batchFolder = `\\\\10.10.3.118\\climps\\Seasonal_forecasts\\${batch}_${getMonthYear(batch)}\\TIFF`;
+    //const batchFolder = `\\\\10.10.3.118\\climps\\Seasonal_forecasts\\${batch}_${getMonthYear(batch)}\\TIFF`;
+    const batchFolder = `/mnt/climps/Seasonal_forecasts/${batch}_${getMonthYear(batch)}/TIFF`;
+
 
     if (!fs.existsSync(batchFolder)) {
         throw new Error(`❌ Batch folder not found: ${batchFolder}`);
