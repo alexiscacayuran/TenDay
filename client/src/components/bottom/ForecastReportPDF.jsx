@@ -59,7 +59,7 @@ import {
   NNWIconPDF,
 } from "../utils/Assets";
 import VerticalBarGraph from "./VerticalBarGraph";
-import { getColorScale } from "../utils/OverlayList";
+import { getColorScale } from "../utils/weatherOverlays";
 import { convertValue } from "../utils/ForecastValue";
 import chroma from "chroma-js";
 

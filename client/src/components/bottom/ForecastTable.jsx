@@ -4,7 +4,7 @@ import { Typography, Link } from "@mui/joy";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
-import { getColorScale } from "../utils/OverlayList";
+import { getColorScale } from "../utils/weatherOverlays";
 import ToggleUnits from "../utils/ToggleUnits";
 import ForecastValue from "../utils/ForecastValue";
 import useMediaQuery from "@mui/material/useMediaQuery";

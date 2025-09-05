@@ -8,7 +8,7 @@ const darken = (color) => {
   return chroma(color).darken(0.4).hex();
 };
 
-const overlayList = [
+const WEATHER_OVERLAYS = [
   {
     name: "temperature_mean",
     pathName: "TMEAN",
@@ -195,7 +195,7 @@ const overlayList = [
 
 // Function to get the correct color scale
 export const getColorScale = (overlayName) => {
-  const overlay = overlayList.find((o) => o.name === overlayName);
+  const overlay = WEATHER_OVERLAYS.find((o) => o.name === overlayName);
   if (!overlay) {
     console.error(`Overlay not found: ${overlayName}`);
     return chroma.scale(["#ffffff", "#000000"]).domain([0, 1]); // Fallback grayscale
@@ -216,4 +216,4 @@ export const getColorScale = (overlayName) => {
 //   "#FA3C3C",
 //   "#F00082";
 
-export default overlayList;
+export default WEATHER_OVERLAYS;

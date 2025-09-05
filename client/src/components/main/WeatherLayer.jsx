@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import parseGeoraster from "georaster";
 import GeorasterLayer from "georaster-layer-for-leaflet";
 import chroma from "chroma-js";
-import overlayList from "../utils/OverlayList";
+import WEATHER_OVERLAYS from "../utils/weatherOverlays";
 import VectorField from "../../raster/VectorField";
 import VectorFieldAnim from "../../layer/VectorFieldAnim";
 import { buffer } from "d3";
@@ -51,7 +51,7 @@ const writeURL = (startDate, overlay, date, isVector, isLayerClipped) => {
     return `https://tendayforecast.s3.ap-southeast-1.amazonaws.com/${formattedStartDate}/UV/UV_${formattedDate}${maskedSuffix}.tif`;
   }
 
-  const currentOverlay = overlayList.find((item) => item.name === overlay);
+  const currentOverlay = WEATHER_OVERLAYS.find((item) => item.name === overlay);
   if (!currentOverlay) {
     console.error(`Invalid overlay name: "${overlay}"`);
     return null;
@@ -63,7 +63,7 @@ const writeURL = (startDate, overlay, date, isVector, isLayerClipped) => {
 };
 
 const getColorScale = (overlay, isDiscrete) => {
-  const currentOverlay = overlayList.find((o) => o.name === overlay);
+  const currentOverlay = WEATHER_OVERLAYS.find((o) => o.name === overlay);
 
   let colorScale = chroma.scale(currentOverlay.scale);
 
@@ -91,7 +91,7 @@ const WeatherLayer = ({
 }) => {
   const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
   const map = useMap();
-  const localOverlay = useRef(overlayList.find((o) => o.name === overlay));
+  const localOverlay = useRef(WEATHER_OVERLAYS.find((o) => o.name === overlay));
   const colorScale = useRef(null);
   const scalarLayerRef = useRef(null);
   const vectorLayerRef = useRef(null);
@@ -297,7 +297,7 @@ const WeatherLayer = ({
 
   useEffect(() => {
     const controller = new AbortController();
-    localOverlay.current = overlayList.find((o) => o.name === overlay);
+    localOverlay.current = WEATHER_OVERLAYS.find((o) => o.name === overlay);
 
     const load = async () => {
       setLoadingScalar(true);

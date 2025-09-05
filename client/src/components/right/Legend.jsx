@@ -3,7 +3,7 @@ import { useTheme } from "@mui/joy/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { Box, List, Typography, ListItem, Tooltip } from "@mui/joy";
 import chroma from "chroma-js";
-import overlayList from "../utils/OverlayList";
+import WEATHER_OVERLAYS from "../utils/weatherOverlays";
 import ToggleUnits, { handleToggle } from "../utils/ToggleUnits";
 import ForecastValue from "../utils/ForecastValue";
 
@@ -12,7 +12,7 @@ const Legend = ({ isDiscrete, overlay, units, setUnits }) => {
   const isTablet = useMediaQuery((theme) => theme.breakpoints.up("md"));
 
   const getColorScale = () => {
-    return overlayList.find((o) => o.name === overlay);
+    return WEATHER_OVERLAYS.find((o) => o.name === overlay);
   };
 
   const [colorScale, setColorScale] = useState(null);

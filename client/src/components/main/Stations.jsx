@@ -141,7 +141,7 @@ const Stations = ({ markerRef, markerLayer, selectedPolygon, setOpen }) => {
                     <Typography level="body-xs" sx={{ color: "common.white" }}>
                       Explore the climatology information from this station
                     </Typography>
-                    <StationsPanel />
+                    <StationsPanel station={stn} />
                   </Box>
                 </Stack>
               </Box>
