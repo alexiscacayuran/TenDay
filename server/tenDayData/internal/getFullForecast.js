@@ -84,6 +84,11 @@ router.get("/", authenticateToken(2), async (req, res) => {
         ],
       });
 
+<<<<<<< HEAD
+=======
+      console.log("Fuse results:", results);
+
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
       if (results.length === 0) {
         return res.status(404).json({ error: "Location not found" });
       }
@@ -161,8 +166,13 @@ router.get("/", authenticateToken(2), async (req, res) => {
         })),
       };
 
+<<<<<<< HEAD
       // ✅ Cache for 1 hour
       await redisClient.set(cacheKey, JSON.stringify(data), "EX", 3600); //1 Hour
+=======
+      // ✅ Cache for 1 day (86400 seconds)
+      await redisClient.set(cacheKey, JSON.stringify(data), "EX", 86400);
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
 
       console.log("Cache miss - Fetched from database");
       res.json(data);

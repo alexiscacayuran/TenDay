@@ -1,12 +1,20 @@
 import express from "express";
+<<<<<<< HEAD
 import Fuse from 'fuse.js'; 
 import { pool, redisClient } from "../db.js"; 
+=======
+import Fuse from 'fuse.js';
+import { pool, redisClient } from "../db.js";
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js"; 
 
 const router = express.Router(); 
 
+<<<<<<< HEAD
 // Map of shorthand/alternative region codes to official region names
+=======
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
 const regionMap = {
   "1": "Ilocos Region (Region I)", "i": "Ilocos Region (Region I)",
   "2": "Cagayan Valley (Region II)", "ii": "Cagayan Valley (Region II)",
@@ -27,6 +35,7 @@ const regionMap = {
   "barmm": "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
   "nir": "Negros Island Region (Region XVIII)"
 };
+<<<<<<< HEAD
 
 // Define API endpoint: /tenday/current
 router.get("/tenday/current", authenticateToken(1), async (req, res) => {
@@ -42,6 +51,20 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
   const timestamp = new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" }).replace(',', ''); // Timestamp for metadata
 
   // Base metadata
+=======
+  
+
+router.get("/tenday/current", authenticateToken(1), async (req, res) => {
+  let { municity, province, region, page = "1", limit = "10" } = req.query;
+
+  const per_page = parseInt(limit);
+  const current_page = page === "none" ? null : (isNaN(parseInt(page)) || parseInt(page) < 1 ? 1 : parseInt(page));
+
+  const today = new Date().toLocaleDateString("en-PH", { timeZone: "Asia/Manila" });
+  const offset = current_page ? (current_page - 1) * per_page : 0;
+  const timestamp = new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" }).replace(',', '');
+
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
   const baseMetadata = {
     api: "Current Forecast",
     forecast: "10-day Forecast",
@@ -89,7 +112,10 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       });
     }
 
+<<<<<<< HEAD
     // Get reference rows of municities for fuzzy matching
+=======
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
     const refRows = (await pool.query(`
       SELECT DISTINCT 
         municity, province, region, 
@@ -97,7 +123,10 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       FROM municities
     `)).rows;    
 
+<<<<<<< HEAD
     // Fuse.js fuzzy search options
+=======
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
     const fuseOptions = {
       location: 8,
       threshold: 0.6,
@@ -108,21 +137,32 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       keys: ["municity", "province", "muniOld", "provOld"]
     };    
     
+<<<<<<< HEAD
     const fuse = new Fuse(refRows, fuseOptions); // Initialize fuzzy search
 
     // --- Location matching logic ---
     if (municity) {
       // If municity param is a PSGC code → direct DB lookup
+=======
+    const fuse = new Fuse(refRows, fuseOptions);
+    
+
+    if (municity) {
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
       const mPsgcRes = await pool.query(
         "SELECT municity, province, region FROM municities WHERE m_psgc = $1 LIMIT 1",
         [municity]
       );
       if (mPsgcRes.rowCount > 0) {
+<<<<<<< HEAD
         // If found → override with DB result
+=======
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
         region = mPsgcRes.rows[0].region;
         province = mPsgcRes.rows[0].province;
         municity = mPsgcRes.rows[0].municity;
       } else {
+<<<<<<< HEAD
         // Otherwise → fuzzy search
         let fuseQuery = {
           $or: [
@@ -143,14 +183,46 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
 
         const results = fuse.search(fuseQuery);
 
+=======
+        let fuseQuery = {
+  $or: [
+    { municity },
+    { muniOld: municity }
+  ]
+};
+
+if (province) {
+  fuseQuery = {
+    $and: [
+      fuseQuery,
+      {
+        $or: [
+          { province },
+          { provOld: province }
+        ]
+      }
+    ]
+  };
+}
+
+const results = fuse.search(fuseQuery);
+
+        
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
         if (results.length > 0) {
           municity = results[0].item.municity;
           province = results[0].item.province;
           region = results[0].item.region;
         }
+<<<<<<< HEAD
       }
     } else if (province) {
       // If province param is a PSGC code
+=======
+        
+      }
+    } else if (province) {
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
       const pPsgcRes = await pool.query(
         "SELECT province, region FROM municities WHERE p_psgc = $1 LIMIT 1",
         [province]
@@ -159,7 +231,10 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
         province = pPsgcRes.rows[0].province;
         region = pPsgcRes.rows[0].region;
       } else {
+<<<<<<< HEAD
         // Otherwise → fuzzy search province
+=======
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
         const match = fuse.search(province).find(r => r.item.province);
         if (match) {
           province = match.item.province;
@@ -167,6 +242,7 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
         }
       }
     } else if (region) {
+<<<<<<< HEAD
       // Normalize region string (lowercase, no spaces)
       const normalized = region.toLowerCase().replace(/\s/g, '');
       if (regionMap[normalized]) {
@@ -174,18 +250,30 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
         region = regionMap[normalized];
       } else {
         // Otherwise check DB by PSGC code
+=======
+      const normalized = region.toLowerCase().replace(/\s/g, '');
+      if (regionMap[normalized]) {
+        region = regionMap[normalized];
+      } else {
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
         const psgcLookup = await pool.query("SELECT region FROM municities WHERE r_psgc = $1 LIMIT 1", [region]);
         if (psgcLookup.rows.length > 0) {
           region = psgcLookup.rows[0].region;
         } else {
+<<<<<<< HEAD
           // Last fallback → fuzzy search
+=======
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
           const match = fuse.search(region).find(r => r.item.region);
           if (match) region = match.item.region;
         }
       }
     }
 
+<<<<<<< HEAD
     // --- SQL Query for forecast data ---
+=======
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
     let query = `
       WITH total AS (
         SELECT COUNT(*) AS total_count 
@@ -234,8 +322,17 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
     if (province) query += ` AND m.province ILIKE $${values.indexOf(`%${province}%`) + 1}`;
     if (region) query += ` AND m.region ILIKE $${values.indexOf(`%${region}%`) + 1}`;
 
+<<<<<<< HEAD
     // Sort by province then municity
     query += ` ORDER BY m.province ASC, m.municity ASC`;
+=======
+    query += ` ORDER BY m.province ASC, m.municity ASC`;
+
+    if (current_page !== null) {
+      query += ` LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
+      values.push(per_page, offset);
+    }
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
 
     // Add pagination (if not disabled)
     if (current_page !== null) {
@@ -246,7 +343,10 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
     // Execute query
     const result = await pool.query(query, values);
 
+<<<<<<< HEAD
     // Handle no results
+=======
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
     if (result.rowCount === 0) {
       const isBadRequest = municity || province || region;
       const statusCode = isBadRequest ? 400 : 404;
@@ -266,12 +366,17 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
         ? "Bad Request: Provided municipality, province, or region not found"
         : "No content: No current forecast data found";
       
+<<<<<<< HEAD
+=======
+    
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
       return res.status(statusCode).json({
         metadata: { request_no, ...baseMetadata },
         data: [],
         misc,
       });
     }
+    
 
     // Pagination metadata
     const total_count = result.rows[0]?.total_count || 0;
@@ -284,6 +389,7 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
 
     // Loop through query results
     for (const entry of result.rows) {
+<<<<<<< HEAD
       const key = `forecast:${entry.location_id}:${entry.date_id}`; // Redis cache key
       const cachedData = await redisClient.hGetAll(key); // Check Redis cache
 
@@ -293,6 +399,15 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
         forecastEntry = { ...cachedData };
       } else {
         // Otherwise → format new forecast entry
+=======
+      const key = `forecast:${entry.location_id}:${entry.date_id}`;
+      const cachedData = await redisClient.hGetAll(key);
+
+      let forecastEntry;
+      if (cachedData && Object.keys(cachedData).length > 0) {
+        forecastEntry = { ...cachedData };
+      } else {
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
         forecastEntry = {
           date: new Date(entry.date).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' }),
           ...(municity ? {} : { municity: entry.municity }),
@@ -308,6 +423,7 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
           wind_speed: entry.speed,
           wind_direction: entry.direction,
         };
+<<<<<<< HEAD
         // Save to Redis (expire in 1 day)
         await redisClient.hSet(key, forecastEntry);
         await redisClient.expire(key, 86400);
@@ -350,6 +466,53 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
     return res.status(200).json({
       metadata,
       data: (municity && province) ? forecastData[0] : forecastData, // Return single row if specific municity+province
+=======
+        await redisClient.hSet(key, forecastEntry);
+        await redisClient.expire(key, 86400);
+      }
+
+      forecastData.push(forecastEntry);
+    }
+
+    const misc = {
+      version: defaultMisc.version,
+      timestamp: defaultMisc.timestamp,
+      method: defaultMisc.method,
+      ...(current_page !== null && {
+        current_page,
+        per_page,
+        total_count,
+        total_page,
+      }),
+      status_code: 200,
+      description: "OK",
+    };    
+
+        const firstRow = result.rows[0];
+
+        const metadata = {
+          request_no,
+          api: "Current Forecast",
+          forecast: "10-day Forecast",
+          issuance_date,
+        };
+        
+        // Only add location-related fields if query params exist
+        if (req.query.region && firstRow?.region) {
+          metadata.region = firstRow.region;
+        }
+        if (req.query.province && firstRow?.province) {
+          metadata.province = firstRow.province;
+        }
+        if (req.query.municity && firstRow?.municity) {
+          metadata.municity = firstRow.municity;
+        }        
+               
+
+    return res.status(200).json({
+      metadata,
+      data: (municity && province) ? forecastData[0] : forecastData,
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
       misc,
     });
 

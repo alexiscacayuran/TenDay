@@ -6,8 +6,13 @@ import limit from 'p-limit';
 import { Router } from 'express';
 import { uploadBatchToDB } from './tenDayToDB.js';
 
+<<<<<<< HEAD
 //const SOURCE_PATH = path.join('\\\\10.10.3.118', 'climps', '10_Day', 'Data');
 const SOURCE_PATH = path.join('/mnt/climps', '10_Day', 'Data');
+=======
+const SOURCE_PATH = path.join('\\\\10.10.3.118', 'climps', '10_Day', 'Data');
+//const SOURCE_PATH = path.join('/mnt/climps', '10_Day', 'Data');
+>>>>>>> cfab6a85c6ac76bafdcc3838309624210472c731
 //const SOURCE_PATH = path.join('C:', 'Users', 'gabri', 'TenDay', 'Data');
 const router = Router();
 
@@ -18,6 +23,8 @@ const decodeCity = (city) => {
         .replace(/Ã©/g, 'é')     // Optional: fix é if needed
         .normalize();
 };
+
+
 
 // Utility to encode 'ñ' to 'Ã±' when writing data back
 const encodeCity = (city) => {
