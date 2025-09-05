@@ -44,6 +44,7 @@ import {
   retrieveForecastFile,
   streamForecastFile,
 } from "./retrieveFile/tenDay.js";
+import { collectDates } from "./tenDayData/availableDates.js";
 
 import {
   retrieveSeasonalFile,
@@ -324,6 +325,10 @@ app.get("/uploadForecastXLSX", authenticate, async (req, res) => {
     return res.status(500).send("Error processing files");
   }
 });
+
+//Collect dates
+app.get("/api/v1/tenday/dates", (req, res) => res.json({ dates: collectDates() }));
+
 
 app.get("/api/v1/file/tenday", async (req, res) => {
   const { issuance_date, file, offset, masked, target, token } = req.query;

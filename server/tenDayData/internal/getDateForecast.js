@@ -138,7 +138,7 @@ router.get("/", async (req, res) => {
         },
       };
 
-      await redisClient.set(cacheKey, JSON.stringify(data), "EX", 86400); // 1 day
+      await redisClient.set(cacheKey, JSON.stringify(data), "EX", 3600); // 1 hour
 
       console.log("Cache miss - Fetched from database");
       res.json(data);

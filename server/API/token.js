@@ -76,8 +76,8 @@ router.post("/generate-token", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: 'tenday.pagasa@gmail.com',
-        pass: 'lnio apew yaup fqds',
+        user: 'tenday.pagasa@gmail.com', //Ilalagay pa sa env
+        pass: 'lnio apew yaup fqds', //Ilalagay pa sa env
       },
     });
 
@@ -101,18 +101,21 @@ router.post("/generate-token", async (req, res) => {
             : `<p><strong>This token has lifetime access.</strong></p>`}
     
           <p>Please <a href="https://tenday.pagasa.dost.gov.ph/api/v1/validate?token=${createdToken}">click here to activate your token</a>.</p>
+          <p>You may also <a href="https://tenday.pagasa.dost.gov.ph/docs">click this to see the full API documentation</a>.</p>
     
           <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
     
           <p style="font-size: 12px; color: #777;">If you did not request this token, please ignore this email or contact support immediately.</p>
+          <p style="font-size: 12px; color: #777;">⚠️ Please do not reply to this email as it was sent automatically and is not monitored.</p>
         </div>
     
         <p style="text-align: center; font-size: 12px; color: #999; margin-top: 30px;">
           &copy; ${new Date().getFullYear()} API Services | TenDay
         </p>
       </div>
-    `,    
+      `,    
     });
+    
 
     return res.json({ token: createdToken, expires_at });
 

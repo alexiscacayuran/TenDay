@@ -1,11 +1,12 @@
 import express from "express";
-import Fuse from 'fuse.js';
-import { pool, redisClient } from "../db.js";
+import Fuse from 'fuse.js'; 
+import { pool, redisClient } from "../db.js"; 
 import { authenticateToken } from "../middleware/authMiddleware.js";
-import { logApiRequest } from "../middleware/logMiddleware.js";
+import { logApiRequest } from "../middleware/logMiddleware.js"; 
 
-const router = express.Router();
+const router = express.Router(); 
 
+// Map of shorthand/alternative region codes to official region names
 const regionMap = {
   "1": "Ilocos Region (Region I)", "i": "Ilocos Region (Region I)",
   "2": "Cagayan Valley (Region II)", "ii": "Cagayan Valley (Region II)",
@@ -26,23 +27,27 @@ const regionMap = {
   "barmm": "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
   "nir": "Negros Island Region (Region XVIII)"
 };
-  
 
+// Define API endpoint: /tenday/current
 router.get("/tenday/current", authenticateToken(1), async (req, res) => {
+  // Extract query params, defaulting page=1, limit=10
   let { municity, province, region, page = "1", limit = "10" } = req.query;
 
-  const per_page = parseInt(limit);
+  const per_page = parseInt(limit); // Results per page
+  // Handle pagination logic (null if "none")
   const current_page = page === "none" ? null : (isNaN(parseInt(page)) || parseInt(page) < 1 ? 1 : parseInt(page));
 
-  const today = new Date().toLocaleDateString("en-PH", { timeZone: "Asia/Manila" });
-  const offset = current_page ? (current_page - 1) * per_page : 0;
-  const timestamp = new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" }).replace(',', '');
+  const today = new Date().toLocaleDateString("en-PH", { timeZone: "Asia/Manila" }); // Current PH date
+  const offset = current_page ? (current_page - 1) * per_page : 0; // Pagination offset
+  const timestamp = new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" }).replace(',', ''); // Timestamp for metadata
 
+  // Base metadata
   const baseMetadata = {
     api: "Current Forecast",
     forecast: "10-day Forecast",
   };
 
+  // Default response info
   const defaultMisc = {
     version: "1.0",
     timestamp,
@@ -52,10 +57,12 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
   };
 
   try {
+    // Check if user is authorized (must have API id 0 or 1)
     const { api_ids } = req.user || {};
     const isAuthorized = api_ids?.some((id) => id === 0 || id === 1);
 
     if (!isAuthorized) {
+      // Return 403 if unauthorized
       return res.status(403).json({
         metadata: baseMetadata,
         data: [],
@@ -67,8 +74,10 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       });
     }
 
+    // Log API request (generate request number)
     const request_no = await logApiRequest(req, 1);
     if (!request_no) {
+      // Return 401 if logging/authentication failed
       return res.status(401).json({
         metadata: baseMetadata,
         data: [],
@@ -80,6 +89,7 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       });
     }
 
+    // Get reference rows of municities for fuzzy matching
     const refRows = (await pool.query(`
       SELECT DISTINCT 
         municity, province, region, 
@@ -87,6 +97,7 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       FROM municities
     `)).rows;    
 
+    // Fuse.js fuzzy search options
     const fuseOptions = {
       location: 8,
       threshold: 0.6,
@@ -97,51 +108,49 @@ router.get("/tenday/current", authenticateToken(1), async (req, res) => {
       keys: ["municity", "province", "muniOld", "provOld"]
     };    
     
-    const fuse = new Fuse(refRows, fuseOptions);
-    
+    const fuse = new Fuse(refRows, fuseOptions); // Initialize fuzzy search
 
+    // --- Location matching logic ---
     if (municity) {
+      // If municity param is a PSGC code → direct DB lookup
       const mPsgcRes = await pool.query(
         "SELECT municity, province, region FROM municities WHERE m_psgc = $1 LIMIT 1",
         [municity]
       );
       if (mPsgcRes.rowCount > 0) {
+        // If found → override with DB result
         region = mPsgcRes.rows[0].region;
         province = mPsgcRes.rows[0].province;
         municity = mPsgcRes.rows[0].municity;
       } else {
+        // Otherwise → fuzzy search
         let fuseQuery = {
-  $or: [
-    { municity },
-    { muniOld: municity }
-  ]
-};
+          $or: [
+            { municity },
+            { muniOld: municity }
+          ]
+        };
 
-if (province) {
-  fuseQuery = {
-    $and: [
-      fuseQuery,
-      {
-        $or: [
-          { province },
-          { provOld: province }
-        ]
-      }
-    ]
-  };
-}
+        if (province) {
+          // Narrow down by province if provided
+          fuseQuery = {
+            $and: [
+              fuseQuery,
+              { $or: [{ province }, { provOld: province }] }
+            ]
+          };
+        }
 
-const results = fuse.search(fuseQuery);
+        const results = fuse.search(fuseQuery);
 
-        
         if (results.length > 0) {
           municity = results[0].item.municity;
           province = results[0].item.province;
           region = results[0].item.region;
         }
-        
       }
     } else if (province) {
+      // If province param is a PSGC code
       const pPsgcRes = await pool.query(
         "SELECT province, region FROM municities WHERE p_psgc = $1 LIMIT 1",
         [province]
@@ -150,6 +159,7 @@ const results = fuse.search(fuseQuery);
         province = pPsgcRes.rows[0].province;
         region = pPsgcRes.rows[0].region;
       } else {
+        // Otherwise → fuzzy search province
         const match = fuse.search(province).find(r => r.item.province);
         if (match) {
           province = match.item.province;
@@ -157,20 +167,25 @@ const results = fuse.search(fuseQuery);
         }
       }
     } else if (region) {
+      // Normalize region string (lowercase, no spaces)
       const normalized = region.toLowerCase().replace(/\s/g, '');
       if (regionMap[normalized]) {
+        // Use mapped region if available
         region = regionMap[normalized];
       } else {
+        // Otherwise check DB by PSGC code
         const psgcLookup = await pool.query("SELECT region FROM municities WHERE r_psgc = $1 LIMIT 1", [region]);
         if (psgcLookup.rows.length > 0) {
           region = psgcLookup.rows[0].region;
         } else {
+          // Last fallback → fuzzy search
           const match = fuse.search(region).find(r => r.item.region);
           if (match) region = match.item.region;
         }
       }
     }
 
+    // --- SQL Query for forecast data ---
     let query = `
       WITH total AS (
         SELECT COUNT(*) AS total_count 
@@ -179,6 +194,7 @@ const results = fuse.search(fuseQuery);
         WHERE d.date = $1`;
     const values = [today];
 
+    // Add filters based on query params
     if (municity) {
       values.push(`%${municity}%`);
       query += ` AND m.municity ILIKE $${values.length}`;
@@ -192,6 +208,7 @@ const results = fuse.search(fuseQuery);
       query += ` AND m.region ILIKE $${values.length}`;
     }
 
+    // Select joined forecast data
     query += `)
       SELECT 
         (SELECT total_count FROM total) AS total_count,
@@ -212,19 +229,24 @@ const results = fuse.search(fuseQuery);
       INNER JOIN wind AS w ON d.id = w.date_id 
       WHERE d.date = $1`;
 
+    // Add filters again for data query
     if (municity) query += ` AND m.municity ILIKE $${values.indexOf(`%${municity}%`) + 1}`;
     if (province) query += ` AND m.province ILIKE $${values.indexOf(`%${province}%`) + 1}`;
     if (region) query += ` AND m.region ILIKE $${values.indexOf(`%${region}%`) + 1}`;
 
+    // Sort by province then municity
     query += ` ORDER BY m.province ASC, m.municity ASC`;
 
+    // Add pagination (if not disabled)
     if (current_page !== null) {
       query += ` LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
       values.push(per_page, offset);
     }
 
+    // Execute query
     const result = await pool.query(query, values);
 
+    // Handle no results
     if (result.rowCount === 0) {
       const isBadRequest = municity || province || region;
       const statusCode = isBadRequest ? 400 : 404;
@@ -244,15 +266,14 @@ const results = fuse.search(fuseQuery);
         ? "Bad Request: Provided municipality, province, or region not found"
         : "No content: No current forecast data found";
       
-    
       return res.status(statusCode).json({
         metadata: { request_no, ...baseMetadata },
         data: [],
         misc,
       });
     }
-    
 
+    // Pagination metadata
     const total_count = result.rows[0]?.total_count || 0;
     const total_page = current_page !== null ? Math.ceil(total_count / per_page) : 1;
     const issuance_date = result.rows[0]?.start_date
@@ -261,14 +282,17 @@ const results = fuse.search(fuseQuery);
 
     const forecastData = [];
 
+    // Loop through query results
     for (const entry of result.rows) {
-      const key = `forecast:${entry.location_id}:${entry.date_id}`;
-      const cachedData = await redisClient.hGetAll(key);
+      const key = `forecast:${entry.location_id}:${entry.date_id}`; // Redis cache key
+      const cachedData = await redisClient.hGetAll(key); // Check Redis cache
 
       let forecastEntry;
       if (cachedData && Object.keys(cachedData).length > 0) {
+        // If cached → use cached data
         forecastEntry = { ...cachedData };
       } else {
+        // Otherwise → format new forecast entry
         forecastEntry = {
           date: new Date(entry.date).toLocaleDateString('en-PH', { timeZone: 'Asia/Manila' }),
           ...(municity ? {} : { municity: entry.municity }),
@@ -284,6 +308,7 @@ const results = fuse.search(fuseQuery);
           wind_speed: entry.speed,
           wind_direction: entry.direction,
         };
+        // Save to Redis (expire in 1 day)
         await redisClient.hSet(key, forecastEntry);
         await redisClient.expire(key, 86400);
       }
@@ -291,6 +316,7 @@ const results = fuse.search(fuseQuery);
       forecastData.push(forecastEntry);
     }
 
+    // Misc info for response
     const misc = {
       version: defaultMisc.version,
       timestamp: defaultMisc.timestamp,
@@ -305,34 +331,30 @@ const results = fuse.search(fuseQuery);
       description: "OK",
     };    
 
-        const firstRow = result.rows[0];
+    const firstRow = result.rows[0];
 
-        const metadata = {
-          request_no,
-          api: "Current Forecast",
-          forecast: "10-day Forecast",
-          issuance_date,
-        };
-        
-        // Only add location-related fields if query params exist
-        if (req.query.region && firstRow?.region) {
-          metadata.region = firstRow.region;
-        }
-        if (req.query.province && firstRow?.province) {
-          metadata.province = firstRow.province;
-        }
-        if (req.query.municity && firstRow?.municity) {
-          metadata.municity = firstRow.municity;
-        }        
-               
+    // Metadata for response
+    const metadata = {
+      request_no,
+      api: "Current Forecast",
+      forecast: "10-day Forecast",
+      issuance_date,
+    };
+    
+    // Add location info if provided in query
+    if (req.query.region && firstRow?.region) metadata.region = firstRow.region;
+    if (req.query.province && firstRow?.province) metadata.province = firstRow.province;
+    if (req.query.municity && firstRow?.municity) metadata.municity = firstRow.municity;
 
+    // ✅ Successful response
     return res.status(200).json({
       metadata,
-      data: (municity && province) ? forecastData[0] : forecastData,
+      data: (municity && province) ? forecastData[0] : forecastData, // Return single row if specific municity+province
       misc,
     });
 
   } catch (error) {
+    // Handle unexpected errors
     console.error("❌ Error executing query:", error);
     return res.status(500).json({
       metadata: baseMetadata,
@@ -346,4 +368,4 @@ const results = fuse.search(fuseQuery);
   }
 });
 
-export default router;
+export default router; 

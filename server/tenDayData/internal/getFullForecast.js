@@ -84,8 +84,6 @@ router.get("/", authenticateToken(2), async (req, res) => {
         ],
       });
 
-      console.log("Fuse results:", results);
-
       if (results.length === 0) {
         return res.status(404).json({ error: "Location not found" });
       }
@@ -163,8 +161,8 @@ router.get("/", authenticateToken(2), async (req, res) => {
         })),
       };
 
-      // ✅ Cache for 1 day (86400 seconds)
-      await redisClient.set(cacheKey, JSON.stringify(data), "EX", 86400);
+      // ✅ Cache for 1 hour
+      await redisClient.set(cacheKey, JSON.stringify(data), "EX", 3600); //1 Hour
 
       console.log("Cache miss - Fetched from database");
       res.json(data);

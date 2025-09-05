@@ -8,16 +8,16 @@ const router = express.Router();
 const POWER_BI_URL =
   'https://app.powerbi.com/view?r=eyJrIjoiMDhjM2JiM2UtMjI0Ni00ZGM0LThmODYtMGIyOTEwMGJiNDRlIiwidCI6ImIzN2NiMTliLTNjMzAtNGJhNi1hNWE5LWUxYzViNTJjODMwMiIsImMiOjEwfQ%3D%3D&navContentPaneEnabled=false&filterPaneEnabled=false&$fitToPage=true';
 
-const BASE_URL = 'http://tenday.pagasa.dost.gov.ph:3030/easitool';
-const EXPIRE_SECONDS = 10800; //3 Hours
-//const EXPIRE_SECONDS = 60; //3 Hours
+const BASE_URL = 'http://tenday.pagasa.dost.gov.ph:3030/admin/easitool';
+//const EXPIRE_SECONDS = 10800; //3 Hours
+const EXPIRE_SECONDS = 86400; //24 H
 
 // Setup email
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'tenday.pagasa@gmail.com',
-    pass: 'lnio apew yaup fqds',
+    user: 'tenday.pagasa@gmail.com', //Ilalagay pa sa env
+    pass: 'lnio apew yaup fqds', //Ilalagay pa sa env
   }
 });
 
@@ -49,6 +49,8 @@ router.post('/generate-link', async (req, res) => {
   const token = randomUUID();
   const expiresAt = new Date(Date.now() + EXPIRE_SECONDS * 1000);
   const link = `${BASE_URL}/${token}`;
+
+  const hours = Math.floor(EXPIRE_SECONDS / 3600);
 
   try {
     await pool.query(
@@ -83,8 +85,8 @@ router.post('/generate-link', async (req, res) => {
         <a href="${link}" style="color: #0066cc;">${link}</a>
       </p>
       <p style="font-size: 13px; color: #999; margin-top: 30px;">
-        ⚠️ This link will expire in <strong>3 hours</strong> for your security.
-      </p>
+          ⚠️ This link will expire in <strong>${hours} ${hours === 1 ? 'Hour' : 'Hours'}</strong> for your security.
+        </p>
     </div>
     <div style="background: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #999;">
       Please do not reply to this email. For assistance, contact your system administrator.
