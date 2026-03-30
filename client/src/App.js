@@ -23,7 +23,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Map />} />
-            <Route path="/docs" element={<API />} />
+            {/*<Route path="/docs" element={<API />} /> */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
