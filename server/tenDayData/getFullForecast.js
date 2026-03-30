@@ -111,7 +111,7 @@ router.get("/tenday/full", authenticateToken(2), async (req, res) => {
     
       const fuse = new Fuse(refRows, fuseOptions);
     
-      console.log("refRows provinces:", [...new Set(refRows.map(r => r.province))]);
+      //console.log("refRows provinces:", [...new Set(refRows.map(r => r.province))]);
 
       const values = [];
       const filters = [];

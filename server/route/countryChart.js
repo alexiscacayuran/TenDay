@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 const router = express.Router();
 
 const client = new BetaAnalyticsDataClient({
-  keyFilename: "./tenDayAnalytics.json", // Your service account key
+  keyFilename: "./tenDayAnalytics.json", // service account key
 });
 
 const propertyId = "properties/484898570";

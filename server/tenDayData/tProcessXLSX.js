@@ -50,11 +50,11 @@ export const uploadForecastXLSX = async (year, month, day) => {
     if (dayMatch) {
       const dayOffset = parseInt(dayMatch[1], 10) - 1;
       const fileDate = baseDate.clone().add(dayOffset, 'days');
-      newFileName = `TanawPH_${fileDate.format('YYYYMMDD')}.xlsx`;
+      newFileName = `TenDay_${fileDate.format('YYYYMMDD')}.xlsx`;
       logLabel = `Uploaded ${file} as ${newFileName}`;
     } 
     else if (/^10 Day Weather Forecast for Municipalities.*\.xlsx$/i.test(file)) {
-      newFileName = 'TanawPH.xlsx';
+      newFileName = 'TenDay.xlsx';
       logLabel = `Uploaded ${file} as ${newFileName}`;
     } 
     else {

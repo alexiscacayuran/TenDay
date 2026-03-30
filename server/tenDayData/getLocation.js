@@ -1,5 +1,5 @@
 import express from "express";
-import { pool, redisClient } from "../db.js";
+import { pool } from "../db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
 
@@ -22,52 +22,36 @@ const regionMap = {
   "13": "Caraga (Region XIII)", "xiii": "Caraga (Region XIII)",
   "ncr": "National Capital Region (NCR)", "NCR": "National Capital Region (NCR)",
   "barmm": "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
-  "nir": "Negros Island Region (Region XVIII)"
+  "nir": "Negros Island Region (Region XVIII)",
+  "car": "Cordillera Administrative Region (CAR)"
 };
 
 router.get("/location", authenticateToken(6), async (req, res) => {
+  const { region, province, year, month, day } = req.query;
+
+  const baseFooter = {
+    version: "1.0",
+    timestamp: new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" }).replace(",", ""),
+    method: "GET",
+    current_page: 1,
+    per_page: 0,
+    total_count: 0,
+    total_pages: 1,
+  };
+
   try {
-    const token = req.headers["token"];
-    const { region, province } = req.query;
-
-    const baseFooter = {
-      version: "1.0",
-      timestamp: new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" }).replace(",", ""),
-      method: "GET",
-      current_page: 1,
-      per_page: 0,
-      total_count: 0,
-      total_pages: 1,
-    };
-
-    const tokenResult = await pool.query(`SELECT api_ids FROM api_tokens WHERE token = $1 LIMIT 1`, [token]);
-    if (tokenResult.rows.length === 0 || !tokenResult.rows[0].api_ids.includes(6)) {
-      return res.status(403).json({
-        metadata: {
-          api: "Location",
-          forecast: "Municipalities, Provinces, and Regions",
-        },
-        data: [],
-        footer: {
-          ...baseFooter,
-          status_code: 403,
-          description: "Forbidden: You are not authorized to access this API.",
-        },
-      });
-    }
-
     const requestNo = await logApiRequest(req, 6);
 
-    const regionOrPsgc = region?.toLowerCase();
-    const normalizedRegion = regionMap[regionOrPsgc];
+    // -------------------------
+    // NO PARAMS → RETURN REGIONS
+    // -------------------------
+    if (!region && !province && !year && !month && !day) {
+      const regionResult = await pool.query(
+        `SELECT region, MIN(r_psgc::bigint) AS psgc_code
+         FROM municities
+         GROUP BY region`
+      );
 
-    const regionResult = await pool.query(`SELECT DISTINCT region, r_psgc FROM municities`);
-    const regionPsgcMap = {};
-    regionResult.rows.forEach(r => {
-      if (!regionPsgcMap[r.region]) regionPsgcMap[r.region] = r.r_psgc;
-    });
-
-    if (!region && !province) {
       const regionGroups = {};
       for (const [code, name] of Object.entries(regionMap)) {
         if (!regionGroups[name]) regionGroups[name] = new Set();
@@ -80,150 +64,132 @@ router.get("/location", authenticateToken(6), async (req, res) => {
         "Western Visayas (Region VI)", "Central Visayas (Region VII)", "Eastern Visayas (Region VIII)",
         "Zamboanga Peninsula (Region IX)", "Northern Mindanao (Region X)", "Davao Region (Region XI)",
         "SOCCSKSARGEN (Region XII)", "Caraga (Region XIII)", "National Capital Region (NCR)",
-        "Cordillera Administrative Region (CAR)", "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)",
-        "Negros Island Region (Region XVIII)"
+        "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)", "Negros Island Region (Region XVIII)",
+        "Cordillera Administrative Region (CAR)"
       ];
 
-      const formatted = customOrder.filter(name => regionGroups[name]).map(name => ({
-        name,
-        codes: Array.from(regionGroups[name]).sort().join(", "),
-        psgc_code: regionPsgcMap[name] || null
-      }));
+      const formatted = customOrder
+        .filter(name => regionGroups[name])
+        .map(name => {
+          const r = regionResult.rows.find(r => r.region === name);
+          return {
+            name,
+            codes: Array.from(regionGroups[name]).sort().join(", "),
+            psgc_code: r?.psgc_code?.toString() || null
+          };
+        });
 
       return res.json({
-        metadata: {
-          request_no: requestNo,
-          api: "Location",
-          forecast: "Municipalities, Provinces, and Regions",
-        },
+        metadata: { request_no: requestNo, api: req.user.api_name, forecast: req.user.forecast },
         data: formatted,
-        footer: {
-          ...baseFooter,
-          total_count: formatted.length,
-          per_page: formatted.length,
-          status_code: 200,
-          description: "OK",
-        },
+        footer: { ...baseFooter, total_count: formatted.length, per_page: formatted.length, status_code: 200, description: "OK" }
       });
     }
 
-    // REGION MODE
+    // -------------------------
+    // REGION PARAM → RETURN PROVINCES
+    // -------------------------
     if (region) {
-      const result = await pool.query(`
-        SELECT DISTINCT province, p_psgc, region
-        FROM municities
-        WHERE LOWER(region) = $1 OR r_psgc = $2
-        ORDER BY province ASC
-      `, [normalizedRegion?.toLowerCase(), region]);
+      const normalizedRegion = regionMap[region.toLowerCase()] || region;
 
-      if (result.rowCount === 0) {
-        return res.status(404).json({
-          metadata: {
-            request_no: requestNo,
-            api: "Location",
-            forecast: "Municipalities, Provinces, and Regions",
-          },
-          data: [],
-          footer: {
-            ...baseFooter,
-            status_code: 404,
-            description: "Bad Request: Provided province or region not found",
-          },
-        });
-      }
-
-      const provinces = result.rows.map(r => ({ name: r.province, psgc_code: r.p_psgc }));
-      const fullRegionName = result.rows[0]?.region || normalizedRegion || region;
-
-      return res.json({
-        metadata: {
-          request_no: requestNo,
-          api: "Location",
-          forecast: "Municipalities, Provinces, and Regions",
-          region: fullRegionName,
-        },
-        data: provinces,
-        footer: {
-          ...baseFooter,
-          total_count: provinces.length,
-          per_page: provinces.length,
-          status_code: 200,
-          description: "OK",
-        },
-      });
-    }
-
-    // PROVINCE MODE
-    if (province) {
-      const result = await pool.query(`
-        SELECT municity, m_psgc, province
-        FROM municities
-        WHERE LOWER(province) = $1 OR p_psgc = $2
-        ORDER BY municity ASC
-      `, [province?.toLowerCase(), province]);
-
-      if (result.rowCount === 0) {
-        return res.status(404).json({
-          metadata: {
-            request_no: requestNo,
-            api: "Location",
-            forecast: "Municipalities, Provinces, and Regions",
-          },
-          data: [],
-          footer: {
-            ...baseFooter,
-            status_code: 404,
-            description: "Bad Request: Provided province or region not found",
-          },
-        });
-      }
-
-      const municipalities = result.rows.map(r => ({ name: r.municity, psgc_code: r.m_psgc }));
-
-      const regResult = await pool.query(
-        `SELECT DISTINCT region FROM municities WHERE LOWER(province) = $1 OR p_psgc = $2`,
-        [province?.toLowerCase(), province]
+      const result = await pool.query(
+        `SELECT province, MIN(p_psgc::bigint) AS psgc_code
+         FROM municities
+         WHERE LOWER(region) = $1 OR r_psgc = $2
+         GROUP BY province
+         ORDER BY province ASC`,
+        [normalizedRegion.toLowerCase(), region]
       );
-      const regionName = regResult.rows[0]?.region || null;
-      const fullProvinceName = result.rows[0]?.province || province;
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({
+          metadata: { request_no: requestNo, api: req.user.api_name, forecast: req.user.forecast },
+          data: [],
+          footer: { ...baseFooter, status_code: 404, description: "Region not found" }
+        });
+      }
+
+      const provinces = result.rows.map(r => ({ name: r.province, psgc_code: r.psgc_code.toString() }));
 
       return res.json({
-        metadata: {
-          request_no: requestNo,
-          api: "Location",
-          forecast: "Municipalities, Provinces, and Regions",
-          province: fullProvinceName,
-          region: regionName,
-        },
-        data: municipalities,
-        footer: {
-          ...baseFooter,
-          total_count: municipalities.length,
-          per_page: municipalities.length,
-          status_code: 200,
-          description: "OK",
-        },
+        metadata: { request_no: requestNo, api: req.user.api_name, forecast: req.user.forecast, region: normalizedRegion },
+        data: provinces,
+        footer: { ...baseFooter, total_count: provinces.length, per_page: provinces.length, status_code: 200, description: "OK" }
       });
     }
-  } catch (error) {
-    console.error("Error:", error.stack);
-    return res.status(500).json({
-      metadata: {
-        api: "Location",
-        forecast: "Municipalities, Provinces, and Regions",
-      },
+
+    // -------------------------
+    // PROVINCE PARAM → RETURN MUNICIPALITIES
+    // -------------------------
+    if (province) {
+      const result = await pool.query(
+        `SELECT municity, MIN(m_psgc::bigint) AS psgc_code
+         FROM municities
+         WHERE LOWER(province) = $1 OR p_psgc = $2
+         GROUP BY municity
+         ORDER BY municity ASC`,
+        [province.toLowerCase(), province]
+      );
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({
+          metadata: { request_no: requestNo, api: req.user.api_name, forecast: req.user.forecast },
+          data: [],
+          footer: { ...baseFooter, status_code: 404, description: "Province not found" }
+        });
+      }
+
+      const municipalities = result.rows.map(r => ({ name: r.municity, psgc_code: r.psgc_code.toString() }));
+
+      return res.json({
+        metadata: { request_no: requestNo, api: req.user.api_name, forecast: req.user.forecast, province },
+        data: municipalities,
+        footer: { ...baseFooter, total_count: municipalities.length, per_page: municipalities.length, status_code: 200, description: "OK" }
+      });
+    }
+
+    // -------------------------
+    // YEAR/MONTH/DAY → RETURN TENDAY FILES
+    // -------------------------
+    if (year && month && day) {
+      const result = await pool.query(
+        `SELECT id, file_name, file_path, created_at
+         FROM tenday_files
+         WHERE year = $1 AND month = $2 AND day = $3
+         ORDER BY created_at DESC`,
+        [year, month, day]
+      );
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({
+          metadata: { request_no: requestNo, api: req.user.api_name, forecast: req.user.forecast },
+          data: [],
+          footer: { ...baseFooter, status_code: 404, description: "No files found for the given date" }
+        });
+      }
+
+      return res.json({
+        metadata: { request_no: requestNo, api: req.user.api_name, forecast: req.user.forecast },
+        data: result.rows,
+        footer: { ...baseFooter, total_count: result.rowCount, per_page: result.rowCount, status_code: 200, description: "OK" }
+      });
+    }
+
+    // -------------------------
+    // FALLBACK → BAD REQUEST
+    // -------------------------
+    return res.status(400).json({
+      metadata: { request_no: requestNo, api: req.user.api_name, forecast: req.user.forecast },
       data: [],
-      footer: {
-        version: "1.0",
-        timestamp: new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila" }).replace(",", ""),
-        method: "GET",
-        current_page: 1,
-        per_page: 0,
-        total_count: 0,
-        total_pages: 1,
-        status_code: 500,
-        description: "Internal Server Error",
-      },
+      footer: { ...baseFooter, status_code: 400, description: "Bad Request" }
+    });
+
+  } catch (err) {
+    console.error("Error in /location:", err.stack);
+    return res.status(500).json({
+      metadata: { api: req.user?.api_name || "Location", forecast: req.user?.forecast || "Municipalities, Provinces, and Regions" },
+      data: [],
+      footer: { ...baseFooter, status_code: 500, description: "Internal Server Error" }
     });
   }
 });

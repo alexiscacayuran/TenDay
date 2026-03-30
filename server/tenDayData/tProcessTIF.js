@@ -136,8 +136,8 @@ const maskTif = async (targetFilePath, outputFileName, paramName) => {
 
 // Main function to process and upload forecast TIF files
 export const uploadForecastTIF = async (year, month, day) => {
-  const SOURCE_PATH = "\\\\10.10.3.118\\climps\\10_Day\\Data";
-  //const SOURCE_PATH = "/mnt/climps/10_Day/Data";
+  //const SOURCE_PATH = "\\\\10.10.3.118\\climps\\10_Day\\Data";
+  const SOURCE_PATH = "/mnt/climps/10_Day/Data";
   //const SOURCE_PATH = 'C:\\Users\\gabri\\TenDay\\Data';
   const BUCKET_NAME = "tendayforecast";
 
@@ -212,9 +212,6 @@ export const uploadForecastTIF = async (year, month, day) => {
               // Upload COG
               if (fs.existsSync(cogPath)) {
                 const cogFileStream = fs.createReadStream(cogPath);
-
-                console.log(`Uploading ${newFileName}.tif (COG) to S3...`);
-
                 const uploadCOG = s3
                   .send(
                     new PutObjectCommand({

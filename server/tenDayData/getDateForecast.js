@@ -1,11 +1,14 @@
 import express from "express";
 import chalk from "chalk";
+import crypto from "crypto";
 import { pool, redisClient } from "../db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { logApiRequest } from "../middleware/logMiddleware.js";
 import Fuse from "fuse.js";
 
+
 const router = express.Router();
+const SECRET_KEY = process.env.jwtSecret;
 
 const regionMap = {
   "1": "Ilocos Region (Region I)", "i": "Ilocos Region (Region I)",
@@ -28,6 +31,11 @@ const regionMap = {
   "nir": "Negros Island Region (Region XVIII)"
 };
 
+
+function makeTokenHash(rawToken) {
+  return crypto.createHmac("sha256", SECRET_KEY).update(rawToken).digest("hex");
+}
+
 router.get("/tenday/date", authenticateToken(4), async (req, res) => {
   const { region, province, municity, date, page } = req.query;
   const isPageNone = page === "none";
@@ -47,8 +55,32 @@ router.get("/tenday/date", authenticateToken(4), async (req, res) => {
   }
 
   try {
-    const tokenResult = await pool.query(`SELECT api_ids FROM api_tokens WHERE token = $1 LIMIT 1`, [token]);
-    if (!tokenResult.rows.length || !tokenResult.rows[0].api_ids.includes(4)) {
+    let tokenResult;
+
+    // lookup via token_hash
+    if (SECRET_KEY) {
+      const token_hash = makeTokenHash(token);
+      tokenResult = await pool.query(
+        `SELECT api_ids
+        FROM api_tokens
+        WHERE token_hash = $1
+        LIMIT 1`,
+        [token_hash]
+      );
+    }
+
+    // Legacy fallback: old rows where token_hash is null/blank and token stored raw
+    if (!tokenResult || tokenResult.rows.length === 0) {
+      tokenResult = await pool.query(
+        `SELECT api_ids
+        FROM api_tokens
+        WHERE token = $1 AND (token_hash IS NULL OR token_hash = '')
+        LIMIT 1`,
+        [token]
+      );
+    }
+
+    if (!tokenResult.rows.length || !tokenResult.rows[0].api_ids?.includes(4)) {
       return res.status(403).json({
         metadata: { api: "Forecast by Date" },
         data: {},
@@ -249,7 +281,8 @@ router.get("/tenday/date", authenticateToken(4), async (req, res) => {
         };
 
     const response = { metadata, data, misc };
-    const cacheKey = `dateForecast:${token}:${region}:${province}:${municity}:${date}`;
+    const tokenKey = SECRET_KEY ? makeTokenHash(token) : token;
+    const cacheKey = `dateForecast:${tokenKey}:${region}:${province}:${municity}:${date}`;
     await redisClient.set(cacheKey, JSON.stringify(response), "EX", 3600);
     return res.json(response);
   } catch (err) {

@@ -36,7 +36,7 @@ router.get("/", authenticateToken(6), async (req, res) => {
     // Check cache
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit - Returning data from Redis");
+      //console.log("Cache hit - Returning data from Redis");
       return res.json(JSON.parse(cachedData));
     }
 
@@ -56,7 +56,7 @@ router.get("/", authenticateToken(6), async (req, res) => {
     // Store in cache
     await redisClient.set(cacheKey, JSON.stringify(data), "EX", 3600);
 
-    console.log("Cache miss - Fetching from database");
+    //console.log("Cache miss - Fetching from database");
     res.json(data);
   } catch (error) {
     console.error("Error executing query", error.stack);

@@ -11,11 +11,11 @@ router.get("/current-all", async (req, res) => {
     // Check if data exists in Redis cache
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log("✅ Cache hit - Returning data from Redis");
+      //console.log("✅ Cache hit - Returning data from Redis");
       return res.json(JSON.parse(cachedData));
     }
 
-    console.log("❌ Cache miss - Fetching data from database");
+    //console.log("❌ Cache miss - Fetching data from database");
 
     const query = `
         SELECT 
@@ -73,7 +73,7 @@ router.get("/current-all", async (req, res) => {
 
     // Store result in Redis cache for 10 days (864000 seconds)
     await redisClient.set(cacheKey, JSON.stringify(data), { EX: 864000 });
-    console.log("📝 Data stored in Redis cache for 10 days");
+    //console.log("📝 Data stored in Redis cache for 10 days");
 
     return res.json(data);
   } catch (error) {

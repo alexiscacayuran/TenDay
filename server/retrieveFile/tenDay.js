@@ -16,7 +16,7 @@ const getFileKeyForType = (date, fileType, isMasked, specDate) => {
 
   // 🔁 Handle XLSX separately
   if (fileTypeLower === "xlsx") {
-    return `TanawPH_${specDate}.xlsx`;
+    return `TenDay_${specDate}.xlsx`;
   }
 
   const fileTypeUpper = typeMap[fileType.toUpperCase()] || fileType.toUpperCase();
@@ -105,7 +105,7 @@ export const retrieveForecastFile = async (
     : `${folderName}/${mappedType}/`;
 
 
-  console.log(`Checking S3 folder: ${folderPath}`);
+  //console.log(`Checking S3 folder: ${folderPath}`);
 
   try {
     const listCommand = new ListObjectsV2Command({
@@ -114,12 +114,12 @@ export const retrieveForecastFile = async (
     });
     const response = await s3.send(listCommand);
 
-    console.log("Files in folder:", response.Contents);
+    //console.log("Files in folder:", response.Contents);
 
     const fileKeys = (response.Contents || [])
       .map((obj) => obj.Key)
       .filter((k) => {
-        console.log(`File found: ${k}`);
+        //console.log(`File found: ${k}`);
         return k.endsWith(".tif") || k.endsWith(".xlsx");
       });
 
