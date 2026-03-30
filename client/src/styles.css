@@ -1,0 +1,390 @@
+:root {
+  --breakpoint-xs: 0;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1200px;
+  --breakpoint-xl: 1312px;
+}
+
+/* commissioner-latin-wght-normal */
+@font-face {
+  font-family: "Commissioner Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/commissioner:vf@latest/latin-wght-normal.woff2)
+    format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100vh;
+}
+
+.leaflet-container {
+  height: 100vh;
+  width: 100%;
+  background-color: #696969 !important;
+  font-family: "Commissioner Variable" !important;
+}
+
+.leaflet-container a {
+  color: none;
+}
+
+.leaflet-control {
+  z-index: 0 !important;
+}
+
+.leaflet-esri-labels-pane {
+  z-index: 400 !important;
+}
+
+.esri-dynamic-attribution {
+  user-select: none;
+}
+
+.leaflet-top {
+  z-index: 0 !important;
+}
+
+.leaflet-bottom {
+  z-index: 1200 !important;
+}
+
+/* .leaflet-container a {
+  color: #12467b;
+  text-decoration-color: #12467b;
+  text-decoration-style: dotted;
+} */
+
+.forecast-units {
+  color: #12467b !important;
+  text-decoration-color: #12467b !important;
+  text-decoration-style: dotted !important;
+}
+
+@media (max-width: 900px) {
+  .forecast-units {
+    color: #32383e !important;
+    text-decoration-color: #32383e !important;
+  }
+}
+
+.leaflet-control-attribution {
+  color: white !important;
+  background: none !important;
+  text-shadow: 2px 2px 3px rgba(0, 0, 0, 0.5) !important;
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .leaflet-control-attribution {
+    display: none !important;
+  }
+}
+
+.leaflet-control-attribution a {
+  color: white !important;
+  text-overflow: ellipsis !important;
+}
+
+.glass {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(7px) !important;
+}
+
+.leaflet-bar.leaflet-control {
+  border: none;
+}
+
+.leaflet-control {
+  margin-top: 63px !important;
+}
+
+.leaflet-marker-pane {
+  z-index: 450 !important;
+}
+
+/* feature layer */
+.leaflet-overlay-pane {
+  z-index: 350 !important;
+}
+
+/* station markers */
+.leaflet-station-pane {
+  z-index: 450 !important;
+}
+
+.leaflet-popup {
+  margin: 0 !important;
+  z-index: 500 !important;
+}
+
+.popup-forecast .leaflet-popup-content {
+  width: 365px !important;
+}
+
+@media (max-width: 768px) {
+  .popup-forecast .leaflet-popup-content {
+    width: 280px !important;
+  }
+}
+
+.popup-station .leaflet-popup-content {
+  width: 250px !important;
+}
+
+.popup-forecast .leaflet-popup-content-wrapper,
+.popup-station .leaflet-popup-content-wrapper {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.popup-forecast .leaflet-popup-content,
+.popup-forecast .leaflet-popup-content p,
+.popup-station .leaflet-popup-content,
+.popup-station .leaflet-popup-content p {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.popup-forecast .leaflet-popup-tip-container {
+  height: 56px;
+  overflow: auto;
+}
+
+.popup-station .leaflet-popup-tip-container {
+  height: 10px;
+}
+
+.popup-station .leaflet-popup-tip {
+  background: #12467b;
+  box-shadow: none;
+}
+
+.popup-forecast .leaflet-popup-tip {
+  width: 4px;
+  height: 56px;
+  padding: 1px;
+  margin: 0px auto 0;
+  pointer-events: auto;
+  transform: rotate(0deg);
+  background: var(--joy-palette-primary-500, #0b6bcb);
+  box-shadow: none;
+}
+
+.cluster-icon {
+  width: 25px;
+  height: 25px;
+  background-color: #0b6bcb;
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  text-align: center;
+  align-items: center;
+  z-index: 450 !important;
+}
+
+.cluster-icon-count {
+  font-weight: 700 !important;
+}
+
+.station-marker {
+  height: 15px !important;
+  width: 15px !important;
+  background-color: #0b6bcb;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 0.75px rgba(0, 0, 0, 0.2);
+  z-index: 500 !important;
+}
+
+.regular-marker {
+  height: 15px;
+  width: 30px;
+  background-color: var(--joy-palette-primary-500, #0b6bcb);
+  border-radius: 50%;
+  box-sizing: border-box;
+  z-index: 500 !important;
+}
+
+.pulsating-marker {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  width: 30px;
+  height: 30px;
+
+  &:before {
+    content: "";
+    position: relative;
+    display: block;
+    width: 300%;
+    height: 300%;
+    box-sizing: border-box;
+    margin-left: -100%;
+    margin-top: -100%;
+    border-radius: 45px;
+    background-color: white;
+    animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  }
+
+  &:after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.33);
+  }
+
+  80%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.legend-container {
+  border-radius: 5px;
+  font-family: "Commissioner Variable", sans-serif;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  z-index: 1200;
+  user-select: none;
+}
+
+.legend-units-container {
+  text-align: center;
+  font-weight: bold;
+  font-size: 14px;
+  width: 36px; /* Set the desired width */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal; /* Allow text to wrap */
+}
+
+.legend-units {
+  text-decoration-color: #32383e !important;
+  text-decoration-style: dotted !important;
+}
+
+@media (max-width: 768px) {
+  .legend-units {
+    text-decoration-color: white !important;
+  }
+}
+
+.legend-scale {
+  background-color: #696969 !important;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.loader {
+  --ballcolor: #f2f2f2;
+  --shadow: 0px 0 #ffffff00;
+  --shadowcolor: #ffffff00;
+  width: 10px;
+  height: 10px;
+  left: -120px;
+  border-radius: 50%;
+  position: relative;
+  color: var(--ballcolor);
+  animation: shadowRolling 2s linear infinite;
+}
+
+@keyframes shadowRolling {
+  0% {
+    box-shadow: var(--shadow), var(--shadow), var(--shadow), var(--shadow);
+  }
+
+  12% {
+    box-shadow: 100px 0 var(--ballcolor), var(--shadow), var(--shadow),
+      var(--shadow);
+  }
+
+  25% {
+    box-shadow: 110px 0 var(--ballcolor), 100px 0 var(--ballcolor),
+      var(--shadow), var(--shadow);
+  }
+
+  36% {
+    box-shadow: 120px 0 var(--ballcolor), 110px 0 var(--ballcolor),
+      100px 0 var(--ballcolor), var(--shadow);
+  }
+
+  50% {
+    box-shadow: 130px 0 var(--ballcolor), 120px 0 var(--ballcolor),
+      110px 0 var(--ballcolor), 100px 0 var(--ballcolor);
+  }
+
+  62% {
+    box-shadow: 200px 0 var(--shadowcolor), 130px 0 var(--ballcolor),
+      120px 0 var(--ballcolor), 110px 0 var(--ballcolor);
+  }
+
+  75% {
+    box-shadow: 200px 0 var(--shadowcolor), 200px 0 var(--shadowcolor),
+      130px 0 var(--ballcolor), 120px 0 var(--ballcolor);
+  }
+
+  87% {
+    box-shadow: 200px 0 var(--shadowcolor), 200px 0 var(--shadowcolor),
+      200px 0 var(--shadowcolor), 130px 0 var(--ballcolor);
+  }
+
+  100% {
+    box-shadow: 200px 0 var(--shadowcolor), 200px 0 var(--shadowcolor),
+      200px 0 var(--shadowcolor), 200px 0 var(--shadowcolor);
+  }
+}
+
+.leaflet-control-scale {
+  position: absolute !important;
+  bottom: 60px !important;
+  left: 10px !important;
+}
+
+.leaflet-control-scale-line {
+  border: 2px solid white !important;
+  border-top: none !important;
+  line-height: 1.5 !important;
+  padding: 2px 5px 1px;
+  background: transparent !important;
+  text-shadow: initial !important;
+  color: white !important;
+}
+
+.today-chip {
+  color: "#32383E" !important;
+}
+
+/* .slick-slider,
+.slick-slide {
+  position: absolute !important;
+} */
