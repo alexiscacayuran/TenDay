@@ -8,9 +8,9 @@ const router = express.Router();
 const POWER_BI_URL =
   'https://app.powerbi.com/view?r=eyJrIjoiMDhjM2JiM2UtMjI0Ni00ZGM0LThmODYtMGIyOTEwMGJiNDRlIiwidCI6ImIzN2NiMTliLTNjMzAtNGJhNi1hNWE5LWUxYzViNTJjODMwMiIsImMiOjEwfQ%3D%3D&navContentPaneEnabled=false&filterPaneEnabled=false&$fitToPage=true';
 
-const BASE_URL = 'http://tenday.pagasa.dost.gov.ph:3030/easitool';
-const EXPIRE_SECONDS = 10800; //3 Hours
-//const EXPIRE_SECONDS = 60; //3 Hours
+const BASE_URL = 'https://tenday.pagasa.dost.gov.ph/admin/easitool';
+//const EXPIRE_SECONDS = 10800; //3 Hours
+const EXPIRE_SECONDS = 86400; //24 Hours
 
 // Setup email
 const transporter = nodemailer.createTransport({
@@ -83,7 +83,7 @@ router.post('/generate-link', async (req, res) => {
         <a href="${link}" style="color: #0066cc;">${link}</a>
       </p>
       <p style="font-size: 13px; color: #999; margin-top: 30px;">
-        ⚠️ This link will expire in <strong>3 hours</strong> for your security.
+        ⚠️ This link will expire in <strong>24 hours</strong> for your security.
       </p>
     </div>
     <div style="background: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #999;">
@@ -140,7 +140,7 @@ router.get('/view/:token', async (req, res) => {
 });
 
 // 👉 React validation check
-router.get('/api/check-token/:token', async (req, res) => {
+router.get('/check-token/:token', async (req, res) => {
   const { token } = req.params;
 
   try {

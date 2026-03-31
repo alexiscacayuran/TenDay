@@ -22,7 +22,7 @@ router.get("/", async (req, res) => {
   try {
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit - Returning data from Redis");
+      //console.log("Cache hit - Returning data from Redis");
       return res.json(JSON.parse(cachedData));
     }
     try {
@@ -140,10 +140,10 @@ router.get("/", async (req, res) => {
 
       await redisClient.set(cacheKey, JSON.stringify(data), "EX", 86400); // 1 day
 
-      console.log("Cache miss - Fetched from database");
+      //console.log("Cache miss - Fetched from database");
       res.json(data);
     } catch (error) {
-      console.error("Failed to load JSON:", error);
+      //console.error("Failed to load JSON:", error);
       return null;
     }
   } catch (error) {

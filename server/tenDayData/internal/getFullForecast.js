@@ -39,7 +39,7 @@ router.get("/", authenticateToken(2), async (req, res) => {
     const cacheKey = `forecast_internal:${municity}:${province}`;
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log("Cache hit - Returning data from Redis");
+      //console.log("Cache hit - Returning data from Redis");
       return res.json(JSON.parse(cachedData));
     }
 
@@ -83,8 +83,6 @@ router.get("/", authenticateToken(2), async (req, res) => {
           },
         ],
       });
-
-      console.log("Fuse results:", results);
 
       if (results.length === 0) {
         return res.status(404).json({ error: "Location not found" });
@@ -166,7 +164,7 @@ router.get("/", authenticateToken(2), async (req, res) => {
       // ✅ Cache for 1 day (86400 seconds)
       await redisClient.set(cacheKey, JSON.stringify(data), "EX", 86400);
 
-      console.log("Cache miss - Fetched from database");
+      //console.log("Cache miss - Fetched from database");
       res.json(data);
     } catch (error) {
       console.error("Failed to load JSON:", error);

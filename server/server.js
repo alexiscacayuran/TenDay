@@ -19,12 +19,15 @@ import authenticate from "./middleware/authorization.js";
 import getTokenRoute from "./API/serverToken.js";
 import archiver from "archiver";
 import moment from "moment";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 //Ports
 import authRoutes from "./API/token.js";
 import { port } from "./config.js";
 import { pool } from "./db.js";
 import { logApiRequest } from "./middleware/logMiddleware.js";
+import { authFileMiddleware } from "./middleware/authFileMiddleware.js";
 
 // Chart
 import pieChart from "./route/pieChart.js";
@@ -39,6 +42,7 @@ import "./backgroundJob/cleanUpS3.js";
 //API tenday (internal)
 import { uploadForecastData } from "./tenDayData/uploadTenDay.js";
 import { uploadForecastTIF } from "./tenDayData/tProcessTIF.js";
+import { uploadForecastTIF_orig } from "./tenDayData/tProcessTIF_orig.js";
 import { uploadForecastXLSX } from "./tenDayData/tProcessXLSX.js";
 import {
   retrieveForecastFile,
@@ -73,6 +77,9 @@ import getLocation from "./tenDayData/getLocation.js";
 import analyticsRoutes from "./analytics.js";
 
 import markSolvedRoute from "./API/markSolved.js";
+import listTokenRoute from "./API/apiToken.js";
+import ipAddressRoutes from "./API/ipAddress.js";
+import createTokenRoute from "./API/createToken.js";
 
 //API seasonal (internal)
 import { processSeasonalData } from "./seasonalData/uploadSeasonal.js";
@@ -130,6 +137,29 @@ import stationsRouter from "./synopagro/stations.js";
 import { uploadNormals } from './synopagro/uploadNormals.js';
 import climateNormals from './synopagro/climateNormals.js';
 
+const SECRET_KEY = process.env.jwtSecret;
+
+//tokenChecker
+function makeTokenHash(rawToken) {
+  return crypto.createHmac("sha256", SECRET_KEY).update(rawToken).digest("hex");
+}
+
+function normalizeApiIds(api_ids) {
+  if (Array.isArray(api_ids)) {
+    // already an array, ensure all numbers
+    return api_ids.map(Number).filter(Number.isFinite);
+  }
+  if (typeof api_ids === "string") {
+    // postgres might return "{5,10,11}" string
+    return api_ids
+      .replace(/[{}]/g, "")
+      .split(",")
+      .map(s => Number(s.trim()))
+      .filter(Number.isFinite);
+  }
+  return [];
+}
+
 // Show time in Manila
 const manilaTime = DateTime.now()
   .setZone("Asia/Manila")
@@ -141,12 +171,13 @@ const utcTime = DateTime.utc().toFormat("yyyy-MM-dd HH:mm:ss");
 console.log("🌐 UTC Time:", utcTime);
 
 const app = express();
+app.set("trust proxy", true);
 
 // MIDDLEWARE:
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://172.18.71.29:8080", "http://localhost:8080"],
+    origin: ["http://172.18.71.29:8080", "http://localhost:8080", "https://tenday.pagasa.dost.gov.ph", "http://54.179.175.67"],
   })
 );
 app.use(bodyParser.json());
@@ -159,7 +190,7 @@ app.use("/serverToken", getTokenRoute);
 app.use("/api", activateTokenRoute);
 
 //EASITOOL
-app.use('/', genLink);
+app.use('/api/', genLink);
 app.use('/api/presigned-links', presignedLinkRoutes);
 app.use('/api/form-status', formStatusRoutes);
 
@@ -176,6 +207,11 @@ app.use("/auth", jwtAuth);
 
 //Mark Solved
 app.use("/api", markSolvedRoute);
+
+app.use("/api", listTokenRoute);
+app.use("/api", ipAddressRoutes);
+app.use("/api", createTokenRoute);
+
 
 // PieChart
 app.use("/api", pieChart);
@@ -260,10 +296,10 @@ app.use("/api/stations", stationsRouter);
 
 //Normals
 app.use("/api/uploadNormals", uploadNormals);
-app.use("/api/v1/climate", climateNormals);
+app.use("/apic", climateNormals);
 
 // Route for uploading Ten Day Data
-app.get("/uploadForecastData", authenticate, async (req, res) => {
+app.get("/api/uploadForecastData", authenticate, async (req, res) => {
   const { year, month, day } = req.query;
 
   // Validate input
@@ -288,7 +324,7 @@ app.get("/uploadForecastData", authenticate, async (req, res) => {
   }
 });
 
-app.get("/uploadForecastTIF", authenticate, async (req, res) => {
+app.get("/api/uploadForecastTIF", authenticate, async (req, res) => {
   const { year, month, day } = req.query;
 
   if (!year || !month || !day) {
@@ -307,7 +343,25 @@ app.get("/uploadForecastTIF", authenticate, async (req, res) => {
   }
 });
 
-app.get("/uploadForecastXLSX", authenticate, async (req, res) => {
+app.get("/api/uploadForecastTIF-orig", authenticate, async (req, res) => {
+  const { year, month, day } = req.query;
+
+  if (!year || !month || !day) {
+    return res
+      .status(400)
+      .send("Error: Missing required parameters (year, month, day)");
+  }
+
+  try {
+    const result = await uploadForecastTIF_orig(year, month, day);
+    return res.status(200).send(result);
+  } catch (error) {
+    console.error("❌ Error processing files:", error);
+    return res.status(500).send("Error processing files");
+  }
+});
+
+app.get("/api/uploadForecastXLSX", authenticate, async (req, res) => {
   const { year, month, day } = req.query;
 
   if (!year || !month || !day) {
@@ -325,58 +379,25 @@ app.get("/uploadForecastXLSX", authenticate, async (req, res) => {
   }
 });
 
+
+// ================== TEN-DAY FORECAST ==================
 app.get("/api/v1/file/tenday", async (req, res) => {
-  const { issuance_date, file, offset, masked, target, token } = req.query;
+  const { issuance_date, file, offset, masked, target } = req.query;
 
-  const timestamp = new Date().toLocaleString("en-PH");
+  if (!issuance_date || !file)
+    return res.status(400).send("Missing parameters");
 
-  // 🔒 Validate params
-  if (!issuance_date || !file || !token) {
-    return res
-      .status(400)
-      .send("Missing required params: issuance_date, file, or token");
-  }
+  if (!/^\d{8}$/.test(issuance_date))
+    return res.status(400).send("Invalid date");
 
-  // 🔒 Validate issuance_date format
-  if (!/^\d{8}$/.test(issuance_date)) {
-    return res.status(400).send("issuance_date must be in YYYYMMDD format");
-  }
-
-  // 🔒 Validate token
   try {
-    const tokenQuery = `
-      SELECT id, organization, status, expires_at, api_ids
-      FROM api_tokens
-      WHERE token = $1
-      LIMIT 1
-    `;
-    const result = await pool.query(tokenQuery, [token]);
+    await authFileMiddleware(req, 5);
 
-    if (result.rows.length === 0) {
-      return res.status(403).send("Invalid token.");
-    }
-
-    const { id: token_id, status, expires_at, api_ids } = result.rows[0];
-
-    if (status !== 1) {
-      return res.status(403).send("Token not activated.");
-    }
-
-    if (expires_at && new Date(expires_at) < new Date()) {
-      return res.status(403).send("Token expired.");
-    }
-
-    if (!api_ids.includes(5)) {
-      return res.status(403).send("Unauthorized to access this API.");
-    }
-
-    // Extract year/month/day
     const year = issuance_date.substring(0, 4);
     const month = issuance_date.substring(4, 6);
     const day = issuance_date.substring(6, 8);
 
-    // 📥 Retrieve file(s)
-    const resultFiles = await retrieveForecastFile(
+    let files = await retrieveForecastFile(
       year,
       month,
       day,
@@ -386,184 +407,23 @@ app.get("/api/v1/file/tenday", async (req, res) => {
       target
     );
 
-    if (!resultFiles || resultFiles.length === 0) {
-      return res.status(404).send("No files found for the given parameters.");
+    if (!files || files.length === 0)
+      return res.status(404).send("No files found");
+
+    // ✅ Only return _orig files EXCEPT when file = XLSX
+    if (file.toUpperCase() !== "XLSX") {
+      files = files.filter(f => /_orig\./i.test(f.file));
     }
 
-    const zipDate = target || issuance_date;
-    const zipFilename = `${file.toUpperCase()}_${zipDate}.zip`;
+    if (files.length === 0)
+      return res.status(404).send("No matching files found");
 
-    // 🎯 Log the request
+    const zipFilename = `${file.toUpperCase()}_${target || issuance_date}.zip`;
+
     const request_no = await logApiRequest(req, 5);
-    console.log(`📘 Logged request #${request_no}`);
 
-    // 🎁 If only one file, redirect to download
-    if (resultFiles.length === 1 && file !== "all") {
-      return res.redirect(resultFiles[0].url);
-    }
-
-    // 📦 Zip and stream multiple files
-    res.setHeader("Content-Type", "application/zip");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${zipFilename}"`
-    );
-
-    const archive = archiver("zip", { zlib: { level: 9 } });
-    archive.pipe(res);
-
-    for (const f of resultFiles) {
-      const stream = await streamForecastFile(f.key);
-      archive.append(stream, { name: f.file });
-    }
-
-    archive.finalize();
-  } catch (error) {
-    console.error("❌ Error:", error);
-    if (!res.headersSent) {
-      return res.status(500).send(`Internal Server Error: ${error.message}`);
-    }
-  }
-});
-
-app.get("/api/v1/file/seasonal", async (req, res) => {
-  const { batch, value, token } = req.query;
-  const timestamp = new Date().toLocaleString("en-PH");
-
-  // 🔒 Validate required params
-  if (!batch || !value || !token) {
-    return res.status(400).send("Missing required params: batch, value, token");
-  }
-
-  // 🔒 Validate batch format
-  if (!/^\d{3}$/.test(batch)) {
-    return res.status(400).send("Batch must be a 3-digit number (e.g. 180)");
-  }
-
-  try {
-    // 🔒 Validate token
-    const tokenQuery = `
-      SELECT id, organization, status, expires_at, api_ids
-      FROM api_tokens
-      WHERE token = $1
-      LIMIT 1
-    `;
-    const result = await pool.query(tokenQuery, [token]);
-
-    if (result.rows.length === 0) return res.status(403).send("Invalid token.");
-
-    const { id: token_id, status, expires_at, api_ids } = result.rows[0];
-
-    if (status !== 1) return res.status(403).send("Token not activated.");
-    if (expires_at && new Date(expires_at) < new Date())
-      return res.status(403).send("Token expired.");
-    if (!api_ids.includes(10))
-      return res.status(403).send("Unauthorized to access this API.");
-
-    // 📥 Retrieve file(s)
-    const resultFiles = await retrieveSeasonalFile(batch, value);
-
-    if (!resultFiles || resultFiles.length === 0) {
-      return res.status(404).send("No files found for the given parameters.");
-    }
-
-    const zipFilename = `${value.toUpperCase()}_${batch}.zip`;
-
-    // 📝 Log request
-    const request_no = await logApiRequest(req, 10);
-    console.log(`📘 Logged request #${request_no}`);
-
-    // 🎁 If only one file and value isn't "all", redirect
-    if (resultFiles.length === 1 && value !== "all") {
-      return res.redirect(resultFiles[0].url);
-    }
-
-    // 📦 Zip and stream files
-    res.setHeader("Content-Type", "application/zip");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${zipFilename}"`
-    );
-
-    const archive = archiver("zip", { zlib: { level: 9 } });
-    archive.pipe(res);
-
-    for (const f of resultFiles) {
-      const stream = await streamSeasonalFile(f.key);
-      let subfolder = value;
-
-      if (value === "pn") subfolder = `PN_${batch}`;
-      else if (value === "mm") subfolder = `MM_${batch}`;
-      else if (value === "all") subfolder = `ALL_${batch}`;
-
-      archive.append(stream, { name: `${subfolder}/${f.file}` });
-    }
-
-    archive.finalize();
-  } catch (error) {
-    console.error("❌ Error:", error);
-    if (!res.headersSent) {
-      res.status(500).send(`Internal Server Error: ${error.message}`);
-    }
-  }
-});
-
-app.get("/api/v1/file/ceram", async (req, res) => {
-  const { token, climate_indicator, indicator_code, percentile, ssp } = req.query;
-  const timestamp = new Date().toLocaleString("en-PH");
-
-  if (!token || !climate_indicator) {
-    return res.status(400).send("Missing required parameters: token or climate_indicator.");
-  }
-
-  try {
-    // 🔒 Validate token
-    const tokenQuery = `
-      SELECT id, organization, status, expires_at, api_ids
-      FROM api_tokens
-      WHERE token = $1
-      LIMIT 1
-    `;
-    const result = await pool.query(tokenQuery, [token]);
-
-    if (result.rows.length === 0) {
-      return res.status(403).send("Invalid token.");
-    }
-
-    const { status, expires_at, api_ids } = result.rows[0];
-
-    if (status !== 1) {
-      return res.status(403).send("Token not activated.");
-    }
-
-    if (expires_at && new Date(expires_at) < new Date()) {
-      return res.status(403).send("Token expired.");
-    }
-
-    if (!api_ids.includes(6)) { // Suppose 6 = CERAM access
-      return res.status(403).send("Unauthorized to access this API.");
-    }
-
-    const resultFiles = await retrieveCeramFiles(
-      climate_indicator,
-      indicator_code,
-      percentile,
-      ssp
-    );
-
-    if (!resultFiles || resultFiles.length === 0) {
-      return res.status(404).send("No files found for the given parameters.");
-    }
-
-    // Log request
-    const request_no = await logApiRequest(req, 6);
-    console.log(`📘 CERAM Logged request #${request_no}`);
-
-    if (resultFiles.length === 1) {
-      return res.redirect(resultFiles[0].url);
-    }
-
-    const zipFilename = `CERAM_${climate_indicator}_${timestamp.replace(/[^\d]/g, "")}.zip`;
+    if (files.length === 1 && file !== "all")
+      return res.redirect(files[0].url);
 
     res.setHeader("Content-Type", "application/zip");
     res.setHeader("Content-Disposition", `attachment; filename="${zipFilename}"`);
@@ -571,19 +431,86 @@ app.get("/api/v1/file/ceram", async (req, res) => {
     const archive = archiver("zip", { zlib: { level: 9 } });
     archive.pipe(res);
 
-    for (const f of resultFiles) {
+    for (const f of files) {
+      const stream = await streamForecastFile(f.key);
+      archive.append(stream, { name: f.file });
+    }
+
+    await archive.finalize();
+
+  } catch (err) {
+    console.error(err);
+    res.status(err.status || 500).send(err.message || "Internal Server Error");
+  }
+});
+
+// ================== SEASONAL FORECAST ==================
+app.get("/api/v1/file/seasonal", async (req, res) => {
+  const { batch, value } = req.query;
+  if (!batch || !value) return res.status(400).send("Missing parameters");
+  if (!/^\d{3}$/.test(batch)) return res.status(400).send("Invalid batch");
+
+  try {
+    await authFileMiddleware(req, 10);
+    const files = await retrieveSeasonalFile(batch, value);
+    if (!files || files.length === 0) return res.status(404).send("No files found");
+
+    const zipFilename = `${value.toUpperCase()}_${batch}.zip`;
+    const request_no = await logApiRequest(req, 10);
+
+    if (files.length === 1 && value !== "all") return res.redirect(files[0].url);
+
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="${zipFilename}"`);
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    for (const f of files) {
+      const stream = await streamSeasonalFile(f.key);
+      let subfolder = value === "pn" ? `PN_${batch}` : value === "mm" ? `MM_${batch}` : `ALL_${batch}`;
+      archive.append(stream, { name: `${subfolder}/${f.file}` });
+    }
+
+    await archive.finalize();
+  } catch (err) {
+    console.error(err);
+    res.status(err.status || 500).send(err.message || "Internal Server Error");
+  }
+});
+
+// ================== CERAM ==================
+app.get("/api/v1/file/ceram", async (req, res) => {
+  const { climate_indicator, indicator_code, percentile, ssp } = req.query;
+  if (!climate_indicator) return res.status(400).send("Missing climate_indicator");
+
+  try {
+    await authFileMiddleware(req, 11);
+    const files = await retrieveCeramFiles(climate_indicator, indicator_code, percentile, ssp);
+    if (!files || files.length === 0) return res.status(404).send("No files found");
+
+    const timestamp = new Date().toISOString().replace(/[^\d]/g, "");
+    const zipFilename = `CERAM_${climate_indicator}_${timestamp}.zip`;
+    const request_no = await logApiRequest(req, 11);
+
+    if (files.length === 1) return res.redirect(files[0].url);
+
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="${zipFilename}"`);
+    const archive = archiver("zip", { zlib: { level: 9 } });
+    archive.pipe(res);
+
+    for (const f of files) {
       const stream = await streamCeramFile(f.key);
       archive.append(stream, { name: f.file });
     }
 
-    archive.finalize();
-  } catch (error) {
-    console.error("❌ CERAM Error:", error);
-    if (!res.headersSent) {
-      return res.status(500).send("Internal Server Error.");
-    }
+    await archive.finalize();
+  } catch (err) {
+    console.error(err);
+    res.status(err.status || 500).send(err.message || "Internal Server Error");
   }
 });
+
 
 // Route for uploading Seasonal Data
 app.get("/seasonal-date", authenticate, async (req, res) => {
@@ -669,7 +596,7 @@ function getMonthName(batch) {
 //});
 
 // Route to upload forecast wind data
-app.get("/uploadForecastWind", authenticate, async (req, res) => {
+app.get("/api/uploadForecastWind", authenticate, async (req, res) => {
   const { year, month, day } = req.query;
 
   // Check if the required parameters are present

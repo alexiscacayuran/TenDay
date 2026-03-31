@@ -7,7 +7,7 @@ import fetch from "node-fetch";     // For making HTTP requests to external APIs
 const app = express();              // Initialize the Express app
 const PORT = 5001;                  // Define the port your server will run on
 
-// PAGASA API token for authentication (replace with your own token)
+// PAGASA API token for authentication
 const PAGASA_API_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdhbml6YXRpb24iOiJIb3BlIiwiZW1haWwiOiJ0ZW5kYXkucGFnYXNhQGdtYWlsLmNvbSIsImFwaV9pZHMiOlsxXSwiaWF0IjoxNzUzMjAxMjQ1fQ.sT_s49iE9ooP3lK98qc1qcT7tL0WMt3OSuxRPGP81MA";
 
 // Route: Serves the homepage with HTML content
